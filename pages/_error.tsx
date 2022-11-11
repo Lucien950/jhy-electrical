@@ -6,11 +6,13 @@ interface Props {
 
 const ErrorPage: NextPage<Props> = ({ statusCode }: Props) => {
 	return (
-		<p>
-			{statusCode
-				? `An error ${statusCode} occurred on server`
-				: 'An error occurred on client'}
-		</p>
+		<div className="h-screen w-screen grid place-items-center">
+			<p className="font-bold text-2xl">
+				{statusCode
+					? `An ${statusCode} error occurred on server`
+					: 'An error occurred on client'}
+			</p>
+		</div>
 	)
 }
 
