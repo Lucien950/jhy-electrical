@@ -9,16 +9,14 @@ export default function App({ Component, pageProps }: AppProps) {
 	const variants = {
 		out: {
 			opacity: 0,
-			y: 40,
 			transition: {
-				duration: 0.45
+				duration: 0.3
 			}
 		},
 		in: {
 			opacity: 1,
-			y: 0,
 			transition: {
-				duration: 0.45,
+				duration: 0.3,
 				delay: 0.5
 			}
 		}
@@ -32,7 +30,6 @@ export default function App({ Component, pageProps }: AppProps) {
 		<NavBar />
 		<AnimatePresence
 			initial={false}
-			exitBeforeEnter
 			mode = "wait"
 		>
 			<motion.div

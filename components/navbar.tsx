@@ -1,11 +1,15 @@
 import Link from "next/link";
-import { Dispatch, SetStateAction, useState } from "react"
+import { useState } from "react"
+import Image from 'next/image'
+
 import { motion } from "framer-motion"
 
 type cartProps = { dim: number, className?: string }
 const Cart = ({ dim, className }: cartProps) => {
 	return(
-		<svg className={`w-${dim} h-${dim} ${className}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg>
+		<svg className={className} style={{width: `${dim}rem`, height: `${dim}rem`}} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+			<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+		</svg>
 	)
 }
 
@@ -47,17 +51,19 @@ const HamButton = ({isOpen, className, onClick}: HamButtonProps)=>{
 		>
 			<motion.path
 				variants={top}
-				d="M4 6h16M4"
+				d="M4 6h16"
 				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={transition}
+				style={{ originX: '60%', originY: '50%' }}
 			/>
 			<motion.path
 				variants={center}
-				d="M4 12h16M4"
+				d="M4 12h16"
 				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={centerTransition}
+				style={{ originX: '60%', originY: '50%' }}
 			/>
 			<motion.path
 				variants={bottom}
@@ -65,6 +71,7 @@ const HamButton = ({isOpen, className, onClick}: HamButtonProps)=>{
 				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={transition}
+				style={{ originX: '60%', originY: '50%' }}
 			/>
 		</motion.svg>
 	)
@@ -79,13 +86,13 @@ const NavBar = () => {
 	<div className="
 		flex flex-row items-center place-content-between
 		fixed top-0 left-0 w-full
-		p-4 z-20
+		p-3 z-20 select-none
 	">
-		<Link href="/">
-			<img src="logo.svg" alt="JHY Electrical Logo" className="h-12"/>
+		<Link href="/" className="select-none">
+			<img src="/logo.svg" alt="JHY Electrical Logo" className="h-12 pointer-events-none"/>
 		</Link>
 
-		<div className="hidden md:flex md:flex-row md:gap-14 font-bold text-xl">
+		<div className="hidden md:flex md:flex-row md:gap-14 font-bold text-lg">
 			<Link href="/products">
 				Products
 			</Link>
@@ -93,13 +100,13 @@ const NavBar = () => {
 				Services
 			</Link>
 		</div>
-		<Cart dim={8} className="hidden md:block"/>
-		<HamButton isOpen={isMobileMenuOpen} className="md:hidden" onClick={toggleSetMobileMenuOpen}/>
+		<Cart dim={2.5} className="hidden md:block"/>
+		<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen}/>
 	</div>
 	{/* side */}
 	<motion.div
 		className="
-			fixed right-0 top-0 h-full w-3/4 z-10
+			fixed right-0 top-0 h-full w-1/2 z-10
 			px-4 pt-36
 			bg-white bg-opacity-20
 			flex flex-col gap-y-4
