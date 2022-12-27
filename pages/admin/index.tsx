@@ -1,17 +1,18 @@
 import { useRouter } from 'next/router'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 
-import auth from "../../firebase/auth"
-import storage from "../../firebase/storage"
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytes, deleteObject } from "firebase/storage";
+import { ref, uploadBytes, deleteObject } from "firebase/storage";
+import auth from "../../util/firebase/auth"
+import storage from "../../util/firebase/storage"
+import { fillProductDoc } from '../../util/fillProduct';
+import db from '../../util/firebase/firestore';
 
-
-import LoadingFullPage from '../../components/loadingFullPage';
-import db from '../../firebase/firestore';
 import { order, firestoreOrder, productInfo } from '../../types/order';
 import productType from '../../types/product';
+
+import LoadingFullPage from '../../components/loadingFullPage';
 import { CircleLoader } from 'react-spinners';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -75,10 +76,18 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 			})
 		}
 		else if (e.target.type == "text") {
-			setAddProduct(oldAddProduct => {
-				(oldAddProduct as any)[productAttribute] = e.target.value
-				return oldAddProduct
-			})
+			if(["quantity", "price"].includes(productAttribute)){
+				setAddProduct(oldAddProduct => {
+					(oldAddProduct as any)[productAttribute] = parseFloat(e.target.value)
+					return oldAddProduct
+				})
+			}
+			else{
+				setAddProduct(oldAddProduct => {
+					(oldAddProduct as any)[productAttribute] = e.target.value
+					return oldAddProduct
+				})
+			}
 		}
 		else if (e.target.type == "file") {
 			const files = e.target.files
@@ -122,7 +131,7 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 	const addProductSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		e.stopPropagation()
-		if (!addProduct.productImageURL || !addProduct.productName || !addProduct.price || !addProduct.quantity || !addProduct.description) {
+		if (!addProduct.productImageURL || !addProduct.productName || addProduct.price <= 0 || addProduct.quantity < 0 || !addProduct.description) {
 			// TODO Display Error Here
 			console.error("[Input Error] Product not complete")
 			return
@@ -145,7 +154,7 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 
 		// upload new product to firebase
 		const { productImageURL, productImageFile, firestoreID, ...firestoreAddProduct} = addProduct
-		
+
 		let error = false;
 		if(mode == "edit"){
 			await setDoc(doc(db, "products", firestoreID), firestoreAddProduct)
@@ -193,7 +202,7 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 				<h1>Image</h1>
 				<label htmlFor="productImageFile" className="hover:cursor-pointer border-2 p-2 inline-block">Upload Product Image</label>
 				<input className="hidden" onChange={addProductChange} type="file" id="productImageFile" accept='image/jpeg, image/png'/>
-				<img id="outImage" src={addProduct.productImageURL} className="mx-auto w-7/12"/>
+				<img id="outImage" src={addProduct.productImageURL} alt="Product Image" className="mx-auto w-7/12"/>
 			</div>
 			<div>
 				<label className="block" htmlFor="productName">Product Name</label>
@@ -242,13 +251,7 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 	// listen to new product changes
 	useEffect(() => {
 		const unSubProducts = onSnapshot(query(collection(db, "products"), orderBy("productName")), (snapshot) => {
-			const newProducts = snapshot.docs.map(async productDoc => {
-				const newProduct = productDoc.data() as productType
-
-				newProduct.firestoreID = productDoc.id
-				newProduct.productImageURL = await getDownloadURL(ref(storage, `products/${newProduct.productImage}`))
-				return newProduct
-			})
+			const newProducts = snapshot.docs.map(productDoc => fillProductDoc(productDoc))
 			Promise.all(newProducts).then(newProducts => setProducts(newProducts))
 		})
 		return () => unSubProducts();
@@ -266,6 +269,15 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 		deleteDoc(doc(db, "products", id))
 	}
 
+	const container = {
+		hidden: {},
+		show: { transition: { staggerChildren: 0.1 } }
+	}
+	const item = {
+		hidden: { opacity: 0, y: "20%" },
+		show: { opacity: 1, y: 0 }
+	} 
+
 	return(
 		<div className="relative">
 			<AnimatePresence>
@@ -273,14 +285,18 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 					initialLoaded ?
 					<motion.div
 						className="w-full flex flex-col gap-y-2"
-						transition={{ ease: "easeOut", duration: 0.3, delay: 0.4 }}
-						initial={{ opacity: 0, y: "5%" }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0 }}
 						key="products"
+						variants={container}
+						initial="hidden"
+						animate="show"
 					>
 						{products.map(product =>
-							<div className="flex flex-row p-2 items-center gap-x-2 rounded bg-gray-300" key={product.firestoreID}>
+							<motion.div
+								className="flex flex-row p-2 items-center gap-x-2 rounded bg-gray-300"
+								key={product.firestoreID}
+								variants={item}
+								// transition={{ ease: "easeOut", duration: 1, delay: 0.4 }}
+							>
 								<img src={product.productImageURL} alt="" className="h-12" />
 								<p>{product.productName}</p>
 								<p>{product.quantity}</p>
@@ -289,16 +305,16 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 								{/* TODO */}
 								<p onClick={() => productEdit(product.firestoreID)} className="hover:cursor-pointer">edit</p>
 								<svg className="w-6 h-6 hover:cursor-pointer" onClick={() => deleteProduct(product.firestoreID)} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-							</div>
+							</motion.div>
 						)}
-						<button
+						<motion.button
 							onClick={openProductModal}
 							className="w-full rounded-lg border-2 bg-green-400 border-green-600 flex justify-center p-2"
 						>
 							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
-						</button>
+						</motion.button>
 					</motion.div>
 					:
 					<motion.div className="left-[50%] translate-x-[-50%] py-4 absolute"
@@ -363,7 +379,7 @@ const OrdersComponent = ()=>{
 					<div>{order.orderID}</div>
 					<div>{order.date.toLocaleDateString()} {order.date.toLocaleTimeString()}</div>
 					<div>{
-						order.products.map(productInfo=>productInfo.product.productName).join(", ")
+						order.products.map(productInfo=>productInfo.product!.productName).join(", ")
 					}</div>
 				</div>
 			)}
@@ -373,7 +389,7 @@ const OrdersComponent = ()=>{
 	)
 }
 
-const admin = () => {
+const Admin = () => {
 	const router = useRouter()
 	const [loading, setLoading] = useState(true)
 	const [editProduct, setEditProduct] = useState({} as productType)
@@ -426,18 +442,18 @@ const admin = () => {
 		{
 			productModalOpen && <ProductModal closeProductModal={() => { setProductModalOpen(false);setEditProduct({} as productType) }} editProduct={editProduct}/>
 		}
-		<div className="grid grid-cols-4">
+		<div className="grid grid-cols-5">
 			{/* sidebar */}
 			<div className="col-span-1 border-r-2 relative">
 				<div className="sticky top-0 pt-24 text-lg">
+					<SidebarButton name="Analytics"/>
 					<SidebarButton name="Orders"/>
 					<SidebarButton name="Products"/>
-					<SidebarButton name="Analytics"/>
 				</div>
 			</div>
 
 			{/* content */}
-			<div className="col-span-3 p-2 min-h-screen pt-[70px]">
+			<div className="col-span-4 p-2 min-h-screen pt-[70px]">
 				{/* greeter */}
 				<div className="flex flex-row justify-between w-full">
 					<h1 className="text-5xl font-bold mb-4">Hello {adminUserName}</h1>
@@ -466,4 +482,4 @@ const admin = () => {
 	);
 }
 
-export default admin;
+export default Admin;

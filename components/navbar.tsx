@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { useState } from "react"
-import Image from 'next/image'
+import { useRef, useState } from "react"
 
-import { motion } from "framer-motion"
+import { AnimatePresence, motion, useScroll } from "framer-motion"
+import { useRouter } from "next/router";
+import { useSelector } from "react-redux";
+import { productInfo } from "../types/order";
 
 type cartProps = { dim: number, className?: string }
 const Cart = ({ dim, className }: cartProps) => {
@@ -79,28 +81,61 @@ const HamButton = ({isOpen, className, onClick}: HamButtonProps)=>{
 
 const NavBar = () => {
 	const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
+	const { scrollY } = useScroll();
+	const router = useRouter();
+	const whiteBG = useRef(null)
+	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
+
+	scrollY.onChange(v=>{
+		(whiteBG.current! as HTMLDivElement).style.backgroundColor = (v>10) ? "white" : "transparent";
+		(whiteBG.current! as HTMLDivElement).style.color = (v > 10) ? "black" : "";
+	})
 	const toggleSetMobileMenuOpen = ()=>{setMobileMenuOpen(e => !e)}
+
 	return (
 	<>
 	{/* top row */}
-	<div className="
-		flex flex-row items-center place-content-between
-		fixed top-0 left-0 w-full
-		p-3 z-20 select-none
-	">
+	<div
+				className={`flex flex-row items-center place-content-between fixed top-0 left-0 w-full p-2 z-20 select-none will-change-transform transition-[colors_transform] duration-200 ${router.pathname == "/" ? "text-white" : ""} ${router.pathname == "/checkout/[pid]" ? "translate-y-[-100%]" : ""}`}
+		ref={whiteBG}
+	>
 		<Link href="/" className="select-none">
 			<img src="/logo.svg" alt="JHY Electrical Logo" className="h-12 pointer-events-none"/>
 		</Link>
 
 		<div className="hidden md:flex md:flex-row md:gap-14 font-bold text-lg">
 			<Link href="/products">
-				Products
+				PRODUCTS
 			</Link>
 			<Link href="/services">
-				Services
+				SERVICES
 			</Link>
 		</div>
-		<Cart dim={2.5} className="hidden md:block"/>
+		<Link href="/cart">
+			<div className="relative">
+				<Cart dim={2.5} className="hidden md:block"/>
+				<AnimatePresence>
+					{
+						cart.length > 0 &&
+						<motion.span
+							className="
+							absolute left-[-8px] bottom-[-7px] w-5 h-5
+							bg-red-400 text-white rounded-full leading-none text-sm font-bold
+							grid place-items-center"
+							animate="open"
+							exit="closed"
+							variants={{
+								"closed":{scale: 0},
+								"open":{scale: 1}
+							}}
+							transition={{ type: 'spring', duration: 0.6, bounce: 0.6 }}
+						>
+							{cart.length}
+						</motion.span>
+					}
+				</AnimatePresence>
+			</div>
+		</Link>
 		<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen}/>
 	</div>
 	{/* side */}
@@ -120,12 +155,9 @@ const NavBar = () => {
 		}}
 		transition={{ease: "easeInOut", duration: 0.4}}
 	>
-		<Link href="/products" onClick={toggleSetMobileMenuOpen}>
-			Products
-		</Link>
-		<Link href="/services" onClick={toggleSetMobileMenuOpen}>
-			Services
-		</Link>
+		<Link href="/products" onClick={toggleSetMobileMenuOpen}> PRODUCTS </Link>
+		<Link href="/services" onClick={toggleSetMobileMenuOpen}> SERVICES </Link>
+		<Link href="/cart" onClick={toggleSetMobileMenuOpen}>CART</Link>
 	</motion.div>
 	</>
 )}

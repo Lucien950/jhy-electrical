@@ -1,10 +1,3 @@
-import { GetServerSideProps } from "next";
-import productType from "../types/product"
-import db from "../firebase/firestore"
-import { collection, getDocs } from "firebase/firestore"; 
-import { getDownloadURL, ref } from "firebase/storage";
-import storage from "../firebase/storage";
-
 const commercial = (
 	<svg className="h-8 w-8" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512.001 512.001">
 		<g>
@@ -110,78 +103,8 @@ const industrial = (
 		</g>
 	</svg>
 )
+const residential = (
+	<svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+)
 
-const ProductItem = ({ product }: {product: productType})=>{
-	return(
-		<div className="border-2 p-4">
-			<img src={product.productImageURL} alt="" />
-			<p>
-				{product.productName}
-			</p>
-			<p>
-				{product.description}
-			</p>
-			<p>
-				x{product.quantity} ${product.price}
-			</p>
-			<div className="flex flex-row	gap-x-2	items-center justify-around">
-				{product.residential && <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>}
-				{product.industrial && industrial}
-				{product.commercial && commercial}
-			</div>
-		</div>
-	)
-}
-
-interface productServerProps{
-	products: productType[]
-}
-const products = ({ products }: productServerProps) => {
-	return (
-		<div>
-			{/* banner */}
-			<div className="relative overflow-hidden h-96 select-none pointer-events-none">
-				<img
-					className="h-[120%] max-w-none w-[120%] object-cover blur-sm relative left-[-4px] top-[-4px]"
-					style={{clipPath:"inset(0)"}}
-					src="https://images.unsplash.com/photo-1529854140025-25995121f16f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3540&q=80"
-					alt=""
-				/>
-				<h1 className="text-6xl font-bold absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white drop-shadow-md select-text pointer-events-auto">
-					PRODUCTS
-				</h1>
-			</div>
-
-			{/* product grid */}
-			<div className="grid grid-cols-3 px-24 pt-8 gap-x-4">
-				{products.map((product, i)=>
-					<ProductItem product={product} key={i}/>
-				)}
-			</div>
-		</div>
-	);
-}
-
-export const getServerSideProps: GetServerSideProps = async () => {
-	const productsQS = await getDocs(collection(db, "products"));
-	let products: productType[] = []
-	productsQS.forEach(doc=>{
-		const product = doc.data() as productType
-		product.firestoreID = doc.id
-		products.push(product)
-	})
-
-	const productPictures = products.map(async p => {
-		p.productImageURL = await getDownloadURL(ref(storage, `products/${p.productImage}`))
-		return p
-	})
-	return await Promise.all(productPictures).then(p=>{
-		return {
-			props: {
-				products: JSON.parse(JSON.stringify(p))
-			}
-		}
-	})
-}
-
-export default products;
+export {residential, commercial, industrial}

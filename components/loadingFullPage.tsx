@@ -1,7 +1,7 @@
 
 // https://www.npmjs.com/package/react-spinners
 import CircleLoader from "react-spinners/CircleLoader";
-import { useState, CSSProperties } from "react";
+import { CSSProperties } from "react";
 
 
 const override: CSSProperties = {
