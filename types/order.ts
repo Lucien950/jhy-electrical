@@ -4,19 +4,31 @@ import productType from "./product";
 interface productInfo{
 	PID: string,
 	quantity: number,
-	product: productType
+	// fill later
+	product?: productType
 }
 
 interface order {
 	products: productInfo[],
+	orderPrice: number,
+	status: string,
 	// byo
 	orderID: string,
 	// convert
 	date: Date,
+
+	//only present on failure orders
+	failureReason?: string,
 }
 interface firestoreOrder{
 	products: productInfo[],
+	orderPrice: number,
+	status: string,
+
 	dateTS: Timestamp,
+	
+	//only present on failure orders
+	failureReason?: string,
 }
 
 export type { order, firestoreOrder, productInfo }
