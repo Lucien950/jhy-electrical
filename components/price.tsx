@@ -1,7 +1,8 @@
-const Price = ({price}: {price?:number}) => {
+const Price = (props: any) => {
+	const {price, ...rest} = props
 	if(!price) return <span></span>
 	return (
-		<span>
+		<span {...rest}>
 			<span className="leading-none text-sm align-top relative top-[4px] pr-[1px] font-medium">$</span>
 			<span className="leading-none text-2xl align-top pr-[2px] slashed-zero">{price.toFixed(2).split(".")[0]}</span>
 			<span className="leading-none text-sm align-top relative top-[3px] slashed-zero">{price.toFixed(2).split(".")[1]}</span>
