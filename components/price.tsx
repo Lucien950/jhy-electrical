@@ -1,4 +1,5 @@
-const Price = ({price}: {price:number}) => {
+const Price = ({price}: {price?:number}) => {
+	if(!price) return <span></span>
 	return (
 		<span>
 			<span className="leading-none text-sm align-top relative top-[4px] pr-[1px] font-medium">$</span>
