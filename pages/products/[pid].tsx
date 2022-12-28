@@ -9,74 +9,10 @@ import Price from '../../components/price'
 import { productInfo } from '../../types/order';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import Head from 'next/head';
 
-const AddCartButton = ({ buttonFunction, inCart, inCartLoaded }: { buttonFunction: () => void, inCart: boolean, inCartLoaded : boolean})=>{
-	const [animating, setAnimating] = useState(false)
-	const animationDuration = 1.8 // time in seconds
-	const fallingEdgeAnimationDuration = 0.2
-	const handleCartButtonClick = ()=>{
-		buttonFunction()
-		setAnimating(true)
-		setTimeout(()=>{
-			setAnimating(false)
-		}, inCart ? fallingEdgeAnimationDuration*1000 : animationDuration*1000)
-	}
-
-	return(
-		<button
-			onClick={ handleCartButtonClick }
-			className={`border-2 p-2 px-4 relative rounded-full bg-white overflow-hidden transition-transform will-change-transform ${!inCart ? "hover:scale-110 active:scale-90 relative" : ""}`}
-			disabled={animating}	
-		>
-			<div
-				className="relative transition-all duration-200"
-				style={{
-					transform: `scale(${inCart ? 0 : 1})`,
-					opacity: inCart ? "0" : "1",
-					transitionDelay: inCart ? "" : "0.15s"
-				}}
-			>
-				<div className="flex flex-row items-center gap-x-1 font-bold">
-					<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-					Add to Cart
-				</div>
-			</div>
-			
-			{
-				(inCart || !inCartLoaded) &&
-				<motion.svg
-					className="w-6 h-6 absolute top-2 right-full"
-					animate={{left: ["-9%", "50%", "50%", "109%"], rotate: [-16, 0, 0, -16], x:"-50%"}}
-					transition={{
-						duration: animationDuration,
-						times: [0, 0.4, 0.6, 1],
-						left:{
-							duration: animationDuration,
-							times: [0, 0.4, 0.6, 1],
-							ease: [0.545, -0.195, 0.235, 0.990]
-						}
-					}}
-					initial={false}
-					fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"
-				>
-					<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-				</motion.svg>					
-			}
-			<div
-				className="absolute transition-all left-[50%] top-2 duration-200"
-				style={{
-					transitionDelay: inCart && animating ? `${animationDuration}s` : "",
-					opacity: inCart ? "1" : "0",
-					transform: `translate(-50%, ${inCart ? 0 : 12}px)`
-				}}
-			>
-				Added
-			</div>
-		</button>
-	)
-}
-
-const ProductID = ({product}: {product: productType}) => {
+const AddCartButton = ({ product }: {product: productType})=>{
+	// HANDLE CART
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
 	const [inCart, setInCart] = useState(false)
@@ -86,41 +22,123 @@ const ProductID = ({product}: {product: productType}) => {
 		setInCartLoaded(true)
 	}, [cart])
 
-	const addCart = ()=>{
-		if(inCart){
-			dispatch(removeFromCart({PID:product.firestoreID}))
+	// ANIMATIONS
+	const [animating, setAnimating] = useState(false)
+	const animationDuration = 1.8 // time in seconds
+	const fallingEdgeAnimationDuration = 0.2
+
+	// ANIMATE + HANDLE CART
+	const handleCartButtonClick = ()=>{
+		if (inCart) {
+			dispatch(removeFromCart({ PID: product.firestoreID }))
 			return
 		}
-		if(product.quantity > 0){
-			dispatch(addToCart({PID:product.firestoreID}))
-		} else{
+		if (product.quantity > 0) {
+			dispatch(addToCart({ PID: product.firestoreID, product }))
+		} else {
 			console.error("No more stock")
 		}
+		setAnimating(true)
+		setTimeout(()=>{
+			setAnimating(false)
+		}, inCart ? fallingEdgeAnimationDuration*1000 : animationDuration*1000)
 	}
 
-	return (
-		<div className="grid grid-cols-2 mx-10 mt-20">
-			<div>
-				<img src={product.productImageURL} className="w-full" alt="" />
-			</div>
-			<div>
-				<div className="p-4">
-					<h1 className="font-bold text-3xl mb-2">{product.productName}</h1>
-					<hr />
-					<Price price={product.price} />
-					<h2 className="text-2xl">About this item</h2>
-					<p>{product.description}</p>
-					<div className="flex flex-row">
-						{product.residential && residential}
-						{product.commercial && commercial}
-						{product.industrial && industrial}
+	return(
+		<button
+			onClick={ handleCartButtonClick }
+			className={`border-2 p-2 px-4 relative rounded-full bg-white text-black overflow-hidden transition-transform will-change-transform ${!inCart && product.quantity > 0 ? "hover:scale-110 active:scale-90 relative" : ""} ${product.quantity <= 0 ? "text-gray-400" : ""} `}
+			disabled={animating || product.quantity <= 0}	
+		>
+			{
+				product.quantity > 0
+				?
+				<>
+					{/* DEFAULT VIEW */}
+					<div
+						className="relative transition-all duration-200"
+						style={{
+							transform: `scale(${inCart ? 0 : 1})`,
+							opacity: inCart ? "0" : "1",
+							transitionDelay: inCart ? "" : "0.15s"
+						}}
+					>
+						<div className="flex flex-row items-center gap-x-1 font-bold">
+							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+							Add to Cart
+						</div>
 					</div>
+					
+					{/* shopping cart animation */}
+					{
+						(inCart || !inCartLoaded) &&
+						<motion.svg
+							className="w-6 h-6 absolute top-2 right-full"
+							animate={{left: ["-9%", "50%", "50%", "109%"], rotate: [-16, 0, 0, -16], x:"-50%"}}
+							transition={{
+								duration: animationDuration,
+								times: [0, 0.4, 0.6, 1],
+								left:{
+									duration: animationDuration,
+									times: [0, 0.4, 0.6, 1],
+									ease: [0.545, -0.195, 0.235, 0.990]
+								}
+							}}
+							initial={false}
+							fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"
+						>
+							<path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+						</motion.svg>					
+					}
 
-					<p>{product.quantity} in stock</p>
-					<AddCartButton buttonFunction={addCart} inCart={inCart} inCartLoaded={inCartLoaded}/>
+					{/* ADDED VIEW */}
+					<div
+						className="absolute transition-all left-[50%] top-2 duration-200"
+						style={{
+							transitionDelay: inCart && animating ? `${animationDuration}s` : "",
+							opacity: inCart ? "1" : "0",
+							transform: `translate(-50%, ${inCart ? 0 : 12}px)`
+						}}
+					>
+						Added
+					</div>
+				</>
+				:
+				<div>Out of Stock</div>
+			}
+		</button>
+	)
+}
+
+const ProductID = ({product}: {product: productType}) => {
+	return (
+		<>
+			<Head>
+				<title>{product.productName} | JHY Electrical</title>
+			</Head>
+			<div className="grid grid-cols-2 mx-10 mt-20">
+				<div>
+					<img src={product.productImageURL} className="w-full" alt="" />
+				</div>
+				<div>
+					<div className="p-4">
+						<h1 className="font-bold text-3xl mb-2">{product.productName}</h1>
+						<hr />
+						<Price price={product.price} />
+						<h2 className="text-2xl">About this item</h2>
+						<p>{product.description}</p>
+						<div className="flex flex-row">
+							{product.residential && residential}
+							{product.commercial && commercial}
+							{product.industrial && industrial}
+						</div>
+
+						<p>{product.quantity} in stock</p>
+						<AddCartButton product={product}/>
+					</div>
 				</div>
 			</div>
-		</div>
+		</>
 	)
 }
 
