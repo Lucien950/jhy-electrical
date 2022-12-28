@@ -39,3 +39,6 @@ next-env.d.ts
 *.pur
 
 /productsdetails
+.firebase/
+
+firebase-debug.log
