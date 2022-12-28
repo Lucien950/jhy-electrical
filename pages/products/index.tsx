@@ -52,7 +52,7 @@ const products = ({ products }: productServerProps) => {
 				<img
 					className="h-[120%] max-w-none w-[120%] object-cover blur-sm relative left-[-4px] top-[-4px]"
 					style={{clipPath:"inset(0)"}}
-					src="https://images.unsplash.com/photo-1529854140025-25995121f16f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=3540&q=80"
+					src="/product.webp"
 					alt=""
 				/>
 				<h1 className="text-6xl font-bold absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] text-white drop-shadow-md select-text pointer-events-auto">
