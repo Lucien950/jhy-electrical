@@ -254,7 +254,7 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 			const newProducts = snapshot.docs.map(productDoc => fillProductDoc(productDoc))
 			Promise.all(newProducts).then(newProducts => setProducts(newProducts))
 		})
-		return () => unSubProducts();
+		return unSubProducts
 	}, [])
 	// loaded after recieving products once
 	useEffect(()=>{
