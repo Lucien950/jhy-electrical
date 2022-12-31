@@ -86,23 +86,7 @@ const HamButton = ({isOpen, className, onClick, id}: HamButtonProps)=>{
 }
 
 const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=>void })=>{
-	const router = useRouter()
 	const dispatch = useDispatch()
-
-	const [loadingCheckout, setLoadingCheckout] = useState(false)
-	const handleCheckout = async () => {
-		setLoadingCheckout(true)
-		const newOrderDoc = await addDoc(collection(db, "orders"), {
-			dateTS: Timestamp.now(),
-			products: cart.map(p => { return { PID: p.PID, quantity: p.quantity } }),
-			status: "pending",
-			orderPrice: cart.reduce((a, p) => a + p.product!.price, 0) * 100
-		} as firestoreOrder)
-		closeCart()
-		setLoadingCheckout(false)
-		router.push(`/checkout/${newOrderDoc.id}`)
-	}
-
 	const HandleRemoveFromCart = (productInfo: productInfo)=>{
 		dispatch(removeFromCart(productInfo))
 	}
@@ -155,15 +139,11 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 								<Link href="/cart" onClick={closeCart}>
 								<button className="p-3 px-9 rounded-md border-2 font-medium text-gray-500">View Cart</button>
 								</Link>
-								<button className="p-3 px-9 rounded-md bg-blue-500 font-medium text-white" onClick={handleCheckout}>
-									{
-										!loadingCheckout
-										?
-										"Checkout"
-										:
-										<CircleLoader size={16} color="white"/>
-									}
+								<Link href="/checkout">
+								<button className="p-3 px-9 rounded-md bg-blue-500 font-medium text-white">
+									Checkout
 								</button>
+								</Link>
 							</div>
 						</div>
 						:
@@ -223,7 +203,7 @@ const NavBar = () => {
 	<>
 	{/* top row */}
 	<nav
-		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform] duration-200 ${router.pathname == "/" ? "text-white" : ""} ${router.pathname == "/checkout/[pid]" ? "translate-y-[-100%]" : ""}`}
+		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform] duration-200 ${router.pathname == "/" ? "text-white" : ""} ${router.pathname == "/checkout" ? "translate-y-[-100%]" : ""}`}
 		ref={whiteBG}
 	>
 		<div className="flex flex-row items-center place-content-between container mx-auto p-2">

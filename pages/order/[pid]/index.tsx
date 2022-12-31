@@ -39,7 +39,7 @@ const Order = ({ order, firstTime }: { order: order,firstTime: boolean }) => {
 						</div>
 					)
 				})}
-				<p className="text-xl">Total: <Price price={(order.orderPrice / 100)}/></p>
+				<p className="text-xl">Total: <Price price={order.orderPrice}/></p>
 			</div>
 		</div>
 	);
@@ -57,8 +57,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 	return{
 		props:{
-			order: JSON.parse(JSON.stringify(order)),
-			firstTime: ctx.query.first == "true",
+			order: JSON.parse(JSON.stringify(order))
 		}
 	}
 }

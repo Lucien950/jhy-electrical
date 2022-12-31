@@ -11,7 +11,6 @@ interface productInfo{
 interface order {
 	products: productInfo[],
 	orderPrice: number,
-	status: string,
 	// byo
 	orderID: string,
 	// convert
@@ -23,8 +22,7 @@ interface order {
 interface firestoreOrder{
 	products: productInfo[],
 	orderPrice: number,
-	status: string,
-
+	orderID: string,
 	dateTS: Timestamp,
 	
 	//only present on failure orders

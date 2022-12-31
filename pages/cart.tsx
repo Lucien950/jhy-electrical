@@ -2,16 +2,12 @@ import Price from "../components/price";
 
 import { useSelector, useDispatch } from "react-redux"
 import { cartFillProducts, clearCart, removeFromCart, setQuantity } from "../util/redux/cart.slice";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import db from "../util/firebase/firestore"
-
-import { firestoreOrder, productInfo } from "../types/order";
+import { productInfo } from "../types/order";
 import { getProductsByIDs} from "../util/fillProduct";
-import { CircleLoader } from "react-spinners";
-import { useRouter } from "next/router";
 import Head from "next/head";
+import Link from "next/link";
 
 const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 	const product = productInfo.product
@@ -68,19 +64,9 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 
 const Cart = () => {
 	const dispatch = useDispatch()
-	const router = useRouter()
 	const cart = useSelector((state: { cart: productInfo[] })=>state.cart) as productInfo[]
 	const handleClearCart = () => {
 		dispatch(clearCart())
-	}
-	const handleCheckout = async ()=>{
-		const newOrderDoc = await addDoc(collection(db, "orders"), {
-			dateTS: Timestamp.now(),
-			products: cart.map(p => { return { PID: p.PID, quantity: p.quantity } }),
-			status: "pending",
-			orderPrice: cart.reduce((a, p)=>a + p.product!.price, 0) * 100
-		} as firestoreOrder)
-		router.push(`/checkout/${newOrderDoc.id}`)
 	}
 
 	// update the products
@@ -124,9 +110,11 @@ const Cart = () => {
 						<p className="flex flex-row items-center">
 							Subtotal: ${(cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)).toFixed(2)}
 						</p>
-						<button className="p-2 border-2 rounded-md w-full disabled:text-gray-500" onClick={handleCheckout} disabled={cart.length <= 0}>
+						<Link href="/checkout">
+						<button className="p-2 border-2 rounded-md w-full disabled:text-gray-500" disabled={cart.length <= 0}>
 							Checkout
 						</button>
+						</Link>
 						<button className="p-2 border-2 rounded-md w-full disabled:text-gray-500" onClick={handleClearCart} disabled={cart.length <= 0}>
 							Clear Cart
 						</button>
