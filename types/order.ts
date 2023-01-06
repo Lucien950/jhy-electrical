@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import productType from "./product";
+import { Address } from "@paypal/paypal-js"
 
 interface productInfo{
 	PID: string,
@@ -11,19 +12,34 @@ interface productInfo{
 interface order {
 	products: productInfo[],
 	orderPrice: number,
-	// byo
-	orderID: string,
 	// convert
 	date: Date,
-
+	// customer information
+	name:string,
+	email:string,
+	address: Address,
+	phone:string,
+	paypalOrderID: string,
+	
+	// byo
+	orderID: string,
 	//only present on failure orders
 	failureReason?: string,
 }
 interface firestoreOrder{
+	// product important
 	products: productInfo[],
 	orderPrice: number,
-	orderID: string,
 	dateTS: Timestamp,
+	//byo
+	orderID: string,
+	// customer information
+	name:string,
+	email:string,
+	address: Address,
+	phone:string,
+	paypalOrderID: string,
+
 	
 	//only present on failure orders
 	failureReason?: string,

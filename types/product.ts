@@ -1,3 +1,5 @@
+type cm = number
+type kg = number
 export default interface product{
 	productName: string,
 	quantity: number,
@@ -8,6 +10,11 @@ export default interface product{
 	commercial: boolean,
 	industrial: boolean,
 	residential: boolean,
+
+	length: cm,
+	width: cm,
+	height: cm,
+	weight: kg,
 
 
 	// THESE MUST BE SUPPLEMENTED

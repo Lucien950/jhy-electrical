@@ -11,7 +11,7 @@ return (
 			<Parallax speed={35} className="absolute top-[-2rem]">
 				<img src="/light.png" className="h-[43rem] pointer-events-none select-none" alt="Hanging Light" />
 			</Parallax>
-			<div className="absolute bottom-[8.5rem] -z-[1] text-[7rem] font-bold text-white">
+			<div className="absolute bottom-[9rem] md:bottom-[8.5rem] -z-[1] text-[3rem] md:text-[7rem] font-black text-white">
 				JHY ELECTRICAL
 			</div>
 		</div>

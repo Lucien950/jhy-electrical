@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
-const AddCartButton = ({ product }: {product: productType})=>{
+const AddCartButton = ({ product, quantity }: {product: productType, quantity: number})=>{
 	// HANDLE CART
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
@@ -34,7 +34,7 @@ const AddCartButton = ({ product }: {product: productType})=>{
 			return
 		}
 		if (product.quantity > 0) {
-			dispatch(addToCart({ PID: product.firestoreID, product }))
+			dispatch(addToCart({ PID: product.firestoreID, product, quantity }))
 		} else {
 			console.error("No more stock")
 		}
@@ -47,8 +47,8 @@ const AddCartButton = ({ product }: {product: productType})=>{
 	return(
 		<button
 			onClick={ handleCartButtonClick }
-			className={`border-2 p-2 px-4 relative rounded-full bg-white text-black overflow-hidden transition-transform will-change-transform ${!inCart && product.quantity > 0 ? "hover:scale-110 active:scale-90 relative" : ""} ${product.quantity <= 0 ? "text-gray-400" : ""} `}
-			disabled={animating || product.quantity <= 0}	
+			className={`w-full border-2 p-2 px-4 relative bg-white disabled:text-blue-300 disabled:border-blue-300 text-blue-600 border-blue-600 overflow-hidden transition-transform will-change-transform ${!inCart && product.quantity > 0 ? "hover:scale-[102%] active:scale-90 relative" : ""} ${product.quantity <= 0 ? "text-gray-400" : ""} `}
+			disabled={animating || product.quantity <= 0}
 		>
 			{
 				product.quantity > 0
@@ -56,14 +56,15 @@ const AddCartButton = ({ product }: {product: productType})=>{
 				<>
 					{/* DEFAULT VIEW */}
 					<div
-						className="relative transition-all duration-200"
+						className="relative transition-all duration-200 left-[50%]"
 						style={{
-							transform: `scale(${inCart ? 0 : 1})`,
+							transform: `scale(${inCart ? 0 : 1}) translateX(-50%)`,
 							opacity: inCart ? "0" : "1",
-							transitionDelay: inCart ? "" : "0.15s"
+							transitionDelay: inCart ? "" : "0.15s",
+							transformOrigin: "left"
 						}}
 					>
-						<div className="flex flex-row items-center gap-x-1 font-bold">
+						<div className="inline-flex flex-row items-center gap-x-1 font-bold">
 							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
 							Add to Cart
 						</div>
@@ -77,11 +78,11 @@ const AddCartButton = ({ product }: {product: productType})=>{
 							animate={{left: ["-9%", "50%", "50%", "109%"], rotate: [-16, 0, 0, -16], x:"-50%"}}
 							transition={{
 								duration: animationDuration,
-								times: [0, 0.4, 0.6, 1],
+								times: [0.3, 0.4, 0.45, 1],
 								left:{
 									duration: animationDuration,
-									times: [0, 0.4, 0.6, 1],
-									ease: [0.545, -0.195, 0.235, 0.990]
+									times: [0, 0.45, 0.55, 1],
+									ease: [0.545, -0.6, 0.235, 0.990]
 								}
 							}}
 							initial={false}
@@ -111,30 +112,46 @@ const AddCartButton = ({ product }: {product: productType})=>{
 }
 
 const ProductID = ({product}: {product: productType}) => {
+	const [quantity, setQuantity] = useState(1)
 	return (
 		<>
 			<Head>
 				<title>{product.productName} | JHY Electrical</title>
 			</Head>
-			<div className="grid grid-cols-2 mx-10 mt-20">
+			<div className="grid grid-cols-1 lg:grid-cols-2 mt-36 container mx-auto px-6 lg:px-36 gap-x-24">
 				<div>
-					<img src={product.productImageURL} className="w-full" alt="" />
+					<img src={product.productImageURL} className="w-full" />
 				</div>
 				<div>
 					<div className="p-4">
-						<h1 className="font-bold text-3xl mb-2">{product.productName}</h1>
-						<hr />
-						<Price price={product.price} />
-						<h2 className="text-2xl">About this item</h2>
-						<p>{product.description}</p>
-						<div className="flex flex-row">
-							{product.residential && residential}
-							{product.commercial && commercial}
-							{product.industrial && industrial}
+						<h1 className="font-bold text-4xl mb-1">{product.productName}</h1>
+						<p className="mb-4 text-lg">{product.description}</p>
+						<p className="mb-1 text-lg">{product.quantity} in stock</p>
+						<div className="mb-3">
+							<Price price={product.price} large/>
+						</div>
+						<div className="flex flex-row gap-x-4 mb-3 flex-wrap">
+							{product.residential && <div className="flex flex-row items-center gap-x-2">{residential} Residential</div>}
+							{product.commercial && <div className="flex flex-row items-center gap-x-2">{commercial} Commercial</div>}
+							{product.industrial && <div className="flex flex-row items-center gap-x-2">{industrial} Industrial</div>}
 						</div>
 
-						<p>{product.quantity} in stock</p>
-						<AddCartButton product={product}/>
+						<div className="flex flex-row items-center gap-x-4 my-4">
+							Qty
+							<div className="flex flex-row border-2">
+								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={quantity - 1 < 1} onClick={() => setQuantity(q => Math.max(q - 1, 1))}>
+									<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+								</button>
+								<span className="w-10 h-10 grid place-items-center">{Math.min(quantity, product.quantity)}</span>
+								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={quantity + 1 > product.quantity} onClick={() => setQuantity(q => Math.min(q + 1, product.quantity))}>
+									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+								</button>
+							</div>
+						</div>
+						<AddCartButton product={product} quantity={quantity}/>
+						<button className="mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 disabled:bg-blue-300 text-white active:scale-[97%] disabled:scale-100" disabled={product.quantity <= 0}>
+							{product.quantity <= 0 && "Cannot"} Buy Now
+						</button>
 					</div>
 				</div>
 			</div>

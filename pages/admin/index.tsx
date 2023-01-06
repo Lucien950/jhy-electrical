@@ -15,6 +15,8 @@ import productType from '../../types/product';
 import LoadingFullPage from '../../components/loadingFullPage';
 import { CircleLoader } from 'react-spinners';
 import { motion, AnimatePresence } from 'framer-motion';
+import Head from 'next/head';
+import Link from 'next/link';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics"
@@ -36,7 +38,7 @@ const SidebarButton = ({name}: SidebarButtonProps)=>{
 				flex flex-row items-center gap-x-3
 				px-4 py-1 mx-0 relative
 				hover:bg-gray-200
-				transition-colors
+				transition-colors overflow-hidden
 			">
 				<div className="h-full w-[5px] rounded-r-md bg-blue-500 absolute left-0 translate-x-[-5px] group-hover:translate-x-0 transition-transform"/>
 				{icon[name]}
@@ -63,33 +65,33 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 	const [uploading, setUploading] = useState(false)
 
 	const addProductChange = (e: ChangeEvent<HTMLInputElement>) => {
-		const productAttribute = e.target.id as ("residential" | "commercial" | "industrial" | "quantity" | "price" | "productName")
+		const productAttribute = e.target.id
 		if (productAttribute == null) {
 			console.error("Could not get add_product_attribute (ID)")
 			return
 		}
-		
+		// checkboxes
 		if (e.target.type == "checkbox") {
 			setAddProduct(oldAddProduct => {
 				(oldAddProduct as any)[productAttribute] = e.target.checked
 				return oldAddProduct
 			})
+			return
 		}
-		else if (e.target.type == "text") {
-			if(["quantity", "price"].includes(productAttribute)){
-				setAddProduct(oldAddProduct => {
-					(oldAddProduct as any)[productAttribute] = parseFloat(e.target.value)
-					return oldAddProduct
-				})
-			}
-			else{
-				setAddProduct(oldAddProduct => {
-					(oldAddProduct as any)[productAttribute] = e.target.value
-					return oldAddProduct
-				})
-			}
+		// textboxes
+		if (e.target.type == "text") {
+			let inputFieldValue: string | number = e.target.value
+			const isNumberValue = e.target.getAttribute("data-numberValue") === "true"
+			console.log("is number value, value", isNumberValue)
+			if (isNumberValue) inputFieldValue = parseFloat(inputFieldValue)
+			setAddProduct(oldAddProduct => {
+				(oldAddProduct as any)[productAttribute] = inputFieldValue
+				return oldAddProduct
+			})
+			return
 		}
-		else if (e.target.type == "file") {
+		// files
+		if (e.target.type == "file") {
 			const files = e.target.files
 			if (!files) {
 				console.error("File not found")
@@ -113,12 +115,10 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 			}
 			fr.readAsDataURL(files[0]);
 		}
-		else {
-			console.error("Input box not checkbox or text, it is", e.target.type)
-			return
-		}
+		
+		// if not any of the input types, error out
+		console.error("Input box not checkbox or text, it is", e.target.type)
 	}
-
 	const addProductChangeTA = (e: ChangeEvent<HTMLTextAreaElement>)=>{
 		setAddProduct(oldAddProduct => {
 			return {
@@ -127,29 +127,39 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 			}
 		})
 	}
-
 	const addProductSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
 		e.stopPropagation()
-		if (!addProduct.productImageURL || !addProduct.productName || addProduct.price <= 0 || addProduct.quantity < 0 || !addProduct.description) {
+		if (
+			!addProduct ||
+			!addProduct.productImageURL || !addProduct.productName ||
+			addProduct.price <= 0 || addProduct.quantity < 0 || addProduct.width < 0 || addProduct.height < 0 || addProduct.length < 0 ||
+			!addProduct.description) {
 			// TODO Display Error Here
 			console.error("[Input Error] Product not complete")
 			return
 		}
 
+		// loading
 		setUploading(true)
-		// upload image to storage
-		const productImageRef = ref(storage, `products/${addProduct.productImage}`)
-		if (addProduct.productImageFile){
-			const snapshotFile = await uploadBytes(productImageRef, addProduct.productImageFile).catch(e => {
-				console.error(e)
-			})
-			if (!snapshotFile) {
-				console.error("[Firebase Storage Error] file upload error")
-				setUploading(false)
-				return
+
+		// if uploading first, or existing photo, there will be url (from blob and firebase storage url respectively)
+		// thus above check catches no file uploaded and no firebase storage
+		// here, we only check if there is an uploaded photo
+	const productImageRef = ref(storage, `products/${addProduct.productImage}`)
+		if(addProduct.productImageFile){
+			// upload image to storage
+			if (addProduct.productImageFile){
+				const snapshotFile = await uploadBytes(productImageRef, addProduct.productImageFile).catch(e => {
+					console.error(e)
+				})
+				if (!snapshotFile) {
+					console.error("[Firebase Storage Error] file upload error")
+					setUploading(false)
+					return
+				}
+				console.log("Image Upload Successful")
 			}
-			console.log("Image Upload Successful")
 		}
 
 		// upload new product to firebase
@@ -171,16 +181,29 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 				error = true
 			});
 		}
-
-		if (error) {
+		if (error && mode == "new") {
 			await deleteObject(productImageRef).catch(e => {
 				console.error("[Firebase File Upload Error] Storage Delete Failure", e)
 			})
 			return
 		}
+
 		console.log("Firestore Update Success")
 
 		closeProductModal()
+	}
+
+	const InputField = (
+		{ label, defaultValue, numberValue = false, className, productKey } :
+		{ label: string, defaultValue: string | number, numberValue?: boolean, className?: string, productKey: string }
+	)=>{
+		if(typeof defaultValue == "number" && defaultValue == -1) defaultValue = ""
+		return(
+			<div>
+				<label className="block" htmlFor={productKey}>{label}</label>
+				<input className={`block border-2 rounded-md p-1 focus:outline-none focus:ring-2 ${className ? className : ""}`} onChange={addProductChange} data-numbervalue={numberValue} type="text" id={productKey} defaultValue={defaultValue}/>
+			</div>
+		)
 	}
 	
 	return(
@@ -204,18 +227,16 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 				<input className="hidden" onChange={addProductChange} type="file" id="productImageFile" accept='image/jpeg, image/png'/>
 				<img id="outImage" src={addProduct.productImageURL} alt="Product Image" className="mx-auto w-7/12"/>
 			</div>
-			<div>
-				<label className="block" htmlFor="productName">Product Name</label>
-				<input className="block border-2 rounded-md p-1" onChange={addProductChange} type="text" id="productName" defaultValue={addProduct.productName}/>
+			<InputField label="Product Name" productKey="productName" defaultValue={addProduct.productName}/>
+			<InputField label="Quantity" productKey="quantity" defaultValue={addProduct.quantity} numberValue={true}/>
+			<InputField label="Price" productKey="price" defaultValue={addProduct.price} numberValue={true} />
+			<div className="flex flex-row gap-x-2">
+				<InputField label="Width (cm)" productKey="width" defaultValue={addProduct.width} numberValue={true} className="w-16"/>
+				<InputField label="Height (cm)" productKey="height" defaultValue={addProduct.height} numberValue={true} className="w-16"/>
+				<InputField label="Length (cm)" productKey="length" defaultValue={addProduct.length} numberValue={true} className="w-16"/>
 			</div>
-			<div>
-				<label className="block" htmlFor="quantity">Quantity</label>
-				<input className="block border-2 rounded-md p-1" onChange={addProductChange} type="text" defaultValue={addProduct.quantity == -1 ? "" : addProduct.quantity} id="quantity" />
-			</div>
-			<div>
-				<label className="block" htmlFor="price">Price</label>
-					<input className="block border-2 rounded-md p-1" onChange={addProductChange} type="text" id="price" defaultValue={addProduct.price == -1 ? "" : addProduct.price}/>
-			</div>
+			<InputField label="Weight (kg)" productKey="weight" defaultValue={addProduct.weight} numberValue={true}/>
+
 			<div className="flex flex-row justify-between">
 				<label className="block" htmlFor="residential">Residential</label>
 				<input className="block" onChange={addProductChange} type="checkbox" name="" id="residential" defaultChecked={addProduct.residential}/>
@@ -289,12 +310,15 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 						variants={container}
 						initial="hidden"
 						animate="show"
+						layout
 					>
 						{products.map(product =>
+							//PRODUCT ELEMENT
 							<motion.div
 								className="flex flex-row p-2 items-center gap-x-2 rounded bg-gray-300"
 								key={product.firestoreID}
 								variants={item}
+								exit={{x:"100%"}}
 								// transition={{ ease: "easeOut", duration: 1, delay: 0.4 }}
 							>
 								<img src={product.productImageURL} alt="" className="h-12" />
@@ -302,11 +326,13 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 								<p>{product.quantity}</p>
 								<p>${product.price}</p>
 								<p>{product.commercial} {product.industrial} {product.residential}</p>
-								{/* TODO */}
+								<p>{product.width}cm x {product.height}cm x {product.length}cm</p>
+								<p>{product.weight} kg</p>
 								<p onClick={() => productEdit(product.firestoreID)} className="hover:cursor-pointer">edit</p>
 								<svg className="w-6 h-6 hover:cursor-pointer" onClick={() => deleteProduct(product.firestoreID)} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 							</motion.div>
 						)}
+						{/* ADD PRODUCT BUTTON */}
 						<motion.button
 							onClick={openProductModal}
 							className="w-full rounded-lg border-2 bg-green-400 border-green-600 flex justify-center p-2"
@@ -317,6 +343,7 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 						</motion.button>
 					</motion.div>
 					:
+					// LOADING
 					<motion.div className="left-[50%] translate-x-[-50%] py-4 absolute"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
@@ -376,7 +403,11 @@ const OrdersComponent = ()=>{
 			</div>
 			{orders.map((order, i) =>
 				<div key={i} className="grid grid-cols-3">
-					<div>{order.orderID}</div>
+					<div>
+						<Link href={`/order/${order.orderID}`}>
+							{order.orderID}
+						</Link>
+					</div>
 					<div>{order.date.toLocaleDateString()} {order.date.toLocaleTimeString()}</div>
 					<div>{
 						order.products.map(productInfo=>productInfo.product!.productName).join(", ")
@@ -439,13 +470,16 @@ const Admin = () => {
 	}
 	return (
 		<>
+		<Head>
+			<title>Admin | JHY Electrical</title>
+		</Head>
 		{
 			productModalOpen && <ProductModal closeProductModal={() => { setProductModalOpen(false);setEditProduct({} as productType) }} editProduct={editProduct}/>
 		}
-		<div className="grid grid-cols-5">
+		<div className="grid grid-cols-5 container mx-auto pt-24">
 			{/* sidebar */}
-			<div className="col-span-1 border-r-2 relative">
-				<div className="sticky top-0 pt-24 text-lg">
+			<div className="col-span-1 border-r-2 relative overflow-hidden">
+				<div className="sticky top-[4rem] text-lg h-min">
 					<SidebarButton name="Analytics"/>
 					<SidebarButton name="Orders"/>
 					<SidebarButton name="Products"/>
@@ -453,7 +487,7 @@ const Admin = () => {
 			</div>
 
 			{/* content */}
-			<div className="col-span-4 p-2 min-h-screen pt-[70px]">
+			<div className="col-span-4 p-2 min-h-screen">
 				{/* greeter */}
 				<div className="flex flex-row justify-between w-full">
 					<h1 className="text-5xl font-bold mb-4">Hello {adminUserName}</h1>

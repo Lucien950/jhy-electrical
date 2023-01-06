@@ -107,7 +107,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 		>
 			<div className="flex flex-row items-center justify-between p-4">
 				<div className="flex flex-row items-center gap-x-3">
-					<h1 className="text-xl font-medium">CART</h1>
+					<h1 className="text-xl font-medium">Cart</h1>
 					<p className="rounded-full bg-slate-300 text-gray-500 w-6 h-6 grid place-items-center font-bold">{cart.length}</p>
 				</div>
 			</div>
@@ -137,9 +137,9 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 							)}
 							<div className="flex flex-row w-full justify-around bg-slate-100 p-4">
 								<Link href="/cart" onClick={closeCart}>
-								<button className="p-3 px-9 rounded-md border-2 font-medium text-gray-500">View Cart</button>
+								<button className="p-3 px-9 rounded-md border-2 font-medium text-gray-500">Edit Cart</button>
 								</Link>
-								<Link href="/checkout">
+								<Link href="/checkout" onClick={closeCart}>
 								<button className="p-3 px-9 rounded-md bg-blue-500 font-medium text-white">
 									Checkout
 								</button>
@@ -194,6 +194,7 @@ const NavBar = () => {
 	scrollY.onChange(v=>{
 		(whiteBG.current! as HTMLDivElement).style.backgroundColor = (v>10) ? "white" : "transparent";
 		(whiteBG.current! as HTMLDivElement).style.color = (v > 10) ? "black" : "";
+		(whiteBG.current! as HTMLDivElement).style.boxShadow = (v > 10) ? "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" : "";
 	})
 
 
@@ -203,7 +204,7 @@ const NavBar = () => {
 	<>
 	{/* top row */}
 	<nav
-		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform] duration-200 ${router.pathname == "/" ? "text-white" : ""} ${router.pathname == "/checkout" ? "translate-y-[-100%]" : ""}`}
+		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 ${["/", "/order/[pid]"].includes(router.pathname) ? "text-white" : ""} ${router.pathname == "/checkout" ? "translate-y-[-100%]" : ""}`}
 		ref={whiteBG}
 	>
 		<div className="flex flex-row items-center place-content-between container mx-auto p-2">
@@ -218,10 +219,10 @@ const NavBar = () => {
 			{/* MIDDLE LINKS */}
 			<div className="hidden md:flex md:flex-row md:gap-14 font-bold text-lg z-30">
 				<Link href="/products">
-					PRODUCTS
+					Products
 				</Link>
 				<Link href="/services">
-					SERVICES
+					Services
 				</Link>
 			</div>
 
@@ -245,7 +246,7 @@ const NavBar = () => {
 							}}
 							transition={{ type: 'spring', duration: 0.6, bounce: 0.6 }}
 						>
-							{cart.length}
+							{cart.reduce((a, p)=>a + p.quantity, 0)}
 						</motion.span>
 					}
 				</AnimatePresence>
