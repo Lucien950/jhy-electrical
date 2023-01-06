@@ -5,12 +5,9 @@ import { useRouter } from "next/router";
 import { AnimatePresence, motion, useScroll } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux";
 
-import Price from "./price";
-import { firestoreOrder, productInfo } from "../types/order";
-import { addDoc, collection, Timestamp } from "firebase/firestore";
-import db from "../util/firebase/firestore"
-import { CircleLoader } from "react-spinners";
-import { removeFromCart } from "../util/redux/cart.slice";
+import Price from "components/price";
+import { productInfo } from "types/order";
+import { removeFromCart } from "util/redux/cart.slice";
 
 const Cart = (props: any) => {
 const {dim, ...rest} = props

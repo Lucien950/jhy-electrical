@@ -1,27 +1,25 @@
-import "../styles/tailwind.css"
-
+// react
 import type { AppProps } from 'next/app'
 import { useEffect } from "react"
-
 import Head from 'next/head'
 import { useRouter } from 'next/router'
-
-import NavBar from '../components/navbar'
+// ui
+import "styles/tailwind.css"
+import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
-
 import { ParallaxProvider } from 'react-scroll-parallax'
-
+// redux
 import { Provider, useDispatch, useSelector } from 'react-redux'
-import store from '../util/redux/store'
+import store from 'util/redux/store'
 import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 const persistor = persistStore(store);
-
-import { getProductsByIDs } from "../util/fillProduct";
-import { cartFillProducts } from "../util/redux/cart.slice";
-import { productInfo } from "../types/order"
+// firebase
+import { getProductsByIDs } from "util/fillProduct";
+import { cartFillProducts } from "util/redux/cart.slice";
+import { productInfo } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
-import db from "../util/firebase/firestore"
+import db from "util/firebase/firestore"
 
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()

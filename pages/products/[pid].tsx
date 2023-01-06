@@ -1,12 +1,12 @@
 import { GetServerSideProps } from 'next'
-import { getProductByID } from '../../util/fillProduct'
-import productType from '../../types/product'
-import { residential, commercial, industrial } from '../../components/categoryIcons'
+import { getProductByID } from 'util/fillProduct'
+import productType from 'types/product'
+import { residential, commercial, industrial } from 'components/categoryIcons'
 
 import { useDispatch, useSelector } from 'react-redux';
-import { addToCart, removeFromCart } from '../../util/redux/cart.slice';
-import Price from '../../components/price'
-import { productInfo } from '../../types/order';
+import { addToCart, removeFromCart } from 'util/redux/cart.slice';
+import Price from 'components/price'
+import { productInfo } from 'types/order';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';

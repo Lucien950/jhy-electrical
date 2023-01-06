@@ -1,13 +1,15 @@
-import Price from "../components/price";
-
-import { useSelector, useDispatch } from "react-redux"
-import { cartFillProducts, clearCart, removeFromCart, setQuantity } from "../util/redux/cart.slice";
-import { MouseEventHandler, useEffect, useRef } from "react";
-
-import { productInfo } from "../types/order";
-import { getProductsByIDs} from "../util/fillProduct";
+// react
+import { useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
+// redux
+import { useSelector, useDispatch } from "react-redux"
+import { cartFillProducts, clearCart, removeFromCart, setQuantity } from "util/redux/cart.slice";
+// products
+import { productInfo } from "types/order";
+import { getProductsByIDs} from "util/fillProduct";
+// ui
+import Price from "components/price";
 
 const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 	const product = productInfo.product

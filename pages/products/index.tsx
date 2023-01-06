@@ -1,18 +1,17 @@
-// types
-import productType from "../../types/product";
-// icons
-import { residential, industrial, commercial } from "../../components/categoryIcons";
-import seedRandom from "seedrandom";
-
+// next
 import Link from "next/link";
 import Head from "next/head";
 import { MouseEventHandler, useEffect, useState } from "react";
-
+// types
+import productType from "types/product";
+// UI
+import { residential, industrial, commercial } from "components/categoryIcons";
+import seedRandom from "seedrandom";
 import { motion } from "framer-motion";
+import Price from "components/price";
 
-import { getAllProducts } from "../../util/fillProduct";
-import Price from "../../components/price";
-import { Parallax } from "react-scroll-parallax";
+// get products
+import { getAllProducts } from "util/fillProduct";
 
 const ProductItem = ({ product }: {product: productType})=>{
 	const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]

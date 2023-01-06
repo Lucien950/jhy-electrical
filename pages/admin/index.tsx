@@ -1,22 +1,26 @@
+// next
 import { useRouter } from 'next/router'
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import Head from 'next/head';
+import Link from 'next/link';
 
+// firebase
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, deleteObject } from "firebase/storage";
-import auth from "../../util/firebase/auth"
-import storage from "../../util/firebase/storage"
-import { fillProductDoc } from '../../util/fillProduct';
-import db from '../../util/firebase/firestore';
+import auth from "util/firebase/auth"
+import storage from "util/firebase/storage"
+import { fillProductDoc } from 'util/fillProduct';
+import db from 'util/firebase/firestore';
 
-import { order, firestoreOrder, productInfo } from '../../types/order';
-import productType from '../../types/product';
+// types
+import { order, firestoreOrder, productInfo } from 'types/order';
+import productType from 'types/product';
 
-import LoadingFullPage from '../../components/loadingFullPage';
+// UI
+import LoadingFullPage from 'components/loadingFullPage';
 import { CircleLoader } from 'react-spinners';
 import { motion, AnimatePresence } from 'framer-motion';
-import Head from 'next/head';
-import Link from 'next/link';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics"

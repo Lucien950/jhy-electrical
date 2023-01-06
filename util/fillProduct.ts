@@ -1,7 +1,7 @@
 import { doc, DocumentData, getDoc, DocumentSnapshot, getDocs, collection } from "firebase/firestore";
 import db from "./firebase/firestore"
 import { getDownloadURL, ref } from "firebase/storage";
-import productType from "../types/product";
+import productType from "types/product";
 import storage from "./firebase/storage";
 
 const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{

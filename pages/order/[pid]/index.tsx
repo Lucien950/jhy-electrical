@@ -1,10 +1,10 @@
 import { doc, getDoc } from "firebase/firestore";
-import db from "../../../util/firebase/firestore"
+import db from "util/firebase/firestore"
 import { GetServerSideProps } from "next";
-import { firestoreOrder, order } from "../../../types/order";
-import Price from "../../../components/price";
+import { firestoreOrder, order } from "types/order";
+import Price from "components/price";
 import Link from "next/link";
-import { getProductByID } from "../../../util/fillProduct";
+import { getProductByID } from "util/fillProduct";
 import seedRandom from "seedrandom";
 
 const Order = ({ order }: { order: order }) => {

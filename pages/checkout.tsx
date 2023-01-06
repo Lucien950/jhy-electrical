@@ -1,16 +1,21 @@
+// react and next
 import { MouseEventHandler, useEffect, useRef, useState } from 'react';
-import { firestoreOrder, productInfo } from '../types/order';
 import Head from 'next/head';
 import Link from 'next/link';
-import { useDispatch, useSelector } from 'react-redux';
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
-import { CreateOrderData, CreateOrderActions, OnApproveData, OnApproveActions, OnCancelledActions } from "@paypal/paypal-js"
-import { CircleLoader } from 'react-spinners';
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import db from "../util/firebase/firestore"
 import { useRouter } from 'next/router';
-import { clearCart } from '../util/redux/cart.slice';
-import { AnimatePresence, AnimateSharedLayout, motion } from 'framer-motion';
+// redux
+import { useDispatch, useSelector } from 'react-redux';
+import { clearCart } from 'util/redux/cart.slice';
+// ui
+import { CircleLoader } from 'react-spinners';
+import { AnimatePresence, motion } from 'framer-motion';
+// firestore products
+import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import db from "util/firebase/firestore"
+import { firestoreOrder, productInfo } from 'types/order';
+// paypal
+import { CreateOrderData, CreateOrderActions, OnApproveData, OnApproveActions, OnCancelledActions } from "@paypal/paypal-js"
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const CheckoutForm = ()=>{
 	const [orderTotal, setOrderTotal] = useState(-1)

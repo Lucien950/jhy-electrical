@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { productInfo } from '../../types/order';
-import productType from "../../types/product"
+import { productInfo } from 'types/order';
+import productType from "types/product"
 
 const cartSlice = createSlice({
 	name: 'cart',
