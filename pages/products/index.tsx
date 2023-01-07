@@ -5,7 +5,7 @@ import { MouseEventHandler, useEffect, useState } from "react";
 // types
 import productType from "types/product";
 // UI
-import { residential, industrial, commercial } from "components/categoryIcons";
+import { residential, industrial, commercial, ResidentialIcon, IndustrialIcon, CommercialIcon } from "components/categoryIcons";
 import seedRandom from "seedrandom";
 import { motion } from "framer-motion";
 import Price from "components/price";
@@ -19,10 +19,9 @@ const ProductItem = ({ product }: {product: productType})=>{
 	return(
 		<motion.div layout>
 			<Link href={`products/${product.firestoreID}`}>
-				<div className={`grid place-items-center py-10 lg:py-20 mb-2 lg:mb-6 ${backgroundColour}`}>
-					<img src={product.productImageURL} alt="" className="h-32"/>
+				<div className={`grid place-items-center py-10 lg:py-20 mb-2 lg:mb-6 group ${backgroundColour}`}>
+					<img src={product.productImageURL} alt="" className="h-32 group-hover:scale-105 transition-transform"/>
 				</div>
-			</Link>
 			<div className="flex flex-row justify-between">
 				<div>
 					<h1 className="font-bold text-xl mb-2 leading-none">
@@ -38,6 +37,7 @@ const ProductItem = ({ product }: {product: productType})=>{
 					{product.commercial && commercial}
 				</div>
 			</div>
+			</Link>
 		</motion.div>
 	)
 }
@@ -51,7 +51,7 @@ const Products = () => {
 	const [products, setProducts] = useState([] as productType[])
 	const [displayProducts, setDisplayProducts] = useState([] as productType[])
 
-	const handleFilter: MouseEventHandler<HTMLInputElement> = (e)=>{
+	const handleFilter: MouseEventHandler<HTMLButtonElement> = (e)=>{
 		const property = (e.target as HTMLInputElement).id as "residential" | "industrial" | "commercial"
 		setFilter({...filter, [property]: !filter[property]})
 	}
@@ -75,10 +75,10 @@ const Products = () => {
 				<title>Products | JHY Electrical</title>
 			</Head>
 			{/* banner */}
-			<div className="relative h-[33rem] select-none pointer-events-none -z-10">
-				<div className="h-[113%] overflow-hidden relative">
+			<div className="relative h-[28rem] select-none pointer-events-none -z-10">
+				<div className="h-[106%] overflow-hidden relative">
 					<img
-						className="w-full object-cover max-h-[200%] h-[130%]"
+						className="w-full object-cover max-h-[200%] h-[120%]"
 						style={{clipPath:"inset(0)"}}
 						src="/product_2.webp"
 						alt=""
@@ -97,36 +97,27 @@ const Products = () => {
 			</div>
 
 			{/* product grid */}
-			<div className="
-				grid
-				grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4
-				container mx-auto mb-6 lg:pt-4 2xl:pt-8
-				lg:gap-x-2 2xl:gap-x-4">
-				<div className="relative">
-					<div className="bg-white p-4 sticky top-20 shadow-lg">
-						<h1 className="text-2xl mb-2 font-semibold">Filters</h1>
-						<hr className="mb-2"/>
-						<div className="text-md flex gap-y-2 flex-col">
-							<div className="flex flex-row justify-between">
-								<label htmlFor="residential">Residential</label>
-								<input type="checkbox" name="residential" id="residential" className="w-6 h-6" onClick={handleFilter}/>
-							</div>
-							<div className="flex flex-row justify-between">
-								<label htmlFor="industrial">Industrial</label>
-								<input type="checkbox" name="industrial" id="industrial" className="w-6 h-6" onClick={handleFilter}/>
-							</div>
-							<div className="flex flex-row justify-between">
-								<label htmlFor="commercial">Commercial</label>
-								<input type="checkbox" name="commercial" id="commercial" className="w-6 h-6" onClick={handleFilter}/>
-							</div>
-						</div>
-					</div>
+			<div className="container mx-auto">
+				<div className="bg-white p-2 lg:p-4 flex flex-row flex-wrap gap-y-2 items-center gap-x-2 sm:mb-6 sm:shadow-lg lg:w-5/6 mx-auto">
+					<svg className="w-10 h-10" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" /></svg>
+					<button className={`flex flex-row items-center gap-x-2 py-2 px-3 border-2 rounded-full leading-none ${filter.residential && "bg-blue-500 border-blue-600 text-white"}`} onClick={handleFilter} id="residential">
+						{<ResidentialIcon className="w-8 h-8"/>}
+						Residential
+					</button>
+					<button className={`flex flex-row items-center gap-x-2 py-2 px-3 border-2 rounded-full leading-none ${filter.industrial && "bg-blue-500 border-blue-600 text-white"}`} onClick={handleFilter} id="industrial">
+						{<IndustrialIcon className="w-8 h-8"/>}	
+						Industrial
+					</button>
+					<button className={`flex flex-row items-center gap-x-2 py-2 px-3 border-2 rounded-full leading-none ${filter.commercial && "bg-blue-500 border-blue-600 text-white"}`} onClick={handleFilter} id="commercial">
+						{<CommercialIcon className="w-8 h-8"/>}
+						Commercial
+					</button>
 				</div>
+
 				<motion.div
 					className="
-						lg:col-span-2 2xl:col-span-3
 						grid
-						lg:grid-cols-2 2xl:grid-cols-3
+						md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4
 						lg:gap-x-2 2xl:gap-x-4 gap-y-6
 					"
 					layout

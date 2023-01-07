@@ -9,7 +9,7 @@ import { clearCart } from 'util/redux/cart.slice';
 // ui
 import { CircleLoader } from 'react-spinners';
 import { AnimatePresence, motion } from 'framer-motion';
-// firestore products
+// firestore
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import db from "util/firebase/firestore"
 import { firestoreOrder, productInfo } from 'types/order';
@@ -213,7 +213,7 @@ const CheckoutForm = ()=>{
 	)
 }
 
-const Checkout = () => {
+export default function Checkout(){
 	return (
 		<>
 		<Head>
@@ -230,5 +230,3 @@ const Checkout = () => {
 		</>
 	);
 }
-
-export default Checkout;

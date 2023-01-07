@@ -66,7 +66,7 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 	)
 }
 
-const Cart = () => {
+export default function Cart() {
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] })=>state.cart) as productInfo[]
 	const handleClearCart = () => {
@@ -136,5 +136,3 @@ const Cart = () => {
 		</>
 	);
 }
-
-export default Cart;

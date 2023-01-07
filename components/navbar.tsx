@@ -224,8 +224,8 @@ const NavBar = () => {
 			</div>
 
 			{/* CART */}
-			<div className="relative">
-				<Cart dim={2.5} onClick={() => setCartOpen(e=>!e)} className="hover:cursor-pointer" id="cartButton"/>
+			<div className="relative w-[74.63px]">
+				<Cart dim={2.5} onClick={() => setCartOpen(e => !e)} className="hover:cursor-pointer float-right" id="cartButton"/>
 				{/* BUTTON */}
 				<AnimatePresence>
 					{
@@ -266,7 +266,7 @@ const NavBar = () => {
 				bg-white bg-opacity-20
 				flex flex-col gap-y-4
 				text-3xl font-bold"
-			style={{backdropFilter: "blur(1rem)"}}
+			style={{backdropFilter: "blur(16px)"}}
 			animate={isMobileMenuOpen ? "opened" : "closed"}
 			initial="closed"
 			variants={{
