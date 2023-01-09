@@ -30,9 +30,11 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 	}
 
 	return(
-		<div className="p-4 grid grid-cols-7">
-			<img src={product.productImageURL} alt="Product Image" className="h-14 place-self-center"/>
-			<div className="col-span-4">
+		<div className="p-4 flex flex-row gap-x-2">
+			<div className='flex-[1_0_3.5rem] grid place-items-center'>
+				<img src={product.productImageURL} alt="Product Image" className="h-14"/>
+			</div>
+			<div className="flex-[4_4_57%]">
 				<h1 className="font-medium text-lg">
 					{product.productName}
 				</h1>
@@ -40,9 +42,9 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 					? <p className="text-sm text-green-600">In Stock</p>
 					: <p className="text-sm text-red-700">Out of Stock</p>
 				}
-				<p className="text-gray-600 text-sm">{product.description}</p>
+				<p className="text-gray-600 text-xs">{product.description}</p>
 			</div>
-			<div className="justify-self-end flex flex-col justify-between items-end col-span-2">
+			<div className="justify-self-end flex flex-col justify-between items-end flex-[2_2_29%]">
 				<div>
 					<Price price={product.price * productInfo.quantity}/>
 				</div>

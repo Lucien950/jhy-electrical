@@ -408,7 +408,7 @@ const OrdersComponent = ()=>{
 			{orders.map((order, i) =>
 				<div key={i} className="grid grid-cols-3">
 					<div>
-						<Link href={`/order/${order.orderID}`}>
+						<Link href={`/order/${order.orderID}`} className="underline text-blue-500 visited:text-purple-500">
 							{order.orderID}
 						</Link>
 					</div>

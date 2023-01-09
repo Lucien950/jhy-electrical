@@ -57,26 +57,23 @@ const HamButton = ({isOpen, className, onClick, id}: HamButtonProps)=>{
 			<motion.path
 				variants={top}
 				d="M4 6h16"
-				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={transition}
-				style={{ originX: '60%', originY: '50%' }}
+				style={{ originX: '12px', originY: '6px' }}
 			/>
 			<motion.path
 				variants={center}
 				d="M4 12h16"
-				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={centerTransition}
-				style={{ originX: '60%', originY: '50%' }}
+				style={{ originX: '12px', originY: '12px' }}
 			/>
 			<motion.path
 				variants={bottom}
 				d="M4 18h16"
-				strokeLinejoin="round" strokeLinecap="round"
 				{...lineProps}
 				transition={transition}
-				style={{ originX: '60%', originY: '50%' }}
+				style={{ originX: '12px', originY: '18px' }}
 			/>
 		</motion.svg>
 	)
@@ -204,7 +201,7 @@ const NavBar = () => {
 		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 ${["/", "/order/[pid]"].includes(router.pathname) ? "text-white" : ""} ${router.pathname == "/checkout" ? "translate-y-[-100%]" : ""}`}
 		ref={whiteBG}
 	>
-		<div className="flex flex-row items-center place-content-between container mx-auto p-2">
+		<div className="flex flex-row items-center place-content-between p-2">
 			{/* HAM BUTTON + IMAGE */}
 			<div className="flex flex-row gap-x-2 z-30">
 				<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen} id="mobileMenu" />

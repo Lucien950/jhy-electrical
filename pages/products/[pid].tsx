@@ -1,13 +1,13 @@
 import { GetServerSideProps } from 'next'
 import { getProductByID } from 'util/fillProduct'
 import productType from 'types/product'
-import { residential, commercial, industrial } from 'components/categoryIcons'
+import { Residential, Commercial, Industrial } from 'components/categoryIcons'
 
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart, removeFromCart } from 'util/redux/cart.slice';
 import Price from 'components/price'
 import { productInfo } from 'types/order';
-import { useEffect, useState } from 'react';
+import { MouseEventHandler, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
@@ -113,6 +113,10 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 
 const ProductID = ({product}: {product: productType}) => {
 	const [quantity, setQuantity] = useState(1)
+	const buyNow: MouseEventHandler<HTMLButtonElement> = (e) => {
+		// TODO Implement this
+		return
+	}
 	return (
 		<>
 			<Head>
@@ -131,9 +135,9 @@ const ProductID = ({product}: {product: productType}) => {
 							<Price price={product.price} large/>
 						</div>
 						<div className="flex flex-row gap-x-4 mb-3 flex-wrap">
-							{product.residential && <div className="flex flex-row items-center gap-x-2">{residential} Residential</div>}
-							{product.commercial && <div className="flex flex-row items-center gap-x-2">{commercial} Commercial</div>}
-							{product.industrial && <div className="flex flex-row items-center gap-x-2">{industrial} Industrial</div>}
+							{product.residential && <div className="flex flex-row items-center gap-x-2">{<Residential />} Residential</div>}
+							{product.commercial && <div className="flex flex-row items-center gap-x-2">{<Commercial />} Commercial</div>}
+							{product.industrial && <div className="flex flex-row items-center gap-x-2">{<Industrial />} Industrial</div>}
 						</div>
 
 						<div className="flex flex-row items-center gap-x-4 my-4">
@@ -149,7 +153,7 @@ const ProductID = ({product}: {product: productType}) => {
 							</div>
 						</div>
 						<AddCartButton product={product} quantity={quantity}/>
-						<button className="mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 disabled:bg-blue-300 text-white active:scale-[97%] disabled:scale-100" disabled={product.quantity <= 0}>
+						<button onClick={buyNow} className="mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 disabled:bg-blue-300 text-white active:scale-[97%] disabled:scale-100" disabled={product.quantity <= 0}>
 							{product.quantity <= 0 && "Cannot"} Buy Now
 						</button>
 					</div>
