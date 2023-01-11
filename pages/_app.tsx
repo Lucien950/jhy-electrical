@@ -1,10 +1,11 @@
 // react
 import type { AppProps } from 'next/app'
-import { useEffect } from "react"
+import { StrictMode, useEffect } from "react"
 import Head from 'next/head'
 import { useRouter } from 'next/router'
 // ui
 import "styles/tailwind.css"
+import 'tippy.js/dist/tippy.css'
 import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
 import { ParallaxProvider } from 'react-scroll-parallax'
@@ -21,6 +22,7 @@ import { productInfo } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
 import db from "util/firebase/firestore"
 
+// dispatch here in order to be inside the provider
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
@@ -50,7 +52,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	const { pathname } = useRouter();
 
 	return (
-	<>
+	<StrictMode>
 		<Head>
 			<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
 		</Head	>
@@ -69,12 +71,10 @@ export default function App({ Component, pageProps }: AppProps) {
 				exit="out"
 				key={pathname}
 			>
-				<ParallaxProvider>
 					<Component {...pageProps} />
-				</ParallaxProvider>
 			</motion.div>
 		</AnimatePresence>
 		</PersistGate>
 		</Provider>
-	</>
+	</StrictMode>
 )}
