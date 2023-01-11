@@ -87,7 +87,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 
 	return(
 		<motion.div
-			className="absolute right-0 top-[130%] bg-white min-h-[8rem] min-w-[22rem] rounded-md text-black drop-shadow-lg"
+			className="absolute right-0 top-[130%] bg-white min-h-[8rem] min-w-[22rem] rounded-md text-black drop-shadow-md overflow-hidden"
 			style={{ backdropFilter: "blur(1rem)" }}
 			initial="closed"
 			animate="opened"
@@ -97,7 +97,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 				opened: { y: 0, opacity: 1 },
 			}}
 			transition={{ ease: "easeInOut", duration: 0.15 }}
-			id="cartButton"
+			id="cartDropDown"
 		>
 			<div className="flex flex-row items-center justify-between p-4">
 				<div className="flex flex-row items-center gap-x-3">
@@ -131,10 +131,12 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 							)}
 							<div className="flex flex-row w-full justify-around bg-slate-100 p-4">
 								<Link href="/cart" onClick={closeCart}>
-								<button className="p-3 px-9 rounded-md border-2 font-medium text-gray-500">Edit Cart</button>
+								<button className="p-3 px-10 rounded-sm border-2 border-white bg-black font-medium text-white hover:scale-[102%] transition-transform">
+									Open Cart
+								</button>
 								</Link>
 								<Link href="/checkout" onClick={closeCart}>
-								<button className="p-3 px-9 rounded-md bg-blue-500 font-medium text-white">
+								<button className="p-3 px-10 rounded-sm border-2 font-medium text-gray-600 border-gray-300">
 									Checkout
 								</button>
 								</Link>
@@ -160,7 +162,8 @@ const NavBar = () => {
 
 	// Close CartDropdown if clicking anywhere other than itself
 	const handleCartDropdown = (e: MouseEvent) => {
-		const isCartElement = (e as any).path.find((p: HTMLElement) => p.id == "cartButton") != undefined
+		// @ts-ignore
+		const isCartElement = document.getElementById("cartDropDown")?.contains(e.target) || document.getElementById("cartButton")?.contains(e.target)
 		if (isCartElement) return
 		if(isCartOpen) setCartOpen(false)
 	}
@@ -173,7 +176,8 @@ const NavBar = () => {
 	}, [isCartOpen])
 
 	const handleMobileMenu = (e: MouseEvent)=>{
-		const isMobileMenuElement = (e as any).path.find((p: HTMLElement) => p.id == "mobileMenu") != undefined
+		// @ts-ignore
+		const isMobileMenuElement = document.getElementById("mobileMenu")?.contains(e.target) || document.getElementById("mobileMenuButton")?.contains(e.target)
 		if (isMobileMenuElement) return
 		if (isMobileMenuOpen) setMobileMenuOpen(false)
 	}
@@ -185,11 +189,18 @@ const NavBar = () => {
 		}
 	}, [isMobileMenuOpen])
 
-	scrollY.onChange(v=>{
-		(whiteBG.current! as HTMLDivElement).style.backgroundColor = (v>10) ? "white" : "transparent";
-		(whiteBG.current! as HTMLDivElement).style.color = (v > 10) ? "black" : "";
-		(whiteBG.current! as HTMLDivElement).style.boxShadow = (v > 10) ? "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)" : "";
-	})
+
+	useEffect(()=>{
+		const unsub = scrollY.on("change", v => {
+			const bgElement = whiteBG.current! as HTMLDivElement
+			bgElement.style.backgroundColor = (v > 10) ? "white" : "transparent";
+			bgElement.style.color = (v > 10) ? "black" : "";
+
+			if(v > 10) bgElement.classList.add("shadow-md")
+			else bgElement.classList.remove("shadow-md")
+		})
+		return unsub
+	}, [])
 
 
 	const toggleSetMobileMenuOpen = ()=>setMobileMenuOpen(e => !e)
@@ -198,13 +209,17 @@ const NavBar = () => {
 	<>
 	{/* top row */}
 	<nav
-		className={`fixed top-0 left-0 w-full z-20 select-none will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 ${["/", "/order/[pid]"].includes(router.pathname) ? "text-white" : ""} ${router.pathname == "/checkout" ? "translate-y-[-100%]" : ""}`}
+		className={`fixed top-0 left-0 w-full z-20 select-none
+			will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 delay-[0s,0s,0.7s,0s]
+			${["/", "/order/[pid]"].includes(router.pathname) && "text-white"}
+			${router.pathname == "/checkout" && "translate-y-[-100%] !delay-[0s]"}
+		`}
 		ref={whiteBG}
 	>
 		<div className="flex flex-row items-center place-content-between p-2">
 			{/* HAM BUTTON + IMAGE */}
 			<div className="flex flex-row gap-x-2 z-30">
-				<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen} id="mobileMenu" />
+				<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen} id="mobileMenuButton" />
 				<Link href="/" className="select-none">
 					<img src="/logo.svg" alt="JHY Electrical Logo" className="h-12 pointer-events-none"/>
 				</Link>
