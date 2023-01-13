@@ -31,7 +31,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 					height: p.height
 				}
 			},
-			originPostalCode: origin,
+			originPostalCode: "K4M1B4",
 			destination: {
 				domestic: {
 					postalCode: destination.split(" ").join("").toUpperCase()

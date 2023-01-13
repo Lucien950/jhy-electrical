@@ -6,8 +6,6 @@ const calculateShipping = async (cart: productInfo[], postalCode: string)=>{
 			const { width, height, length, weight } = productInfo.product!
 			return { width, height, length, weight, id: productInfo.PID }
 		}),
-		// TODO origin and destination?
-		origin: "K2J6E4",
 		destination: postalCode
 	})
 	const res = await fetch("/api/shippingcost", {
