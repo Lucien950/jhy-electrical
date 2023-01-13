@@ -1,8 +1,8 @@
 import CanadaPostClient from "canadapost-api"
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-const userID = process.env.NEXT_PUBLIC_CANADAPOST_USERID
-const password = process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD
+const userID = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_USERID_DEV : process.env.NEXT_PUBLIC_CANADAPOST_USERID
+const password = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD_DEV : process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD
 const cpc = new CanadaPostClient(userID, password, process.env.NEXT_PUBLIC_CANADAPOST_CUSTOMERID);
 
 
