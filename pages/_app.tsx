@@ -27,6 +27,7 @@ const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
 	useEffect(() => {
+		console.log("Firebase Subscribe")
 		const unsub = onSnapshot(collection(db, "products"), () => {
 			getProductsByIDs(cart.map(p => p.PID))
 				.then(requiredProducts => {
@@ -71,7 +72,7 @@ export default function App({ Component, pageProps }: AppProps) {
 				exit="out"
 				key={pathname}
 			>
-					<Component {...pageProps} />
+				<Component {...pageProps} />
 			</motion.div>
 		</AnimatePresence>
 		</PersistGate>

@@ -1,38 +1,26 @@
 import { GetServerSideProps } from 'next'
 import { getProductByID } from 'util/fillProduct'
 import productType from 'types/product'
-import { Residential, Commercial, Industrial } from 'components/categoryIcons'
+import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
 
 import { useDispatch, useSelector } from 'react-redux';
-import { addToCart, removeFromCart } from 'util/redux/cart.slice';
+import { addToCart } from 'util/redux/cart.slice';
 import Price from 'components/price'
 import { productInfo } from 'types/order';
-import { MouseEventHandler, useEffect, useState } from 'react';
+import { MouseEventHandler, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
 const AddCartButton = ({ product, quantity }: {product: productType, quantity: number})=>{
 	// HANDLE CART
 	const dispatch = useDispatch()
-	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
-	const [inCart, setInCart] = useState(false)
-	const [inCartLoaded, setInCartLoaded] = useState(false)
-	useEffect(() => {
-		setInCart(cart.find(p => p.PID == product.firestoreID) != undefined)
-		setInCartLoaded(true)
-	}, [cart])
-
 	// ANIMATIONS
 	const [animating, setAnimating] = useState(false)
 	const animationDuration = 1.8 // time in seconds
-	const fallingEdgeAnimationDuration = 0.2
+	const fallingEdgeAnimationDuration = 1.2
 
 	// ANIMATE + HANDLE CART
 	const handleCartButtonClick = ()=>{
-		if (inCart) {
-			dispatch(removeFromCart({ PID: product.firestoreID }))
-			return
-		}
 		if (product.quantity > 0) {
 			dispatch(addToCart({ PID: product.firestoreID, product, quantity }))
 		} else {
@@ -41,13 +29,17 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 		setAnimating(true)
 		setTimeout(()=>{
 			setAnimating(false)
-		}, inCart ? fallingEdgeAnimationDuration*1000 : animationDuration*1000)
+		}, animationDuration*1000 + fallingEdgeAnimationDuration * 1000)
 	}
 
 	return(
 		<button
 			onClick={ handleCartButtonClick }
-			className={`w-full border-2 p-2 px-4 relative bg-white disabled:text-blue-300 disabled:border-blue-300 text-blue-600 border-blue-600 overflow-hidden transition-transform will-change-transform ${!inCart && product.quantity > 0 ? "hover:scale-[102%] active:scale-90 relative" : ""} ${product.quantity <= 0 ? "text-gray-400" : ""} `}
+			className={`w-full border-2 p-2 px-4 relative
+				bg-white text-blue-600 border-blue-600
+				overflow-hidden transition-transform will-change-transform
+				${(!animating && product.quantity > 0) && "hover:scale-[102%] active:scale-90"}
+				${product.quantity <= 0 && "text-gray-400 disabled:text-blue-300 disabled:border-blue-300"}`}
 			disabled={animating || product.quantity <= 0}
 		>
 			{
@@ -58,21 +50,23 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 					<div
 						className="relative transition-all duration-200 left-[50%]"
 						style={{
-							transform: `scale(${inCart ? 0 : 1}) translateX(-50%)`,
-							opacity: inCart ? "0" : "1",
-							transitionDelay: inCart ? "" : "0.15s",
+							transform: `scale(${animating ? 0 : 1}) translateX(-50%)`,
+							opacity: animating ? "0" : "1",
+							transitionDelay: animating ? "" : "0.15s",
 							transformOrigin: "left"
 						}}
 					>
 						<div className="inline-flex flex-row items-center gap-x-1 font-bold">
-							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+							</svg>
 							Add to Cart
 						</div>
 					</div>
 					
 					{/* shopping cart animation */}
 					{
-						(inCart || !inCartLoaded) &&
+						(animating) &&
 						<motion.svg
 							className="w-6 h-6 absolute top-2 right-full"
 							animate={{left: ["-9%", "50%", "50%", "109%"], rotate: [-16, 0, 0, -16], x:"-50%"}}
@@ -96,9 +90,9 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 					<div
 						className="absolute transition-all left-[50%] top-2 duration-200"
 						style={{
-							transitionDelay: inCart && animating ? `${animationDuration}s` : "",
-							opacity: inCart ? "1" : "0",
-							transform: `translate(-50%, ${inCart ? 0 : 12}px)`
+							transitionDelay: animating ? `${animationDuration}s` : "",
+							opacity: animating ? "1" : "0",
+							transform: `translate(-50%, ${animating ? 0 : 12}px)`
 						}}
 					>
 						Added
@@ -113,6 +107,7 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 
 const ProductID = ({product}: {product: productType}) => {
 	const [quantity, setQuantity] = useState(1)
+	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
 	const buyNow: MouseEventHandler<HTMLButtonElement> = (e) => {
 		// TODO Implement this
 		return
@@ -128,32 +123,47 @@ const ProductID = ({product}: {product: productType}) => {
 				</div>
 				<div>
 					<div className="p-4">
+						{/* Basic Information */}
 						<h1 className="font-bold text-4xl mb-1">{product.productName}</h1>
 						<p className="mb-4 text-lg">{product.description}</p>
 						<p className="mb-1 text-lg">{product.quantity} in stock</p>
 						<div className="mb-3">
 							<Price price={product.price} large/>
 						</div>
+
+						{/* Categories */}
 						<div className="flex flex-row gap-x-4 mb-3 flex-wrap">
-							{product.residential && <div className="flex flex-row items-center gap-x-2">{<Residential />} Residential</div>}
-							{product.commercial && <div className="flex flex-row items-center gap-x-2">{<Commercial />} Commercial</div>}
-							{product.industrial && <div className="flex flex-row items-center gap-x-2">{<Industrial />} Industrial</div>}
+							{product.residential && <div className="flex flex-row items-center gap-x-2">{<ResidentialIcon className="w-10 h-10"/>} Residential</div>}
+							{product.commercial && <div className="flex flex-row items-center gap-x-2">{<CommercialIcon className="w-10 h-10"/>} Commercial</div>}
+							{product.industrial && <div className="flex flex-row items-center gap-x-2">{<IndustrialIcon className="w-10 h-10"/>} Industrial</div>}
 						</div>
 
+						{/* Quantity Adjuster */}
 						<div className="flex flex-row items-center gap-x-4 my-4">
 							Qty
 							<div className="flex flex-row border-2">
-								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={quantity - 1 < 1} onClick={() => setQuantity(q => Math.max(q - 1, 1))}>
-									<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
+								{/* - icon */}
+								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300"
+									disabled={quantity - 1 < 1} onClick={() => setQuantity(q => Math.max(q - 1, 1))}>
+									<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+										<path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+									</svg>
 								</button>
+								{/* Quantity */}
 								<span className="w-10 h-10 grid place-items-center">{Math.min(quantity, product.quantity)}</span>
-								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={quantity + 1 > product.quantity} onClick={() => setQuantity(q => Math.min(q + 1, product.quantity))}>
-									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+								{/* + icon */}
+								<button className="w-10 h-10 grid place-items-center disabled:text-gray-300"
+									disabled={quantity + 1 > product.quantity - (cart.find(p => p.PID == product.firestoreID)?.quantity || 0)} onClick={() => setQuantity(q => Math.min(q + 1, product.quantity - (cart.find(p=>p.PID == product.firestoreID)?.quantity || 0)))}>
+									<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+									</svg>
 								</button>
 							</div>
 						</div>
+
+						{/* Add Cart */}
 						<AddCartButton product={product} quantity={quantity}/>
-						<button onClick={buyNow} className="mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 disabled:bg-blue-300 text-white active:scale-[97%] disabled:scale-100" disabled={product.quantity <= 0}>
+						<button onClick={buyNow} className={`mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 text-white active:scale-[97%] ${product.quantity <= 0 && "disabled:bg-blue-300 disabled:scale-100"}`} disabled={product.quantity <= 0}>
 							{product.quantity <= 0 && "Cannot"} Buy Now
 						</button>
 					</div>

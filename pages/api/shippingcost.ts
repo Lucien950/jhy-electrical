@@ -14,15 +14,14 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		height: number,
 		length: number,
 		weight: number,
-		quantity: number,
+		id: string,
 	}
 
 	const body = JSON.parse(req.body)
 	const products = body.products as productPackageInfo[]
-	const { origin, destination } = body
-	console.log(body)
-
-	const prices = await Promise.all(products.map(async p=>{
+	const { origin, destination }: {origin: string, destination: string} = body
+	const prices = {} as {[key: string]: number}
+	await Promise.all(products.map(async p => {
 		const rates = await cpc.getRates({
 			parcelCharacteristics: {
 				weight: p.weight,
@@ -35,17 +34,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 			originPostalCode: origin,
 			destination: {
 				domestic: {
-					postalCode: destination
+					postalCode: destination.split(" ").join("").toUpperCase()
 				}
 			}
-		}).catch((e:any)=>{
+		}).catch((e: any) => {
 			res.status(500).send(e)
 			error = true
 		})
-		if(rates == undefined) return 0
-		const minimumPrice = Math.min(...rates.map((r: any)=>r.priceDetails.due))
-		return minimumPrice * p.quantity
+		if (rates == undefined) return 0
+		const minimumPrice = Math.min(...rates.map((r: any) => r.priceDetails.due))
+		prices[p.id] = minimumPrice
 	}))
 	if(error) return
-	res.status(200).json(prices.reduce((a, p) => a + p, 0))
+	res.status(200).json(prices)
 }

@@ -11,14 +11,13 @@ interface productInfo{
 
 interface order {
 	products: productInfo[],
-	orderPrice: number,
+	orderPrice: Price,
 	// convert
 	date: Date,
 	// customer information
 	name:string,
 	email:string,
 	address: Address,
-	phone:string,
 	paypalOrderID: string,
 	
 	// byo
@@ -29,20 +28,23 @@ interface order {
 interface firestoreOrder{
 	// product important
 	products: productInfo[],
-	orderPrice: number,
+	orderPrice: Price,
 	dateTS: Timestamp,
-	//byo
-	orderID: string,
 	// customer information
 	name:string,
 	email:string,
 	address: Address,
-	phone:string,
 	paypalOrderID: string,
-
 	
 	//only present on failure orders
 	failureReason?: string,
 }
 
-export type { order, firestoreOrder, productInfo }
+interface Price{
+	subtotal: number,
+	shipping: number,
+	tax: number,
+	total: number
+}
+
+export type { order, firestoreOrder, productInfo, Price }

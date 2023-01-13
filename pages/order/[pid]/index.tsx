@@ -8,6 +8,13 @@ import { getProductByID } from "util/fillProduct";
 import seedRandom from "seedrandom";
 
 const Order = ({ order }: { order: order }) => {
+	if(!order){
+		return(
+			<div className="grid place-items-center text-5xl h-screen">
+				Order not found
+			</div>
+		)
+	}
 	order.date = new Date(order.date)
 	return (
 		<div className="h-screen w-screen" >
@@ -80,7 +87,7 @@ const Order = ({ order }: { order: order }) => {
 										<span className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] w-10 h-10 bg-blue-500 overflow-hidden rounded-full leading-none grid place-items-center text-white text-xl font-bold">{productInfo.quantity}</span>
 									</div>
 									<p className="text-xl">{product.productName}</p>
-									<p className="ml-auto"><Price price={product.price}/></p>
+									<p className="ml-auto"><Price price={product.price}/>/ea</p>
 								</div>
 							)
 						})}
@@ -88,16 +95,16 @@ const Order = ({ order }: { order: order }) => {
 					<hr />
 					<div className="p-6 grid grid-cols-2 text-xl gap-y-2">
 						<p>Subtotal</p>
-						<p className="justify-self-end">10</p>
+						<p className="justify-self-end">{order.orderPrice.subtotal.toFixed(2)}</p>
 						<p>Shipping</p>
-						<p className="justify-self-end">10</p>
-						<p>HST</p>
-						<p className="justify-self-end">10</p>
+						<p className="justify-self-end">{order.orderPrice.shipping.toFixed(2)}</p>
+						<p>Tax</p>
+						<p className="justify-self-end">{order.orderPrice.tax.toFixed(2)}</p>
 					</div>
 					<hr />
 					<div className="p-6 text-xl flex flex-row justify-between">
 						<p>Total:</p>
-						<p><Price price={order.orderPrice} /></p>
+						<p><Price price={order.orderPrice.total} /></p>
 					</div>
 				</div>
 			</div>
@@ -106,14 +113,20 @@ const Order = ({ order }: { order: order }) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-	const orderDoc = await getDoc(doc(db, "orders", ctx.query.pid as string))
+	const { pid } = ctx.query
+	if(!pid || typeof pid != "string"){
+		return{
+			redirect:{
+				destination: "/",
+				permanent: false
+			}
+		}
+	}
+	const orderDoc = await getDoc(doc(db, "orders", pid))
 	const firestoreOrder = orderDoc.data() as firestoreOrder
 	if(!firestoreOrder){
 		return{
-			redirect:{
-				destination:`/order/${ctx.query.pid}/failed`,
-				permanent:false
-			}
+			props:{}
 		}
 	}
 	const order = { ...firestoreOrder, orderID: orderDoc.id, date: firestoreOrder.dateTS.toDate() } as order
