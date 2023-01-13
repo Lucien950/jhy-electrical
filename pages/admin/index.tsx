@@ -19,8 +19,8 @@ import productType from 'types/product';
 
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
-import { CircleLoader } from 'react-spinners';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Oval } from 'react-loader-spinner';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics"
@@ -260,7 +260,7 @@ const ProductModal = ({ closeProductModal, editProduct }: { closeProductModal: (
 			<button type="submit" className="border-2 px-4 flex justify-center" disabled={uploading}>
 				{
 					uploading
-					? <CircleLoader size={24}/>
+					? <Oval height={24} width={24}/>
 					: `${mode.charAt(0).toUpperCase() + mode.slice(1)} Item`
 				}
 			</button>
@@ -355,7 +355,7 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 						transition={{duration:0.3}}
 						key="loading"
 					>
-						<CircleLoader size={120} />
+						<Oval width={120} height={120}/>
 					</motion.div>
 				}
 			</AnimatePresence>

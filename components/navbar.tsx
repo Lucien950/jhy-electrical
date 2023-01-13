@@ -245,8 +245,8 @@ const NavBar = () => {
 						<motion.span
 							className="
 							absolute right-[-3px] top-[-3px] w-5 h-5
-							bg-red-400 text-white rounded-full leading-none text-sm font-bold
-							grid place-items-center"
+							bg-red-500 text-white rounded-full leading-none text-sm font-bold
+							grid place-items-center hover:cursor-pointer"
 							animate="open"
 							exit="closed"
 							variants={{

@@ -8,7 +8,7 @@ import auth from "util/firebase/auth"
 
 // loading
 import LoadingFullPage from "components/loadingFullPage";
-import { CircleLoader } from "react-spinners";
+import { Oval } from 'react-loader-spinner';
 
 const AdminLogin = () => {
 	const router = useRouter()
@@ -52,7 +52,7 @@ const AdminLogin = () => {
 				<input type="password" className="border-2 p-2 w-64" id="password" name="password" required placeholder="Password"/>
 				<button type="submit" className="border-2 p-2 flex justify-center" disabled={logInLoading}>
 					{logInLoading
-						? <CircleLoader size={24} />
+						? <Oval />
 						: <p>login</p>
 					}
 				</button>
