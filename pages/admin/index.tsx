@@ -330,8 +330,16 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 								<p>{product.quantity}</p>
 								<p>${product.price}</p>
 								<p>{product.commercial} {product.industrial} {product.residential}</p>
-								<p>{product.width}cm x {product.height}cm x {product.length}cm</p>
-								<p>{product.weight} kg</p>
+								{
+									product.width && product.height && product.length
+									? <p>{product.width}cm x {product.height}cm x {product.length}cm</p>
+									: <p>No Dimensions</p>
+								}
+								{
+									product.weight
+									? <p>{product.weight} kg</p>
+									: <p>No Weight</p>
+								}
 								<p onClick={() => productEdit(product.firestoreID)} className="hover:cursor-pointer">edit</p>
 								<svg className="w-6 h-6 hover:cursor-pointer" onClick={() => deleteProduct(product.firestoreID)} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
 							</motion.div>
@@ -339,7 +347,7 @@ const ProductsComponent = ({ openProductModal, editProductModal }: { openProduct
 						{/* ADD PRODUCT BUTTON */}
 						<motion.button
 							onClick={openProductModal}
-							className="w-full rounded-lg border-2 bg-green-400 border-green-600 flex justify-center p-2"
+							className="w-full rounded-lg border-4 bg-green-400 border-green-600 hover:bg-green-500 transition-colors flex justify-center p-2"
 						>
 							<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -480,7 +488,7 @@ const Admin = () => {
 		{
 			productModalOpen && <ProductModal closeProductModal={() => { setProductModalOpen(false);setEditProduct({} as productType) }} editProduct={editProduct}/>
 		}
-		<div className="grid grid-cols-5 container mx-auto pt-24">
+		<div className="grid grid-cols-5 container mx-auto">
 			{/* sidebar */}
 			<div className="col-span-1 border-r-2 relative overflow-hidden">
 				<div className="sticky top-[4rem] text-lg h-min">
@@ -491,7 +499,7 @@ const Admin = () => {
 			</div>
 
 			{/* content */}
-			<div className="col-span-4 p-2 min-h-screen">
+			<div className="col-span-4 p-2 pt-16 min-h-screen">
 				{/* greeter */}
 				<div className="flex flex-row justify-between w-full">
 					<h1 className="text-5xl font-bold mb-4">Hello {adminUserName}</h1>

@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-html{
+html {
 	@apply scroll-smooth;
+}
+
+.link {
+	@apply underline text-blue-500 hover:text-blue-700 transition-colors duration-75 visited:text-purple-600 hover:visited:text-purple-800
 }

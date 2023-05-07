@@ -17,7 +17,7 @@ const ProductItem = ({ product }: {product: productType})=>{
 	const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
 	const backgroundColour = backgroundColours[Math.round(seedRandom(product.firestoreID)() * 3)]
 	return(
-		<motion.div layout>
+		<motion.div>
 			<Link href={`products/${product.firestoreID}`}>
 				<div className={`grid place-items-center py-10 lg:py-20 mb-2 lg:mb-6 group ${backgroundColour}`}>
 					<img src={product.productImageURL} alt="" className="h-32 group-hover:scale-105 transition-transform"/>
