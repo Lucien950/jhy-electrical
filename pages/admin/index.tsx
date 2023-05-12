@@ -6,21 +6,22 @@ import Link from 'next/link';
 
 // firebase
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { addDoc, collection, deleteDoc, doc, getDoc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, deleteObject } from "firebase/storage";
-import auth from "util/firebase/auth"
+import { doc, getDoc } from "firebase/firestore";
+import { auth } from "util/firebase/auth"
+import { db } from 'util/firebase/firestore';
 import storage from "util/firebase/storage"
 import { fillProductDoc } from 'util/fillProduct';
 import db from 'util/firebase/firestore';
 
 // types
-import { order, firestoreOrder, productInfo } from 'types/order';
+import ProductInterface from 'types/product';
 import productType from 'types/product';
 
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
+import { AdminInterface } from 'types/admin';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics"

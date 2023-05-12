@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 
 // auth handling
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import auth from "util/firebase/auth"
+import { auth } from "util/firebase/auth"
 
 // loading
 import LoadingFullPage from "components/loadingFullPage";

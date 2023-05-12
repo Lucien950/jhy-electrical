@@ -9,9 +9,10 @@ interface productInfo{
 	product?: productType
 }
 
-interface order {
+interface OrderInterface {
 	products: productInfo[],
 	orderPrice: Price,
+	completed: boolean,
 	// convert
 	date: Date,
 	// customer information
@@ -25,19 +26,10 @@ interface order {
 	//only present on failure orders
 	failureReason?: string,
 }
-interface firestoreOrder{
-	// product important
-	products: productInfo[],
-	orderPrice: Price,
+interface FirestoreOrderInterface extends OrderInterface{
+	// because of serialization sadge
+	date: never,
 	dateTS: Timestamp,
-	// customer information
-	name:string,
-	email:string,
-	address: Address,
-	paypalOrderID: string,
-	
-	//only present on failure orders
-	failureReason?: string,
 }
 
 interface Price{
@@ -47,4 +39,4 @@ interface Price{
 	total: number
 }
 
-export type { order, firestoreOrder, productInfo, Price }
+export type { OrderInterface, FirestoreOrderInterface, productInfo, Price }

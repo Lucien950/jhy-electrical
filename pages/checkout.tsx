@@ -21,7 +21,7 @@ import { calculateShipping } from 'util/calculateShipping';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import db from "util/firebase/firestore"
 // types
-import customer from 'types/customer';
+import CustomerInterface from 'types/customer';
 import { firestoreOrder, Price, productInfo } from 'types/order';
 import { clearCart } from 'util/redux/cart.slice';
 import { createOrder } from 'util/paypal/createOrder';
@@ -37,13 +37,13 @@ import {
 
 const postalCodePattern = "^(?!.*[DFIOQUdfioqu])[A-VXYa-vxy][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]$"
 
-const ProvinceDropdown = ({province, setProvince}: {province: string, setProvince: (p:string)=>void}) => {
-	const [query, setQuery] = useState('')
+import { postalCodePattern } from 'util/postalCodePattern';
+import { displayVariants } from 'util/formVariants';
 	const provinces = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"]
 	const filteredProvinces = query === '' ? [] : provinces.filter((province) => province.toLowerCase().includes(query.toLowerCase()))
 	
-	return (
-		<Combobox value={province} onChange={setProvince} className="relative" as="div">
+import { logEvent } from 'firebase/analytics';
+import { analytics } from 'util/firebase/analytics';
       <Combobox.Input
 				onChange={(event) => setQuery(event.target.value)}
 				className="w-full h-full p-2 rounded-sm border-2 focus:outline-none focus:ring"

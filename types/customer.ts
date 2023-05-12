@@ -1,5 +1,5 @@
 import {Address} from "@paypal/paypal-js"
-export default interface customer {
+export default interface CustomerInterface {
 	first_name: string,
 	last_name: string,
 	paymentMethod: "card" | "paypal" | "",
@@ -16,8 +16,9 @@ interface paypalInfo{
 	token: string,
 }
 
+// TODO what information does card require
 interface cardInfo{
-
+	
 }
 
 export type { paypalInfo }

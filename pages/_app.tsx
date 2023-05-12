@@ -1,14 +1,12 @@
 // react
 import type { AppProps } from 'next/app'
-import { StrictMode, useEffect } from "react"
-import Head from 'next/head'
+import { useEffect, useState } from "react"
 import { useRouter } from 'next/router'
 // ui
 import "styles/tailwind.css"
 import 'tippy.js/dist/tippy.css'
 import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
-import { ParallaxProvider } from 'react-scroll-parallax'
 // redux
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from 'util/redux/store'
@@ -16,11 +14,11 @@ import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 const persistor = persistStore(store);
 // firebase
-import { getProductsByIDs } from "util/fillProduct";
+import { fillProductDoc } from "util/fillProduct";
 import { cartFillProducts } from "util/redux/cart.slice";
 import { productInfo } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
-import db from "util/firebase/firestore"
+import { db } from "util/firebase/firestore"
 
 // dispatch here in order to be inside the provider
 const CartUpdater = ()=>{
@@ -53,10 +51,6 @@ export default function App({ Component, pageProps }: AppProps) {
 	const { pathname } = useRouter();
 
 	return (
-	<StrictMode>
-		<Head>
-			<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-		</Head	>
 		<Provider store={store}>
 		<PersistGate persistor={persistor}>
 		<CartUpdater />
@@ -77,5 +71,4 @@ export default function App({ Component, pageProps }: AppProps) {
 		</AnimatePresence>
 		</PersistGate>
 		</Provider>
-	</StrictMode>
 )}

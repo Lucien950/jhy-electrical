@@ -6,6 +6,8 @@ import { AnimatePresence, motion, useScroll } from "framer-motion"
 import { useDispatch, useSelector } from "react-redux";
 
 import Price from "components/price";
+import LinkBoxes from "components/linkBoxes"
+
 import { productInfo } from "types/order";
 import { removeFromCart } from "util/redux/cart.slice";
 
@@ -15,7 +17,8 @@ return(
 	<svg {...rest} style={{width: `${dim}rem`, height: `${dim}rem`}} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 		<path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
 	</svg>
-)}
+	)
+}
 
 type HamButtonProps = { isOpen: Boolean, className?: string, onClick: ()=>void, id:string }
 const HamButton = ({isOpen, className, onClick, id}: HamButtonProps)=>{
@@ -273,22 +276,22 @@ const NavBar = () => {
 		<motion.div
 			className="
 				fixed z-20 top-0 left-0
-				h-screen max-w-[32rem] w-full
-				px-4 pt-36
-				bg-white bg-opacity-20
+			h-screen max-w-[32rem] w-full pt-36
+			bg-white bg-opacity-20 gap-y-4 md:hidden"
+			style={{ backdropFilter: "blur(16px)" }}
 				flex flex-col gap-y-4
 				text-3xl font-bold"
 			style={{backdropFilter: "blur(16px)"}}
 			animate={isMobileMenuOpen ? "opened" : "closed"}
 			initial="closed"
 			variants={{
-				opened:{x:0},
-				closed:{x:"-100%"}
+				opened: { x: 0 },
+				closed: { x: "-100%" }
 			}}
-			transition={{ease: "easeInOut", duration: 0.4}}
+			transition={{ ease: "easeInOut", duration: 0.4 }}
 			id="mobileMenu"
 		>
-			<Link href="/products" onClick={toggleSetMobileMenuOpen}> PRODUCTS </Link>
+			<LinkBoxes onclick={toggleMobileMenuOpen}/>
 			<Link href="/services" onClick={toggleSetMobileMenuOpen}> SERVICES </Link>
 		</motion.div>
 	</nav>

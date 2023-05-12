@@ -1,16 +1,16 @@
 import { createSlice } from '@reduxjs/toolkit';
-import customer from 'types/customer';
+import CustomerInterface from 'types/customer';
 
 const persistCustomerSlice = createSlice({
 	name: 'persistCustomer',
-	initialState: {} as customer,
+	initialState: {} as CustomerInterface,
 	reducers: {
 		setPersistCustomer: (state, action)=>{
 			const newCustomer = action.payload
 			return newCustomer
 		},
 		removePersistCustomer: ()=>{
-			return {} as customer
+			return {} as CustomerInterface
 		}
 	},
 });

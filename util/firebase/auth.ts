@@ -1,3 +1,3 @@
 import { getAuth } from "firebase/auth";
-import app from "./index"
-export default getAuth(app)
+import { app } from "./index"
+export const auth = getAuth(app)

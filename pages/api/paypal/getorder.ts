@@ -1,5 +1,5 @@
 import { generateAccessToken } from 'util/paypal/auth'
-import customer from 'types/customer';
+import CustomerInterface from 'types/customer';
 import { PaypalOrder } from './types';
 
 const provinceConvert = {
@@ -40,5 +40,5 @@ export default async (orderID: string)=>{
 			paypalEmail: data.payer.email_address,
 			token: orderID
 		}
-	} as customer
+	} as CustomerInterface
 }

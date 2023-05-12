@@ -1,6 +1,6 @@
 type cm = number
 type kg = number
-export default interface product{
+export default interface ProductInterface{
 	productName: string,
 	quantity: number,
 	price: number,
