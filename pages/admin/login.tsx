@@ -16,7 +16,7 @@ const AdminLogin = () => {
 	const [logInLoading, setLogInLoading] = useState(false)
 	useEffect(() => {
 		onAuthStateChanged(auth, authUser => {
-			if (authUser) router.push('/admin')
+			if (authUser) router.push('/admin', undefined, { shallow: true })
 			else setLoading(false)
 		})
 	}, [])
@@ -52,7 +52,7 @@ const AdminLogin = () => {
 				<input type="password" className="border-2 p-2 w-64" id="password" name="password" required placeholder="Password"/>
 				<button type="submit" className="border-2 p-2 flex justify-center" disabled={logInLoading}>
 					{logInLoading
-						? <Oval />
+						? <Oval height={18} strokeWidth={9} color="black" secondaryColor="black" />
 						: <p>login</p>
 					}
 				</button>

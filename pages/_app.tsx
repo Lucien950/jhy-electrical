@@ -24,13 +24,21 @@ import { db } from "util/firebase/firestore"
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
+	const [isInitial, setIsInitial] = useState(true)
 	useEffect(() => {
 		console.log("Firebase Subscribe")
-		const unsub = onSnapshot(collection(db, "products"), () => {
-			getProductsByIDs(cart.map(p => p.PID))
-				.then(requiredProducts => {
-					dispatch(cartFillProducts(requiredProducts))
-				})
+		const unsub = onSnapshot(collection(db, "products"), async (snapshot) => {
+			const cartIds = cart.map(p => p.PID)
+
+			const changedDocs = snapshot.docChanges().filter(d => {
+				if (isInitial) {
+					setIsInitial(false)
+					return true
+				}
+				return d.type != "added"
+			}).map(doc => doc.doc)
+			const requiredProducts = await Promise.all(changedDocs.filter	(doc => cartIds.includes(doc.id)).map(fillProductDoc))
+			dispatch(cartFillProducts(requiredProducts))
 		})
 		return unsub
 	}, [])
@@ -51,24 +59,24 @@ export default function App({ Component, pageProps }: AppProps) {
 	const { pathname } = useRouter();
 
 	return (
-		<Provider store={store}>
-		<PersistGate persistor={persistor}>
-		<CartUpdater />
-		<NavBar />
-		<AnimatePresence
-			initial={false}
-			mode = "wait"
+	<Provider store={store}>
+	<PersistGate persistor={persistor}>
+	<CartUpdater />
+	<NavBar />
+	<AnimatePresence
+		initial={false}
+		mode = "wait"
+	>
+		<motion.div
+			variants={variants}
+			animate="in"
+			initial="out"
+			exit="out"
+			key={pathname}
 		>
-			<motion.div
-				variants={variants}
-				animate="in"
-				initial="out"
-				exit="out"
-				key={pathname}
-			>
-				<Component {...pageProps} />
-			</motion.div>
-		</AnimatePresence>
-		</PersistGate>
-		</Provider>
+			<Component {...pageProps} />
+		</motion.div>
+	</AnimatePresence>
+	</PersistGate>
+	</Provider>
 )}

@@ -11,6 +11,9 @@ import { MouseEventHandler, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
 
+import { logEvent } from "firebase/analytics";
+import { analytics } from "util/firebase/analytics";
+
 const AddCartButton = ({ product, quantity }: {product: productType, quantity: number})=>{
 	// HANDLE CART
 	const dispatch = useDispatch()
@@ -21,11 +24,13 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 
 	// ANIMATE + HANDLE CART
 	const handleCartButtonClick = ()=>{
-		if (product.quantity > 0) {
-			dispatch(addToCart({ PID: product.firestoreID, product, quantity }))
-		} else {
+		if (product.quantity <= 0) {
 			console.error("No more stock")
+			return
 		}
+
+		dispatch(addToCart({ PID: product.firestoreID, product, quantity }))
+		logEvent(analytics(), "add_to_cart", { PID: product.firestoreID })
 		setAnimating(true)
 		setTimeout(()=>{
 			setAnimating(false)

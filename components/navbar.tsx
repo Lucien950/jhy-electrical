@@ -10,13 +10,15 @@ import LinkBoxes from "components/linkBoxes"
 
 import { productInfo } from "types/order";
 import { removeFromCart } from "util/redux/cart.slice";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "util/firebase/analytics";
 
 const Cart = (props: any) => {
-const {dim, ...rest} = props
-return(
-	<svg {...rest} style={{width: `${dim}rem`, height: `${dim}rem`}} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-		<path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
-	</svg>
+	const {dim, ...rest} = props
+	return(
+		<svg {...rest} style={{width: `${dim}rem`, height: `${dim}rem`}} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+			<path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
+		</svg>
 	)
 }
 
@@ -42,7 +44,6 @@ const HamButton = ({isOpen, className, onClick, id}: HamButtonProps)=>{
 	// line properties
 	const strokeWidth = 3;
 	const lineProps = {
-		stroke: "black",
 		strokeWidth: strokeWidth as number,
 		initial: "closed",
 		animate: variant,
@@ -88,9 +89,13 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 		dispatch(removeFromCart(productInfo))
 	}
 
+	useEffect(()=>{
+		logEvent(analytics(), "view_item_list")
+	}, [])
+
 	return(
 		<motion.div
-			className="absolute right-0 top-[130%] bg-white min-h-[8rem] min-w-[22rem] rounded-md text-black drop-shadow-md overflow-hidden"
+			className="absolute right-0 top-[130%] bg-white min-h-[8rem] min-w-[22rem] rounded-md text-black drop-shadow-md overflow-hidden select-text"
 			style={{ backdropFilter: "blur(1rem)" }}
 			initial="closed"
 			animate="opened"
@@ -116,7 +121,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 							{cart.map(p =>
 								<div className="flex flex-row items-center p-4 justify-between" key={p.PID}>
 									<div className="flex flex-row items-center gap-x-4">
-										<img src={p.product?.productImageURL} className="h-10" alt="Product Image" />
+										<img src={p.product?.productImageURL} className="h-10 select-none" alt="Product Image" />
 										<p>{p.product?.productName}</p>
 									</div>
 									<div>
@@ -132,7 +137,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 									</div>
 								</div>
 							)}
-							<div className="flex flex-row w-full justify-around bg-slate-100 p-4">
+							<div className="flex flex-row w-full justify-around bg-slate-100 p-4 select-none">
 								<Link href="/cart" onClick={closeCart}>
 								<button className="p-3 px-10 rounded-sm border-2 border-white bg-black font-medium text-white hover:scale-[102%] transition-transform">
 									Open Cart
@@ -153,44 +158,33 @@ const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=
 	)
 }
 
+const useMenu: (menuIds: string[]) => [boolean, (() => void)] = (menuIds)=>{
+	const [menuOpen, setMenuOpen] = useState(false)
+	const suppress = (e: MouseEvent)=>{
+		const menuElements = menuIds.map(s => document.getElementById(s))
+		const clickingMenuElements = menuElements.some(el => el && el.contains(e.target as HTMLElement))
+		if (!clickingMenuElements) setMenuOpen(false)
+	}
+	useEffect(()=>{
+		window.addEventListener("click", suppress)
+		return ()=>{ window.removeEventListener("click", suppress) }
+	}, [])
+
+	const toggleMenuOpen = () => setMenuOpen(e => !e)
+	return [ menuOpen, toggleMenuOpen ]
+}
+
 const NavBar = () => {
 	const router = useRouter();
 	
 	const { scrollY } = useScroll();
 	const whiteBG = useRef(null)
 	
-	const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-	const [isCartOpen, setCartOpen] = useState(false)
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
 
-	// Close CartDropdown if clicking anywhere other than itself
-	const handleCartDropdown = (e: MouseEvent) => {
-		// @ts-ignore
-		const isCartElement = document.getElementById("cartDropDown")?.contains(e.target) || document.getElementById("cartButton")?.contains(e.target)
-		if (isCartElement) return
-		if(isCartOpen) setCartOpen(false)
-	}
-	useEffect(()=>{
-		window.addEventListener("click", handleCartDropdown)
-		
-		return ()=>{
-			window.removeEventListener("click", handleCartDropdown)
-		}
-	}, [isCartOpen])
-
-	const handleMobileMenu = (e: MouseEvent)=>{
-		// @ts-ignore
-		const isMobileMenuElement = document.getElementById("mobileMenu")?.contains(e.target) || document.getElementById("mobileMenuButton")?.contains(e.target)
-		if (isMobileMenuElement) return
-		if (isMobileMenuOpen) setMobileMenuOpen(false)
-	}
-	useEffect(()=>{
-		window.addEventListener("click", handleMobileMenu)
-
-		return () => {
-			window.removeEventListener("click", handleMobileMenu)
-		}
-	}, [isMobileMenuOpen])
+	// cart and mobile menus
+	const [isMobileMenuOpen, toggleMobileMenuOpen] = useMenu(["mobileMenu", "mobileMenuButton"]);
+	const [isCartOpen, toggleCartOpen] = useMenu(["cartDropDown", "cartButton"])
 
 
 	useEffect(()=>{
@@ -206,23 +200,23 @@ const NavBar = () => {
 	}, [])
 
 
-	const toggleSetMobileMenuOpen = ()=>setMobileMenuOpen(e => !e)
-
+	const whiteNavs = ["/", "/order/[pid]", "/products", "/services"]
+	const noNavbar = ["/checkout", "/admin"]
 	return (
 	<>
 	{/* top row */}
 	<nav
 		className={`fixed top-0 left-0 w-full z-20 select-none
 			will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 delay-[0s,0s,0.7s,0s]
-			${["/", "/order/[pid]"].includes(router.pathname) && "text-white"}
-			${router.pathname == "/checkout" && "translate-y-[-100%] !delay-[0s]"}
+			${whiteNavs.includes(router.pathname) && "text-white"}
+			${noNavbar.includes(router.pathname) && "translate-y-[-100%] !delay-[0s]"}
 		`}
 		ref={whiteBG}
 	>
-		<div className="flex flex-row items-center place-content-between p-2">
+		<div className="flex flex-row items-center place-content-between p-2 md:px-6">
 			{/* HAM BUTTON + IMAGE */}
 			<div className="flex flex-row gap-x-2 z-30">
-				<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleSetMobileMenuOpen} id="mobileMenuButton" />
+				<HamButton isOpen={isMobileMenuOpen} className="md:hidden block" onClick={toggleMobileMenuOpen} id="mobileMenuButton" />
 				<Link href="/" className="select-none">
 					<img src="/logo.svg" alt="JHY Electrical Logo" className="h-12 pointer-events-none"/>
 				</Link>
@@ -240,7 +234,11 @@ const NavBar = () => {
 
 			{/* CART */}
 			<div className="relative w-[74.63px]">
-				<Cart dim={2.5} onClick={() => setCartOpen(e => !e)} className="hover:cursor-pointer float-right" id="cartButton"/>
+				<Cart
+					dim={2.5} tabIndex={0}
+					onClick={toggleCartOpen}
+					className="hover:cursor-pointer float-right outline-none focus:fill-blue-500 focus:drop-shadow-lg" id="cartButton"
+				/>
 				{/* BUTTON */}
 				<AnimatePresence>
 					{
@@ -266,7 +264,7 @@ const NavBar = () => {
 				<AnimatePresence>
 					{
 						isCartOpen &&
-						<CartDropdown cart={cart} closeCart={()=>setCartOpen(false)}/>
+						<CartDropdown cart={cart} closeCart={toggleCartOpen}/>
 					}
 				</AnimatePresence>
 			</div>
@@ -275,13 +273,10 @@ const NavBar = () => {
 		{/* side */}
 		<motion.div
 			className="
-				fixed z-20 top-0 left-0
+			fixed z-20 top-0 left-0
 			h-screen max-w-[32rem] w-full pt-36
 			bg-white bg-opacity-20 gap-y-4 md:hidden"
 			style={{ backdropFilter: "blur(16px)" }}
-				flex flex-col gap-y-4
-				text-3xl font-bold"
-			style={{backdropFilter: "blur(16px)"}}
 			animate={isMobileMenuOpen ? "opened" : "closed"}
 			initial="closed"
 			variants={{
@@ -292,7 +287,6 @@ const NavBar = () => {
 			id="mobileMenu"
 		>
 			<LinkBoxes onclick={toggleMobileMenuOpen}/>
-			<Link href="/services" onClick={toggleSetMobileMenuOpen}> SERVICES </Link>
 		</motion.div>
 	</nav>
 	</>

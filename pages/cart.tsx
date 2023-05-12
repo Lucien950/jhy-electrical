@@ -10,13 +10,12 @@ import { productInfo } from "types/order";
 // ui
 import Price from "components/price";
 import { PaypalSVG } from "components/paypalSVG";
-import { getUserPostcode } from "util/postalCode";
-import { calculateShipping } from "util/calculateShipping";
 import Tippy from "@tippyjs/react";
-import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { Oval } from "react-loader-spinner";
 import { createOrder } from "util/paypal/createOrder";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "util/firebase/analytics";
 
 const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 	const product = productInfo.product
@@ -84,7 +83,6 @@ export default function Cart() {
 	const cart = useSelector((state: { cart: productInfo[] })=>state.cart) as productInfo[]
 
 	const [shippingCost, setShippingCost] = useState(-1)
-	const [productShippingCosts, setProductShippingCosts] = useState({} as {[key: string]: number})
 	const [subTotal, setSubTotal] = useState(-1)
 	const [total, setTotal] = useState(-1)
 	const [tax, setTax] = useState(0.13)
@@ -96,23 +94,8 @@ export default function Cart() {
 		if (router.query) {
 			router.push("/cart", undefined, { shallow: true })
 		}
-		getUserPostcode()
-			.then(postalCode => {
-				if(!postalCode) throw "No Postal Code"
-				return calculateShipping(cart, postalCode)
-			})
-			.then(res =>{
-				setProductShippingCosts(res)
-			})
-			.catch(e=>{
-				console.error(e)
-			})
+		logEvent(analytics(), "view_cart")
 	}, [])
-
-	// set shipping costs
-	useEffect(()=>{
-		setShippingCost(cart.reduce((a, p)=>a + productShippingCosts[p.PID] * p.quantity, 0))
-	}, [productShippingCosts, cart])
 	// set subtotal
 	useEffect(()=>{
 		setSubTotal(cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0))
@@ -143,7 +126,7 @@ export default function Cart() {
 		<Head>
 			<title>Cart | JHY Electrical</title>
 		</Head>
-		<div className="pt-24 pb-10 2xl:px-64 min-h-screen container mx-auto">
+		<div className="pt-32 pb-10 2xl:px-36 min-h-screen container mx-auto">
 			<h1 className="text-6xl font-bold mb-4">Shopping Cart</h1>
 			<div className="gap-x-4 flex flex-col md:flex-row gap-y-4 container mx-auto relative">
 				{/* CART */}
@@ -171,31 +154,13 @@ export default function Cart() {
 				cart.length > 0 &&
 				<div className="w-full md:flex-[1] sticky top-[5rem] self-start">
 					{/* blackbox */}
-					<div className="p-6 bg-black text-white">
+					<div className="p-6 bg-slate-800 text-white">
 						<h1 className="text-3xl font-bold">Your Cart</h1>
 						<hr className="my-4"/>
 
 						<div className="flex flex-row mb-4">
 							<p className="flex-1"> Subtotal </p>
 							<Price price={subTotal} className="place-self-end"/>
-						</div>
-						<div className="flex flex-row mb-4">
-							<p className="flex flex-row items-center gap-x-2 flex-1">
-								<span>
-									Estimated Shipping
-								</span>
-								<Tippy content={"Shipping cost is estimated based on your current position. If you are shipping elsewhere, this value will be inaccurate"} delay={50}>
-									<svg className="h-5 w-5 focus:outline-none hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-										<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-									</svg>
-								</Tippy>
-							</p>
-							{
-								shippingCost ? 
-								<Price price={shippingCost} className="place-self-end" />
-								:
-								CostLoader
-							}
 						</div>
 						<div className="flex flex-row mb-4">
 								<p className="flex flex-row items-center gap-x-2 flex-1">
@@ -213,7 +178,7 @@ export default function Cart() {
 								CostLoader
 							}
 						</div>
-						<div className="flex flex-row mb-8">
+						<div className="flex flex-row mb-4">
 							<p className="flex-1">Total</p>
 							{
 								total ?
@@ -223,11 +188,13 @@ export default function Cart() {
 							}
 						</div>
 
+						<p className="text-sm mb-6">*Note that this calculation <strong>DOES NOT</strong> take into account shipping fees</p>
+
 						<div className="text-black">
 							{/* paypal */}
 							<button className="text-lg p-3 w-full h-[50px] bg-white grid place-items-center relative group" onClick={paypalCheckout} disabled={!total}>
-								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} wrapperClass={`mr-2 opacity-0 transition-[opacity] ${paypalLoading && "opacity-1"}`} color="#28a9fa" secondaryColor="#28a9fa" />
-								<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${paypalLoading && "translate-x-[20px] !delay-[0s]"}`}>
+								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${paypalLoading && "opacity-100"} justify-self-start`} color="#28a9fa" secondaryColor="#28a9fa" />
+								<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${paypalLoading && "translate-x-[14px] !delay-[0s]"}`}>
 									<PaypalSVG className="h-4 translate-y-[2px]"/>
 									<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
 								</div>
@@ -242,7 +209,7 @@ export default function Cart() {
 					</div>
 
 					<p className="mt-4 text-gray-600 text-sm">
-						TEMPORARY, AND NOT REFLECTIVE OF COMPANY POLICY <br />
+						**TEMPORARY, AND NOT REFLECTIVE OF COMPANY POLICY <br />
 						30 days withdrawal and free returns. Read more about Return and Refund. <br />
 						Prices and shipping costs are not confirmed until you&apos;ve reached the checkout <br />
 						The items in your shopping bad are saved for 8 days on this computer. We cannot guarantee availability
