@@ -4,7 +4,9 @@
 		{
 			"type": "npm",
 			"script": "dev",
-			"problemMatcher": [],
+			"problemMatcher": [
+				"$tsc"
+			],
 			"label": "Dev Server",
 			"detail": "next dev"
 		},
