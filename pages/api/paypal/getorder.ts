@@ -1,6 +1,6 @@
 import { generateAccessToken } from 'util/paypal/auth'
 import CustomerInterface from 'types/customer';
-import { PaypalOrder } from './types';
+import { PaypalOrder } from 'types/paypalTypes';
 
 const provinceConvert = {
 	"AB": "Alberta",

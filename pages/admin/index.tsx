@@ -2,24 +2,22 @@
 import { useRouter } from 'next/router'
 import { RefObject, useEffect, useRef, useState } from 'react';
 import Head from 'next/head';
-
 // firebase
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
-import { doc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, orderBy, query, doc, getDoc } from "firebase/firestore";
 import { auth } from "util/firebase/auth"
 import { db } from 'util/firebase/firestore';
-
+import { fillOrder } from "util/orderUtil"
 // types
 import ProductInterface from 'types/product';
-
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
-import { ProductsComponent, ProductModal } from '../../components/admin/ProductsComponents';
-import { OrdersComponent } from '../../components/admin/OrdersComponent';
-import { AnimatePresence } from 'framer-motion';
+import { ProductsComponent, ProductModal } from 'components/admin/ProductsComponents';
+import { OrdersComponent } from 'components/admin/OrdersComponent';
 import { AdminInterface } from 'types/admin';
 import AnalyticsComponent from 'components/admin/AnalyticsComponent';
 import Link from 'next/link';
+import { OrderInterface } from 'types/order';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics",
@@ -56,6 +54,7 @@ const Admin = () => {
 	// auth
 	const [loading, setLoading] = useState(true)
 	const [admin, setAdmin] = useState<AdminInterface>({} as AdminInterface);
+	const signout = () => { signOut(auth).catch((error) => { console.error("Sign out error: ", error); }); }
 
 	// push back to login page, or start admin login
 	useEffect(()=>{
@@ -76,7 +75,6 @@ const Admin = () => {
 		setLoading(false)
 	}
 
-	const signout = ()=>{ signOut(auth).catch((error) => { console.error("Sign out error: ", error); }); }
 
 	// edit product modal
 	const [editProduct, setEditProduct] = useState<ProductInterface>({} as ProductInterface)
@@ -97,6 +95,18 @@ const Admin = () => {
 	const analytics = useRef<HTMLDivElement>(null)
 	const orders = useRef<HTMLDivElement>(null)
 	const products = useRef<HTMLDivElement>(null)
+
+	// Orders
+	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
+	useEffect(() => {
+		const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("completed", "asc") , orderBy("dateTS", "desc"), orderBy("__name__", "asc")), (querySnapshot) => {
+			console.log('%c Firebase ',
+				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
+				'Admin Orders Listing Snapshot Updated');
+			Promise.all(querySnapshot.docs.map(fillOrder)).then(newOrders => setAllOrders(newOrders))
+		})
+		return () => unsubOrders();
+	}, [])
 
 	if (loading) return <LoadingFullPage />
 	return (
@@ -143,11 +153,11 @@ const Admin = () => {
 			<div className="flex-[8] min-h-screen pl-4 pt-8 p-2 pb-10">
 				{/* analytics */}
 				<h1 className="text-4xl font-bold mb-4" id="analytics" ref={analytics}>Analytics</h1>
-				<AnalyticsComponent />
+				<AnalyticsComponent allOrders={allOrders}/>
 
 				{/* orders */}
 				<h1 className="text-4xl font-bold mb-4 mt-7" id="orders" ref={orders}>Orders</h1>
-				<OrdersComponent />
+				<OrdersComponent allOrders={allOrders}/>
 				
 				{/* products */}
 				<h1 className="text-4xl font-bold mb-4 mt-7" id="products" ref={products}>Products</h1>

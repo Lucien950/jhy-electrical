@@ -1,5 +1,5 @@
 import { GetServerSideProps } from 'next'
-import { getProductByID } from 'util/fillProduct'
+import { getProductByID } from 'util/productUtil'
 import productType from 'types/product'
 import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
 

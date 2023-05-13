@@ -14,7 +14,7 @@ import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 const persistor = persistStore(store);
 // firebase
-import { fillProductDoc } from "util/fillProduct";
+import { fillProductDoc } from "util/productUtil";
 import { cartFillProducts } from "util/redux/cart.slice";
 import { productInfo } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
@@ -24,19 +24,13 @@ import { db } from "util/firebase/firestore"
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
-	const [isInitial, setIsInitial] = useState(true)
 	useEffect(() => {
-		console.log("Firebase Subscribe")
 		const unsub = onSnapshot(collection(db, "products"), async (snapshot) => {
+			console.log('%c Firebase ',
+				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
+				'Cart Snapshot Updated');
 			const cartIds = cart.map(p => p.PID)
-
-			const changedDocs = snapshot.docChanges().filter(d => {
-				if (isInitial) {
-					setIsInitial(false)
-					return true
-				}
-				return d.type != "added"
-			}).map(doc => doc.doc)
+			const changedDocs = snapshot.docChanges().map(doc => doc.doc)
 			const requiredProducts = await Promise.all(changedDocs.filter	(doc => cartIds.includes(doc.id)).map(fillProductDoc))
 			dispatch(cartFillProducts(requiredProducts))
 		})
@@ -46,17 +40,10 @@ const CartUpdater = ()=>{
 }
 
 export default function App({ Component, pageProps }: AppProps) {
-	const variants = {
-		out: {
-			opacity: 0,
-			transition: { duration: 0.3 }
-		},
-		in: {
-			opacity: 1,
-			transition: { duration: 0.3 }
-		}
-	}
 	const { pathname } = useRouter();
+
+	const variants = { out: { opacity: 0, }, in: { opacity: 1, } }
+	const transition = { duration: 0.3 }
 
 	return (
 	<Provider store={store}>
@@ -69,6 +56,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	>
 		<motion.div
 			variants={variants}
+			transition={transition}
 			animate="in"
 			initial="out"
 			exit="out"

@@ -4,7 +4,7 @@ import { GetServerSideProps } from "next";
 import { FirestoreOrderInterface, OrderInterface } from "types/order";
 import Price from "components/price";
 import Link from "next/link";
-import { getProductByID } from "util/fillProduct";
+import { getProductByID } from "util/productUtil";
 import seedRandom from "seedrandom";
 import Head from "next/head";
 

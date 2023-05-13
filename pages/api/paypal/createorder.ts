@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { PayPalCreateOrder } from './types';
+import { PayPalCreateOrder } from 'types/paypalTypes';
 import { generateAccessToken } from 'util/paypal/auth';
-import baseURL from './baseURL';
+import baseURL from 'util/paypal/baseURL';
 
 const createOrder = async (access_token: string, amount: string, returnURL: string)=>{
 	const orderInformation = {

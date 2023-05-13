@@ -33,6 +33,12 @@ const ReviewView = ({ customerInformation, paymentInformation, submitOrderLoadin
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
 		setSubmitOrderLoading(true)
 
+		if(!(paymentInformation.shipping && paymentInformation.subtotal && paymentInformation.tax && paymentInformation.total)){
+			setSubmitOrderLoading(false)
+			console.error("Payment Information is not Complete")
+			return
+		}
+
 		const newOrder = {
 			products: cart,
 			orderPrice: paymentInformation,

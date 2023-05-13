@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import Price from "components/price";
 
 // get products
-import { getAllProducts } from "util/fillProduct";
+import { getAllProducts } from "util/productUtil";
 import { JsxElement } from "typescript";
 
 const ProductItem = ({ product }: {product: productType})=>{

@@ -1,39 +1,50 @@
+// react
+import { ChangeEvent, DragEventHandler, FormEvent, Fragment, useEffect, useState } from "react";
+// firebase
 import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
 import { ref, uploadBytes, deleteObject } from "firebase/storage";
-import { AnimatePresence, Variants, motion } from "framer-motion";
-import { ChangeEvent, FormEvent, Fragment, useEffect, useState } from "react";
-import { Oval } from "react-loader-spinner";
-import ProductInterface from 'types/product';
-import { fillProductDoc } from "util/fillProduct";
 import { db } from 'util/firebase/firestore';
 import { storage } from "util/firebase/storage"
-import { Dialog, Transition } from '@headlessui/react'
+// utils
+import { fillProductDoc } from "util/productUtil";
 import { toSentenceCase } from "util/stringManipulation";
+import ProductInterface from 'types/product';
+// UIs
+import { AnimatePresence, motion } from "framer-motion";
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
+import { Dialog, Transition } from '@headlessui/react'
+import { Oval } from "react-loader-spinner";
 
-const InputField = (
-	{ label, defaultValue, numberValue = false, className, productKey, unit, handleChange }:
-		{ label: string, defaultValue: string | number, numberValue?: boolean, className?: string, productKey: string, unit?: string, handleChange: (e: ChangeEvent<HTMLInputElement>)=>void }
-) => {
+type InputFieldPropType = {
+	label: string,
+	defaultValue: string | number,
+	numberValue?: boolean,
+	className?: string,
+	productKey: string,
+	unit?: string,
+	handleChange: (e: ChangeEvent<HTMLInputElement>) => void
+}
+const InputField = ( { label, defaultValue, numberValue = false, className, productKey, unit, handleChange }: InputFieldPropType ) => {
 	if (typeof defaultValue == "number" && defaultValue == -1) defaultValue = ""
 	return (
 		<div>
-			<label className="block font-semibold" htmlFor={productKey}>{label}</label>
+			<label className="block font-semibold text-sm" htmlFor={productKey}>{label}</label>
 			<div className="relative">
-				<input className={`block border-2 border-zinc-300 rounded-md p-1 focus:outline-none focus:ring-2 w-full text-lg ${className ?? className}`}
+				<input className={`block border-2 border-zinc-400 rounded-md p-1 focus:outline-none focus:ring-2 w-full text-lg ${className ?? className}`}
 					onChange={handleChange} data-numbervalue={numberValue} type="text" id={productKey} defaultValue={defaultValue} />
-				<span className="absolute right-2 top-[50%] translate-y-[-50%] text-zinc-500 pointer-events-none	">{unit}</span>
+				<span className="absolute right-2 top-[50%] translate-y-[-50%] text-zinc-500 pointer-events-none text-sm">{unit}</span>
 			</div>
 		</div>
 	)
 }
 
-export const ProductModal = ({ open, product, mode, closeModal }: { open: boolean, product: ProductInterface, mode: string, closeModal: ()=>void}) => {
+type ProductModalProp = { open: boolean, product: ProductInterface, mode: string, closeModal: () => void }
+export const ProductModal = ({ open, product, mode, closeModal }: ProductModalProp) => {
 	const [uploading, setUploading] = useState(false)
 	const [addProduct, setAddProduct] = useState({} as ProductInterface)
+	const [changedImage, setChangedImage] = useState(false)
 
 	useEffect(()=>{
-		console.log("change add product")
 		if(Object.keys(product).length > 0) {
 			setUploading(false)
 			setAddProduct(product)
@@ -170,6 +181,48 @@ export const ProductModal = ({ open, product, mode, closeModal }: { open: boolea
 		closeModal()
 	}
 
+	const [fileActive, setFileActive] = useState(false)
+	const stopProp: DragEventHandler<HTMLDivElement> = (e)=>{
+		e.preventDefault()
+		e.stopPropagation()
+	}
+	const dropListener: DragEventHandler<HTMLDivElement> = (e) => {
+		stopProp(e)
+
+		const dataFiles = e.dataTransfer.files
+		if (dataFiles.length > 1 || dataFiles.length <= 0){
+			console.error("Too many files")
+			return
+		}
+		const dataFile = dataFiles[0]
+		if (!["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"].includes(dataFile.type)){
+			console.error("Wrong file type")
+			return
+		}
+
+		const imageFile = dataFile
+		const imageURL = URL.createObjectURL(imageFile)
+		setAddProduct(op=>{return {
+			...op,
+			productImageURL: imageURL,
+			productImageFile: imageFile
+		}})
+		setChangedImage(true)
+		setFileActive(false)
+	}
+	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => {
+		stopProp(e)
+
+		console.log("drag enter")
+		setFileActive(true)
+	}
+	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => {
+		stopProp(e)
+
+		setFileActive(false)
+		console.log("drag leave")
+	}
+
 	return (
 		<Transition show={open} as={Fragment}>
 			<Dialog onClose={closeModal}>
@@ -202,10 +255,10 @@ export const ProductModal = ({ open, product, mode, closeModal }: { open: boolea
 					leaveTo="opacity-0 translate-y-6"
 				>
 					<div className="fixed inset-0 flex items-center justify-center p-4">
-						<form className="bg-white z-20 max-h-[90vh] overflow-scroll rounded-xl" onSubmit={addProductSubmit}>
+						<form className="bg-white z-20 max-h-[90vh] overflow-scroll rounded-xl w-[37rem]" onSubmit={addProductSubmit}>
 							<Dialog.Panel>
-								<div className="sticky top-0">
-									<div className="flex flex-row p-8 pb-2 justify-between">
+								<div className="sticky top-0 bg-white">
+									<div className="flex flex-row p-8 px-12 pb-2 justify-between">
 										<Dialog.Title className="text-3xl font-bold">{toSentenceCase(mode)} Product</Dialog.Title>
 										{/* x button */}
 										<svg onClick={closeModal} tabIndex={0} className="w-8 h-8 hover:cursor-pointer focus:outline-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -216,45 +269,55 @@ export const ProductModal = ({ open, product, mode, closeModal }: { open: boolea
 								</div>
 
 								{/* grid */}
-								<div className="grid grid-cols-2 gap-x-2 gap-y-3 p-8">
+								<div className="grid grid-cols-2 gap-x-2 gap-y-4 p-8 px-12">
 									{/* images */}
-									<div className="border-2 border-zinc-400 rounded-xl border-dashed flex flex-col justify-center items-center col-span-2 p-10">
+									<div
+										onDrop={dropListener} onDragEnter={dragEnter} onDragLeave={dragLeave} onDragOver={stopProp}
+										className={`border-2 border-zinc-400 ${fileActive ? "!border-blue-500" : ""}
+										rounded-xl border-dashed flex flex-col justify-center items-center col-span-2 p-10 py-4`}
+									>
 										{
 											addProduct.productImageURL &&
 											<img id="outImage" src={addProduct.productImageURL} alt="Product Image" className="mb-4 w-16" />
 										}
-										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+										
+										<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+											className="w-6 h-6">
 											<path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
 										</svg>
 										<input className="hidden" onChange={addProductChange} type="file" id="productImageFile" accept='image/jpeg, image/png' />
 										<p>
 											Drag & Drop or
-											<label htmlFor="productImageFile" className="hover:cursor-pointer text-blue-600 hover:underline focus:outline-2 outline-blue-500 outline-offset-2" tabIndex={0}> Choose File </label>
+											<label
+												htmlFor="productImageFile"
+												className="hover:cursor-pointer text-blue-600 hover:underline focus:outline-2 outline-blue-500 outline-offset-2"
+												tabIndex={0}> Choose File </label>
 											to upload
 										</p>
 									</div>
 
 									<div className="col-span-2">
-										<InputField handleChange={addProductChange} label="Product Name" productKey="productName" defaultValue={addProduct.productName}/>
+										<InputField handleChange={addProductChange} label="Product Name"
+											productKey="productName" defaultValue={addProduct.productName}/>
 									</div>
 
 									<div className="flex flex-row gap-x-2 col-span-2 text-lg">
 										<label
-											className={`block select-none hover:cursor-pointer p-2 px-4 border-2 border-zinc-300 rounded-lg outline-none focus:ring-2 ${addProduct.residential && "text-white bg-blue-600"}`}
+											className={`block select-none text-sm transition-colors hover:cursor-pointer p-1 px-4 border-2 border-zinc-400 rounded-xl outline-none focus:ring-2 ${addProduct.residential && "text-white bg-blue-600 border-blue-700"}`}
 											tabIndex={0} htmlFor="residential"
 										>	
 											Residential
 											<input className="hidden" onChange={addProductChange} type="checkbox" name="" id="residential" defaultChecked={addProduct.residential} />
 										</label>
 										<label
-											className={`block select-none hover:cursor-pointer p-2 px-4 border-2 border-zinc-300 rounded-lg outline-none focus:ring-2 ${addProduct.commercial && "text-white bg-blue-600"}`}
+											className={`block select-none text-sm transition-colors hover:cursor-pointer p-1 px-4 border-2 border-zinc-400 rounded-xl outline-none focus:ring-2 ${addProduct.commercial && "text-white bg-blue-600 border-blue-700"}`}
 											tabIndex={0} htmlFor="commercial"
 										>
 											Commercial
 											<input className="hidden" onChange={addProductChange} type="checkbox" name="" id="commercial" defaultChecked={addProduct.commercial} />
 										</label>
 										<label
-											className={`block select-none hover:cursor-pointer p-2 px-4 border-2 border-zinc-300 rounded-lg outline-none focus:ring-2 ${addProduct.industrial && "text-white bg-blue-600"}`}
+											className={`block select-none text-sm transition-colors hover:cursor-pointer p-1 px-4 border-2 border-zinc-400 rounded-xl outline-none focus:ring-2 ${addProduct.industrial && "text-white bg-blue-600 border-blue-700"}`}
 											tabIndex={0} htmlFor="industrial"
 										>
 											Industrial
@@ -262,28 +325,41 @@ export const ProductModal = ({ open, product, mode, closeModal }: { open: boolea
 										</label>
 									</div>
 
-									<InputField handleChange={addProductChange} label="Quantity" productKey="quantity" defaultValue={addProduct.quantity} numberValue={true} />
-									<InputField handleChange={addProductChange} label="Price" productKey="price" defaultValue={addProduct.price} numberValue={true} unit="$CAD" />
+									<InputField handleChange={addProductChange} label="Quantity"
+										productKey="quantity" defaultValue={addProduct.quantity} numberValue={true} />
+									<InputField handleChange={addProductChange} label="Price" unit="$CAD"
+										productKey="price" defaultValue={addProduct.price} numberValue={true}/>
 
-									<InputField handleChange={addProductChange} label="Weight" unit="kg" productKey="weight" defaultValue={addProduct.weight} numberValue={true} />
-									<div className="flex flex-row gap-x-2">
-										<InputField handleChange={addProductChange} label="Width" unit="cm" productKey="width" defaultValue={addProduct.width} numberValue={true} className="!w-16" />
-										<InputField handleChange={addProductChange} label="Height" unit="cm" productKey="height" defaultValue={addProduct.height} numberValue={true} className="!w-16" />
-										<InputField handleChange={addProductChange} label="Length" unit="cm" productKey="length" defaultValue={addProduct.length} numberValue={true} className="!w-16" />
+									<InputField handleChange={addProductChange} label="Weight" unit="kg"
+										productKey="weight" defaultValue={addProduct.weight} numberValue={true} />
+									
+									<div className="flex flex-row gap-x-2 justify-around">
+										<InputField handleChange={addProductChange} label="Width" unit="cm" productKey="width"
+											defaultValue={addProduct.width} numberValue={true} className="!w-16" />
+										<InputField handleChange={addProductChange} label="Height" unit="cm" productKey="height"
+											defaultValue={addProduct.height} numberValue={true} className="!w-16" />
+										<InputField handleChange={addProductChange} label="Length" unit="cm" productKey="length"
+											defaultValue={addProduct.length} numberValue={true} className="!w-16" />
 									</div>
 
 									<div className="col-span-2">
-										<label className="block" htmlFor="description">Description</label>
-										<textarea className="block border-2 border-zinc-300 w-full max-h-32 rounded-md py-1 px-2 outline-none focus:ring-2 text-lg" onChange={addProductChangeTA} name="description" id="description" defaultValue={addProduct.description} />
+										<label className="block text-sm" htmlFor="description">Description</label>
+										<textarea
+											className="block border-2 border-zinc-400 w-full max-h-32 rounded-md py-1 px-2 outline-none focus:ring-2 text-lg"
+											onChange={addProductChangeTA} name="description" id="description" defaultValue={addProduct.description}
+										/>
 									</div>
 
-									<div className="col-span-2 grid grid-cols-2 gap-x-2">
-										<button className="py-2 rounded-lg outline-none focus:ring-2 text-lg border-2 border-zinc-300" type="button" onClick={closeModal} disabled={uploading}>Cancel</button>
+									<div className="col-span-2 grid grid-cols-2 gap-x-4">
+										<button className="py-2 rounded-lg outline-none focus:ring-2 border-2 border-zinc-400"
+											type="button" onClick={closeModal} disabled={uploading}>Cancel</button>
 										{/* submit button */}
-										<button className="py-2 rounded-lg outline-none focus:ring-2 text-lg bg-blue-600 text-white relative" type="submit" disabled={uploading}>
+										<button className="py-2 rounded-lg outline-none focus:ring-2 bg-blue-600 text-white relative"
+											type="submit" disabled={uploading}>
 											{
 												uploading
-													? <Oval height={22} strokeWidth={7} color="white" secondaryColor="white" wrapperClass="absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]" />
+													? <Oval height={22} strokeWidth={7} color="white" secondaryColor="white"
+															wrapperClass="absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]" />
 													: `${toSentenceCase(mode)} Item`
 											}
 										</button>
@@ -310,12 +386,15 @@ const useUpdatingProducts = ()=>{
 			return
 		}
 		setProducts(items => [...items, pendingItems.at(0)!])
-		setTimeout(() => setPendingItems(pi => pi.slice(1, pi.length)), 200);
+		setTimeout(() => setPendingItems(pi => pi.slice(1, pi.length)), 70);
 	}, [pendingItems])
 
 	// listen to new product changes
 	useEffect(() => {
 		const unSubProducts = onSnapshot(query(collection(db, "products"), orderBy("productName")), (snapshot) => {
+			console.log('%c Firebase ',
+				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
+				'Admin Product Snapshot Updated');
 			const newProducts = snapshot.docs.map(productDoc => fillProductDoc(productDoc))
 
 			Promise.all(newProducts).then(newProducts => {
@@ -352,7 +431,15 @@ export const ProductsComponent = ({ newProductModal, openEditModal }: ProductCom
 									variants={item} initial="hidden" animate="show" transition={{ ease: "easeInOut" }} layout
 									key={product.firestoreID}
 								>
-									<img src={product.productImageURL} alt="" className="h-12" />
+									<div className="relative min-w-[4.3rem] flex justify-center">
+										<img src={product.productImageURL} alt=""
+											className={`h-16 relative ${product.quantity <= 0 ? "saturate-0 blur-[1px] contrast-125" : ""}`} />
+										{
+											product.quantity <= 0 &&
+											<p className="absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%] whitespace-nowrap font-semibold bg-white rounded-sm px-1">
+												No Stock</p>
+										}
+									</div>
 									<div className="flex-1">
 										<div>
 											<p className="inline mr-1">{product.productName}</p>
@@ -377,7 +464,10 @@ export const ProductsComponent = ({ newProductModal, openEditModal }: ProductCom
 										}
 									</div>
 									<p onClick={() => openEditModal(product)} className="hover:cursor-pointer shrink-0	">edit</p>
-									<svg className="w-6 h-6 hover:cursor-pointer shrink-0	" onClick={() => deleteProduct(product.firestoreID)} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+									<svg className="w-6 h-6 hover:cursor-pointer shrink-0	" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+										onClick={() => deleteProduct(product.firestoreID)}>
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+									</svg>
 								</motion.div>
 							)}
 						</AnimatePresence>
