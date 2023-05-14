@@ -1,1 +1,1 @@
-export default "https://api-m.sandbox.paypal.com"
+export const baseURL = "https://api-m.sandbox.paypal.com"

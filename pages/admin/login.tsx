@@ -27,12 +27,6 @@ const AdminLogin = () => {
 
 		setLogInLoading(true)
 		const userCredential = await signInWithEmailAndPassword(auth, email, password)
-			.catch((error) => {
-				//TODO display error message
-				const errorCode = error.code;
-				const errorMessage = error.message;
-				console.error(errorCode, errorMessage)
-			})
 			
 		console.log("login side user credential: ", userCredential)
 		setLogInLoading(false)

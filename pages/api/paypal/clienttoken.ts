@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { generateAccessToken } from 'util/paypal/auth';
-import baseURL from 'util/paypal/baseURL';
+import { baseURL } from 'util/paypal/baseURL';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const accessToken = await generateAccessToken();

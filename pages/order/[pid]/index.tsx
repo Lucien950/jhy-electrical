@@ -1,12 +1,14 @@
+import { GetServerSideProps } from "next";
+import Link from "next/link";
+import Head from "next/head";
+
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "util/firebase/firestore"
-import { GetServerSideProps } from "next";
+
 import { FirestoreOrderInterface, OrderInterface } from "types/order";
-import Price from "components/price";
-import Link from "next/link";
 import { getProductByID } from "util/productUtil";
+import Price from "components/price";
 import seedRandom from "seedrandom";
-import Head from "next/head";
 
 const Order = ({ order }: { order: OrderInterface }) => {
 	if(!order){
@@ -102,7 +104,7 @@ const Order = ({ order }: { order: OrderInterface }) => {
 							<p>Subtotal</p>
 							<p className="justify-self-end">{order.orderPrice.subtotal.toFixed(2)}</p>
 							<p>Shipping</p>
-							<p className="justify-self-end">{order.orderPrice.shipping.toFixed(2)}</p>
+							<p className="justify-self-end">{order.orderPrice.shipping!.toFixed(2)}</p>
 							<p>Tax</p>
 							<p className="justify-self-end">{order.orderPrice.tax.toFixed(2)}</p>
 						</div>
@@ -120,7 +122,7 @@ const Order = ({ order }: { order: OrderInterface }) => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const { pid } = ctx.query
-	if(!pid || typeof pid != "string"){
+	if (!pid || typeof pid != "string") {
 		return{
 			redirect:{
 				destination: "/",

@@ -1,19 +1,26 @@
 import { displayVariants } from "util/formVariants";
 import { useRouter } from 'next/router';
 import { useDispatch } from 'react-redux';
-import { MouseEventHandler, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { setPersistCustomer } from "util/redux/persistCustomer.slice";
-import { createOrder } from 'util/paypal/createOrder';
+import { createPayPalOrderLink } from 'util/paypal/createOrder';
 import { RadioGroup } from '@headlessui/react'
 import { PaypalSVG, PayPalWhiteSVG } from 'components/paypalSVG';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
 import CustomerInterface from "types/customer";
+import { toast } from "react-toastify";
 
-const PaymentForm = (
-	{ goToShipping, goToReview, setPaymentMethod, removePayPal, customerInformation, total }:
-		{ goToShipping: MouseEventHandler<HTMLButtonElement>, goToReview: () => void, setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void, removePayPal: MouseEventHandler<HTMLButtonElement>, customerInformation: CustomerInterface, total: number }
-) => {
+
+type PaymentFormProps = {
+	prevCheckoutStage: () => void,
+	nextCheckoutStage: () => void,
+	setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
+	removePayPal: () => void,
+	customerInformation: CustomerInterface,
+	redirect_link: string
+}
+const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, removePayPal, customerInformation, redirect_link }:PaymentFormProps) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [paymentSubmitLoading, setPaymentSubmitLoading] = useState(false)
@@ -22,38 +29,33 @@ const PaymentForm = (
 	useEffect(() => {
 		fetch("/api/paypal/clienttoken").then(res => {
 			return res.json()
+		}).then(token => {
+			console.log(token)
+			setClientID(token.client_token)
 		})
-			.then(token => {
-				console.log(token)
-				setClientID(token.client_token)
-			})
 	}, [])
 
 	const validatePayment = async () => {
 		if (customerInformation.paymentMethod == "paypal") {
 			setPaymentSubmitLoading(true)
+			// 
 			if (customerInformation.paypalInfo) {
-				goToReview()
-				return
+				nextCheckoutStage()
 			}
-			const redirect_link = await createOrder(total).catch(err => console.error(err))
-			if (!redirect_link) {
-				setPaymentSubmitLoading(false)
-				return
+			else{
+				dispatch(setPersistCustomer(customerInformation))
+				router.push(redirect_link)
 			}
-			dispatch(setPersistCustomer(customerInformation))
-			router.push(redirect_link)
 		}
 		// TODO hosted fields validation
 		else if (customerInformation.paymentMethod == "card" && customerInformation.cardInfo) {
+			toast("Card Not Implemented Yet, please try again")
 			return
 		}
 		else {
-			// TODO display this error
-			console.error("Select a Payment Method or fill in payment information")
+			toast("Select a Valid Payment Method or fill in payment information")
 		}
 	}
-	const INVALID_COLOR = { color: "#dc3545", };
 
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="paymentForm">
@@ -167,7 +169,7 @@ const PaymentForm = (
 			</div>
 			{/* under button */}
 			<div className="flex flex-row justify-end gap-x-8 mt-8 items-center">
-				<button className="underline" onClick={goToShipping}>
+				<button className="underline" onClick={prevCheckoutStage}>
 					Back to Cart
 				</button>
 				<button

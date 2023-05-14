@@ -5,9 +5,10 @@ import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
 import CustomerInterface from "types/customer";
-import { FirestoreOrderInterface, Price, productInfo } from "types/order";
+import { FirestoreOrderInterface, OrderProduct } from "types/order";
+import { PriceInterface } from "util/priceUtil";
 // react
-import { Dispatch, MouseEventHandler, SetStateAction } from "react";
+import { MouseEventHandler, useState } from "react";
 import { useRouter } from "next/router"
 // state
 import { clearCart } from 'util/redux/cart.slice';
@@ -15,20 +16,20 @@ import { clearCart } from 'util/redux/cart.slice';
 import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from "util/firebase/firestore"
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 
 type ReviewViewProps = {
 	customerInformation: CustomerInterface,
-	paymentInformation: Price,
-	submitOrderLoading: boolean,
-	setSubmitOrderLoading: Dispatch<SetStateAction<boolean>>,
-	cart: productInfo[],
+	paymentInformation: PriceInterface,
+	cart: OrderProduct[],
 	goToShipping: MouseEventHandler<HTMLButtonElement>,
 	goToPayment: MouseEventHandler<HTMLButtonElement>
 }
 
-const ReviewView = ({ customerInformation, paymentInformation, submitOrderLoading, setSubmitOrderLoading, cart, goToShipping, goToPayment }: ReviewViewProps) => {
+const ReviewView = ({ customerInformation, paymentInformation, cart, goToShipping, goToPayment }: ReviewViewProps) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
+	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
 	
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
 		setSubmitOrderLoading(true)
@@ -91,8 +92,10 @@ const ReviewView = ({ customerInformation, paymentInformation, submitOrderLoadin
 
 		if (!doc) {
 			setSubmitOrderLoading(false)
+			toast(`Paypal has been charged, but order was not submitted. Please contact us with PayPal OrderID ${newOrder.paypalOrderID}`)
 			return
 		}
+		
 		dispatch(clearCart())
 		router.push(`/order/${doc.id}`)
 	}
@@ -125,6 +128,7 @@ const ReviewView = ({ customerInformation, paymentInformation, submitOrderLoadin
 						customerInformation.paymentMethod == "card" &&
 						<div>
 							{/* TODO After getting cards sorted */}
+							testing testing
 						</div>
 					}
 				</div>

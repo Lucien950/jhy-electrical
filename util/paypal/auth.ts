@@ -1,5 +1,5 @@
 import { PayPalAuth } from "types/paypalTypes"
-import baseURL from "util/paypal/baseURL";
+import { baseURL } from "util/paypal/baseURL";
 
 const generateAccessToken = async (): Promise<string | void> => {
 	const clientid = process.env.NODE_ENV === "development"

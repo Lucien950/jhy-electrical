@@ -6,19 +6,22 @@ import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux"
 import { removeFromCart, setQuantity } from "util/redux/cart.slice";
 // products
-import { productInfo } from "types/order";
+import { OrderProduct } from "types/order";
 // ui
 import Price from "components/price";
 import { PaypalSVG } from "components/paypalSVG";
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
 import { Oval } from "react-loader-spinner";
-import { createOrder } from "util/paypal/createOrder";
+import { createPayPalOrderLink } from "util/paypal/createOrder";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
+import { toast } from "react-toastify";
+// util price
+import { PriceInterface, TAX_RATE } from "util/priceUtil";
 
-const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
-	const product = productInfo.product
+const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
+	const product = orderProduct.product
 	const dispatch = useDispatch()
 
 	if(!product){
@@ -29,10 +32,10 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 		)
 	}
 	const handleUpdateQuantity = (change: number)=>{
-		let quantity = productInfo.quantity + change
+		let quantity = orderProduct.quantity + change
 		quantity = Math.min(quantity, product.quantity)
 		quantity = Math.max(1, quantity)
-		dispatch(setQuantity({PID: productInfo.PID, quantity}))
+		dispatch(setQuantity({PID: orderProduct.PID, quantity}))
 	}
 
 	return(
@@ -49,7 +52,13 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 						? <p className="text-sm text-green-600">In Stock</p>
 						: <p className="text-sm text-red-700">Out of Stock</p>
 					}
-					<span className="text-sm underline text-blue-500 hover:cursor-pointer" onClick={() => dispatch(removeFromCart(productInfo))}>
+					<span
+						className="text-sm underline text-blue-500 hover:cursor-pointer"
+						onClick={() => {
+							logEvent(analytics(), "remove_from_cart", { items: [{ item_id: product.productName, price: product.price, quantity: product.quantity }] })
+							dispatch(removeFromCart(orderProduct))
+						}}
+					>
 						Remove from Cart
 					</span>
 				</div>
@@ -57,16 +66,16 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 			</div>
 			<div className="justify-self-end flex flex-col justify-between items-end flex-[2_2_29%]">
 				<div>
-					<Price price={product.price * productInfo.quantity}/>
+					<Price price={product.price * orderProduct.quantity}/>
 				</div>
 				{
 					product.quantity > 0 &&
 						<div className="flex flex-row border-2 mt-3">
-							<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={productInfo.quantity - 1 < 1} onClick={()=>handleUpdateQuantity(-1)}>
+							<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={orderProduct.quantity - 1 < 1} onClick={()=>handleUpdateQuantity(-1)}>
 								<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
 							</button>
-							<span className="w-10 h-10 grid place-items-center">{productInfo.quantity}</span>
-							<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={productInfo.quantity + 1 > product.quantity} onClick={()=>handleUpdateQuantity(1)}>
+							<span className="w-10 h-10 grid place-items-center">{orderProduct.quantity}</span>
+							<button className="w-10 h-10 grid place-items-center disabled:text-gray-300" disabled={orderProduct.quantity + 1 > product.quantity} onClick={()=>handleUpdateQuantity(1)}>
 								<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
 							</button>
 						</div>
@@ -78,47 +87,45 @@ const ProductListing = ({ productInfo }: { productInfo:productInfo})=>{
 
 const CostLoader = ( <Oval height={18} width={18} strokeWidth={6} strokeWidthSecondary={6} color="#28a9fa" secondaryColor="#28a9fa"/> )
 
+
+const usePrice = (cart: OrderProduct[])=>{
+	const [subtotal, setSubtotal] = useState(0)
+	const [tax, setTax] = useState(0)
+	const [total, setTotal] = useState(0)
+	// subtotal, tax, shipping, total
+	useEffect(() => { setSubtotal(cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)) }, [cart])
+	useEffect(() => { if (subtotal) setTax(subtotal * TAX_RATE) }, [subtotal])
+	useEffect(() => { if (subtotal && tax) setTotal(subtotal + tax) }, [subtotal, tax])
+
+	return { paymentInformation: {subtotal, tax, total} as PriceInterface }
+}
+
 export default function Cart() {
 	const router = useRouter()
-	const cart = useSelector((state: { cart: productInfo[] })=>state.cart) as productInfo[]
+	const cart = useSelector((state: { cart: OrderProduct[] })=>state.cart) as OrderProduct[]
+	const {paymentInformation: {subtotal, tax, total}} = usePrice(cart)
 
-	const [shippingCost, setShippingCost] = useState(-1)
-	const [subTotal, setSubTotal] = useState(-1)
-	const [total, setTotal] = useState(-1)
-	const [tax, setTax] = useState(0.13)
-
-	const [paypalLoading, setPaypalLoading] = useState(false)
-
-	// update the products and estimate shipping cost
 	useEffect(() => {
-		if (router.query) {
+		// paypal cancel
+		if (router.query.token?.length == 17){
 			router.push("/cart", undefined, { shallow: true })
+			logEvent(analytics(), "cancel_paypal_checkout")
 		}
 		logEvent(analytics(), "view_cart")
 	}, [])
-	// set subtotal
-	useEffect(()=>{
-		setSubTotal(cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0))
-	},[cart])
-	// set tax
-	useEffect(()=>{
-		setTax((subTotal + shippingCost) * 0.13)
-	}, [subTotal, shippingCost])
-	// set total
-	useEffect(()=>{
-		setTotal(subTotal + shippingCost + tax)
-	}, [subTotal, shippingCost, tax])
 
-	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async (e) => {
+	const [paypalLoading, setPaypalLoading] = useState(false)
+	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
-		const redirect_link = await createOrder(total).catch(err=>{
-			console.error(err)
-		})
-		if(!redirect_link){
-			setPaypalLoading(false)
-			return
+		try{
+			const { redirect_link } = await createPayPalOrderLink(cart)
+			router.push(redirect_link)
 		}
-		router.push(redirect_link)
+		catch (e){
+			setPaypalLoading(false)
+			toast.error(`PayPal Order Link Error: ${e}`,{theme: "colored"})
+			console.error(e)
+		}
 	}
 
 	return (
@@ -143,7 +150,7 @@ export default function Cart() {
 							<div>Price</div>
 						</div>
 						<div className="flex flex-col gap-y-2">
-							{cart.map(productInfo => <ProductListing productInfo={productInfo} key={productInfo.PID} />)}
+							{cart.map(productInfo => <ProductListing orderProduct={productInfo} key={productInfo.PID} />)}
 						</div>
 						</>
 					}
@@ -158,12 +165,14 @@ export default function Cart() {
 						<h1 className="text-3xl font-bold">Your Cart</h1>
 						<hr className="my-4"/>
 
+						{/* Subtotal */}
 						<div className="flex flex-row mb-4">
 							<p className="flex-1"> Subtotal </p>
-							<Price price={subTotal} className="place-self-end"/>
+							<Price price={subtotal} className="place-self-end"/>
 						</div>
+						{/* Tax */}
 						<div className="flex flex-row mb-4">
-								<p className="flex flex-row items-center gap-x-2 flex-1">
+							<p className="flex flex-row items-center gap-x-2 flex-1">
 								Tax
 								<Tippy content={"Tax is calculated based on the Ontario rate of 13%"} delay={50}>
 									<svg className="h-5 w-5 focus:outline-none hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -171,29 +180,22 @@ export default function Cart() {
 									</svg>
 								</Tippy>
 							</p>
-							{
-								tax ?
-								<Price price={tax} className="place-self-end" />
-								:
-								CostLoader
-							}
+							{ tax ? <Price price={tax} className="place-self-end" /> : CostLoader }
 						</div>
+						{/* Total */}
 						<div className="flex flex-row mb-4">
 							<p className="flex-1">Total</p>
-							{
-								total ?
-								<Price price={total} className="place-self-end" />
-								:
-								CostLoader
-							}
+							{ total ? <Price price={total} className="place-self-end" /> : CostLoader }
 						</div>
-
 						<p className="text-sm mb-6">*Note that this calculation <strong>DOES NOT</strong> take into account shipping fees</p>
 
+						{/* Checkout Buttons */}
 						<div className="text-black">
 							{/* paypal */}
-							<button className="text-lg p-3 w-full h-[50px] bg-white grid place-items-center relative group" onClick={paypalCheckout} disabled={!total}>
-								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${paypalLoading && "opacity-100"} justify-self-start`} color="#28a9fa" secondaryColor="#28a9fa" />
+							<button className="text-lg p-3 w-full h-[50px] bg-white grid place-items-center relative group"
+							onClick={paypalCheckout} disabled={!total}>
+								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="#28a9fa" secondaryColor="#28a9fa"
+								wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${paypalLoading && "opacity-100"} justify-self-start`}/>
 								<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${paypalLoading && "translate-x-[14px] !delay-[0s]"}`}>
 									<PaypalSVG className="h-4 translate-y-[2px]"/>
 									<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
@@ -201,7 +203,9 @@ export default function Cart() {
 							</button>	
 							{/* checkout */}
 							<Link href="/checkout">
-							<button className="text-lg my-2 h-[50px] rounded-sm w-full disabled:text-gray-500 bg-white font-bold" disabled={cart.length <= 0}>
+							<button className="text-lg my-2 h-[50px] rounded-sm w-full disabled:text-gray-500 bg-white font-bold"
+							disabled={cart.length <= 0}
+							>
 								Checkout
 							</button>
 							</Link>

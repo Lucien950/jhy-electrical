@@ -12,7 +12,7 @@ export interface PayPalAuth {
 export interface PayPalCreateOrder {
 	id: string;
 	status: string;
-	links?: (LinksEntity)[] | null;
+	links: LinksEntity[];
 }
 export interface LinksEntity {
 	href: string;

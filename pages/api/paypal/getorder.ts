@@ -25,20 +25,26 @@ export default async (orderID: string)=>{
 		headers: {
 			Authorization: `Bearer ${accessToken}`
 		}
-	}).catch(err=>{throw err})
-	const data = await response.json() as PaypalOrder
-	if (data.name =="RESOURCE_NOT_FOUND") throw data
-	const payer = data.payer
-	const purchaseUnit0 = data.purchase_units![0]
-	if (purchaseUnit0.shipping.address.country_code != "CA") throw "Do not ship outside Canada"
-	return {
-		first_name: payer.name.given_name,
-		last_name: payer.name.surname,
-		address: purchaseUnit0.shipping.address,
-		paymentMethod: "paypal",
-		paypalInfo:{
-			paypalEmail: data.payer.email_address,
-			token: orderID
-		}
-	} as CustomerInterface
+	})
+
+	if(response.ok){
+		const data = await response.json() as PaypalOrder
+		if (data.name =="RESOURCE_NOT_FOUND") throw { error_message: "PayPal could not find order"}
+		const payer = data.payer
+		const purchaseUnit0 = data.purchase_units![0]
+		if (purchaseUnit0.shipping.address.country_code != "CA") throw { error_message: "Do not ship outside Canada" }
+		return {
+			first_name: payer.name.given_name,
+			last_name: payer.name.surname,
+			address: purchaseUnit0.shipping.address,
+			paymentMethod: "paypal",
+			paypalInfo: {
+				paypalEmail: data.payer.email_address,
+				token: orderID
+			}
+		} as CustomerInterface
+	}
+	else{
+		throw {error_message: "Fetch Error"}
+	}
 }

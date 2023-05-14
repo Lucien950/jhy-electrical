@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Price from "components/price";
 import LinkBoxes from "components/linkBoxes"
 
-import { productInfo } from "types/order";
+import { OrderProduct } from "types/order";
 import { removeFromCart } from "util/redux/cart.slice";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
@@ -83,9 +83,9 @@ const HamButton = ({isOpen, className, onClick, id}: HamButtonProps)=>{
 	)
 }
 
-const CartDropdown = ({ cart, closeCart }: { cart: productInfo[], closeCart: ()=>void })=>{
+const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()=>void })=>{
 	const dispatch = useDispatch()
-	const HandleRemoveFromCart = (productInfo: productInfo)=>{
+	const HandleRemoveFromCart = (productInfo: OrderProduct)=>{
 		dispatch(removeFromCart(productInfo))
 	}
 
@@ -180,7 +180,7 @@ const NavBar = () => {
 	const { scrollY } = useScroll();
 	const whiteBG = useRef(null)
 	
-	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
+	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 
 	// cart and mobile menus
 	const [isMobileMenuOpen, toggleMobileMenuOpen] = useMenu(["mobileMenu", "mobileMenuButton"]);

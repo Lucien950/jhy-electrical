@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { productInfo } from 'types/order';
+import { OrderProduct } from 'types/order';
 import productType from "types/product"
 
 const cartSlice = createSlice({
 	name: 'cart',
-	initialState: [] as productInfo[],
+	initialState: [] as OrderProduct[],
 	reducers: {
 		addToCart: (state, action) => {
-			const { PID, product, quantity = 1 } = action.payload as productInfo
+			const { PID, product, quantity = 1 } = action.payload as OrderProduct
 
 			const itemExists = state.find((item) => item.PID === PID);
 			if (itemExists) {
@@ -17,7 +17,7 @@ const cartSlice = createSlice({
 			state.push({ PID, quantity, product });
 		},
 		setQuantity: (state, action) => {
-			const { PID, quantity } = action.payload as productInfo
+			const { PID, quantity } = action.payload as OrderProduct
 			const item = state.find((item) => item.PID === PID);
 			if (!item) return
 			
@@ -29,7 +29,7 @@ const cartSlice = createSlice({
 			item.quantity = quantity;
 		},
 		removeFromCart: (state, action) => {
-			const { PID } = action.payload as productInfo
+			const { PID } = action.payload as OrderProduct
 			const index = state.findIndex(item => item.PID === PID);
 			if(index >= 0) state.splice(index, 1);
 		},

@@ -1,17 +1,18 @@
 import { Timestamp } from "firebase/firestore";
-import productType from "./product";
+import ProductInterface from "./product";
 import { Address } from "@paypal/paypal-js"
+import { PriceInterface } from "util/priceUtil";
 
-interface productInfo{
+export interface OrderProduct{
 	PID: string,
 	quantity: number,
 	// fill later
-	product?: productType
+	product?: ProductInterface
 }
 
-interface OrderInterface {
-	products: productInfo[],
-	orderPrice: Price,
+export interface OrderInterface {
+	products: OrderProduct[],
+	orderPrice: PriceInterface,
 	completed: boolean,
 	// convert
 	date: Date,
@@ -26,17 +27,8 @@ interface OrderInterface {
 	//only present on failure orders
 	failureReason?: string,
 }
-interface FirestoreOrderInterface extends OrderInterface{
+export interface FirestoreOrderInterface extends OrderInterface{
 	// because of serialization sadge
 	date: never,
 	dateTS: Timestamp,
 }
-
-interface Price{
-	subtotal: number,
-	shipping: number,
-	tax: number,
-	total: number
-}
-
-export type { OrderInterface, FirestoreOrderInterface, productInfo, Price }

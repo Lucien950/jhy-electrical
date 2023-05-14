@@ -1,12 +1,15 @@
 // react
 import type { AppProps } from 'next/app'
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from 'next/router'
 // ui
 import "styles/tailwind.css"
 import 'tippy.js/dist/tippy.css'
 import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
+import 'react-toastify/dist/ReactToastify.min.css'
+import { ToastContainer, Slide } from 'react-toastify'
+
 // redux
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from 'util/redux/store'
@@ -16,14 +19,14 @@ const persistor = persistStore(store);
 // firebase
 import { fillProductDoc } from "util/productUtil";
 import { cartFillProducts } from "util/redux/cart.slice";
-import { productInfo } from "types/order"
+import { OrderProduct } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 
 // dispatch here in order to be inside the provider
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()
-	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
+	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	useEffect(() => {
 		const unsub = onSnapshot(collection(db, "products"), async (snapshot) => {
 			console.log('%c Firebase ',
@@ -50,6 +53,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	<PersistGate persistor={persistor}>
 	<CartUpdater />
 	<NavBar />
+	<ToastContainer autoClose={false} transition={Slide}/>
 	<AnimatePresence
 		initial={false}
 		mode = "wait"

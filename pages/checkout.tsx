@@ -11,199 +11,173 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
 import Tippy from '@tippyjs/react';	
 import PriceComponent from 'components/price';
+import { toast } from 'react-toastify';
 // api
 import getorder from './api/paypal/getorder';
-import { calculateShipping } from 'util/calculateShipping';
-
 // types
 import CustomerInterface from 'types/customer';
-import { Price, productInfo } from 'types/order';
-
+import { OrderProduct } from 'types/order';
 import { removePersistCustomer } from 'util/redux/persistCustomer.slice';
-
 // checkout stages
 import CheckoutStageZero from "components/checkout/p0"
 import CheckoutStageOne from "components/checkout/p1"
 import CheckoutStageTwo from "components/checkout/p2"
-
-import { postalCodePattern } from 'util/postalCodePattern';
+// util
 import { displayVariants } from 'util/formVariants';
-
+// analytics
 import { logEvent } from 'firebase/analytics';
 import { analytics } from 'util/firebase/analytics';
+import { createPayPalOrderLink } from 'util/paypal/createOrder';
+import { PriceInterface } from 'util/priceUtil';
 
-const TAX_RATE = 0.13
-
-const NoPriceComponent = ()=>{
-	return (
-		<p> - </p>
-	)
-}
 
 type CheckoutProps = { paypalCustomerInformation?: CustomerInterface, paypal_error?: Error }
 export default function Checkout({ paypalCustomerInformation, paypal_error }: CheckoutProps){
 	const router = useRouter()
 	const dispatch = useDispatch()
 	
-	// CHECKOUT DATA
-	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
-	const [paymentInformation, setPaymentInformation] = useState({ subtotal: 0, shipping: 0, tax: 0, total: 0, } as Price)
-	const persistCustomer = useSelector((state: { persistCustomer: CustomerInterface }) => state.persistCustomer) as CustomerInterface
-	const [customerInformation, setCustomerInformation] = useState({ paymentMethod:"", address:{admin_area_1: "", postal_code: ""}} as CustomerInterface)
+	// cart
+	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart)
+	const [checkoutCart, setCheckoutCart] = useState<OrderProduct[]>([])
+	const [updatedCart, setUpdatedCart] = useState(false)
+	// customer
+	const persistCustomer = useSelector((state: { persistCustomer: CustomerInterface }) => state.persistCustomer)
+	const [customerInformation, setCustomerInformation] = useState<CustomerInterface>({
+		first_name: "",
+		last_name: "",
+		paymentMethod:"",
+		address: {
+			country_code: "CA",			
+		}
+	})
+	// pricing
+	const [paymentInformation, setPaymentInformation] = useState<PriceInterface>({ subtotal: 0, tax: 0, shipping: 0, total: 0 })
+	const [redirectLink, setRedirectLink] = useState<string>("")
+	const [calculatingPI, setCalculatingPI] = useState(false)
+	const finalTotalFound = Object.values(paymentInformation).every(i => i != 0)
+	const paymentMethodFound =
+		(customerInformation.paymentMethod == "paypal" && !!customerInformation.paypalInfo) ||
+		(customerInformation.paymentMethod == "card" && !!customerInformation.cardInfo)
+
 	// CHECKOUT STAGES
-	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(0)
-	const [finalTotalFound, setFinalTotalFound] = useState(false)
+	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(0)	
 	const canGoToPayment = finalTotalFound
-	const [paymentMethodFound, setPaymentMethodFound] = useState(false)
 	const canGoToReview = finalTotalFound && paymentMethodFound
-	// UI STATES
-	const [calculatingShipping, setCalculatingShipping] = useState(false)
-	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
-
-	// ONLOAD
-	useEffect(() => {
-		if (paypal_error) {
-			// TODO display this error
-			console.error("PAYPAL ERROR", paypal_error)
-			return
-		}
-
-		logEvent(analytics(), "begin_checkout")
-		// only use persist customer if coming from paypal
-		if (!paypalCustomerInformation) {
-			dispatch(removePersistCustomer())
-			return
-		}
-		else{
-			setCustomerInformation({ ...paypalCustomerInformation, ...persistCustomer })
-			dispatch(removePersistCustomer())
-		}
-
-
-		setFinalTotalFound(true)
-		setPaymentMethodFound(true)
-		setCurrentCheckoutStage(2) // force go to review (because state takes too long 😭)
-		logEvent(analytics(), "checkout_paypal_express")
-		logEvent(analytics(), "checkout_progress", { checkout_step: 2 })
-		router.push("/checkout", undefined, { shallow: true }) //remove paypal redirect information from URL
-	}, [])
-
 	// CHECKOUT STAGES
-	const goToShipping = ()=>{
+	const goToShipping = () => {
 		setCurrentCheckoutStage(0)
-		logEvent(analytics(), "checkout_progress", { checkout_step: 0})
+		logEvent(analytics(), "checkout_progress", { checkout_step: 0 })
 	}
 	const goToPayment = () => {
 		if (canGoToPayment) {
 			setCurrentCheckoutStage(1)
-			logEvent(analytics(), "checkout_progress", { checkout_step: 1})
+			logEvent(analytics(), "checkout_progress", { checkout_step: 1 })
 		}
 	}
 	const goToReview = () => {
-		if (!canGoToReview){
+		if (canGoToReview) {
 			setCurrentCheckoutStage(2)
-			logEvent(analytics(), "checkout_progress", { checkout_step: 2})
+			logEvent(analytics(), "checkout_progress", { checkout_step: 2 })
 		}
 	}
-	useEffect(()=>{
-		setPaymentMethodFound(
-			(customerInformation.paymentMethod == "paypal" && !!customerInformation.paypalInfo) ||
-			(customerInformation.paymentMethod == "card" && !!customerInformation.cardInfo)
-		)
-	}, [customerInformation.paymentMethod, customerInformation.paypalInfo, customerInformation.cardInfo])
 	const GetCheckoutStageView = () => {
 		switch (currentCheckoutStage) {
 			case 0:
-				return <CheckoutStageZero
-					customerInformation={customerInformation}
-					setCustomerInformation={setCustomerInformation}
-					cart={cart}
-					canGoToPayment={canGoToPayment}
-					paymentInformation={paymentInformation}
-					nextCheckoutStage={goToPayment}
-				/>
+				return 	<CheckoutStageZero
+									customerInformation={customerInformation}
+									cart={cart}
+									canGoToPayment={canGoToPayment}
+									paymentInformation={paymentInformation}
+									nextCheckoutStage={goToPayment}
+
+									shippingUpdate={(id: string, val: string) => {
+										setCustomerInformation(ci => ({
+											...ci,
+											address: {
+												...customerInformation.address,
+												[id]: val
+											}
+										}))
+									}}
+									customerUpdate={(id: string, val: string) => {
+										setCustomerInformation(ci=>({
+											...ci,
+											[id]: val
+										}))
+									}}
+								/>
 			case 1:
-				return <CheckoutStageOne
-					goToShipping={goToShipping}
-					goToReview={goToReview}
-					customerInformation={customerInformation}
-					total={paymentInformation.total}
-					setPaymentMethod={(newPaymentMethod: "paypal" | "card") => {
-						setCustomerInformation({ ...customerInformation, paymentMethod: newPaymentMethod })
-					}}
-					removePayPal={(e) => {
-						const { paypalInfo, ...newCI } = customerInformation
-						setCustomerInformation(newCI)
-					}}
-				/>
+				return  <CheckoutStageOne
+									prevCheckoutStage={goToShipping}
+									nextCheckoutStage={goToReview}
+									customerInformation={customerInformation}
+									redirect_link={redirectLink}
+									setPaymentMethod={(newPaymentMethod: "paypal" | "card") => {
+										setCustomerInformation({ ...customerInformation, paymentMethod: newPaymentMethod })
+									}}
+									removePayPal={() => {
+										const { paypalInfo, ...newCI } = customerInformation
+										setCustomerInformation(newCI)
+									}}
+								/>
 			case 2:
-				return <CheckoutStageTwo
-					customerInformation={customerInformation}
-					paymentInformation={paymentInformation}
-					setSubmitOrderLoading={setSubmitOrderLoading}
-					submitOrderLoading={submitOrderLoading}
-					cart={cart}
-					goToShipping={goToShipping}
-					goToPayment={goToPayment}
-				/>
+				return  <CheckoutStageTwo
+									customerInformation={customerInformation}
+									paymentInformation={paymentInformation}
+									cart={cart}
+									goToShipping={goToShipping}
+									goToPayment={goToPayment}
+								/>
 		}
 	}
 
-	// PRICE CALCULATIONS
-	// set shipping
+	// ONLOAD
 	useEffect(() => {
-		if (!customerInformation.address.postal_code?.match(new RegExp(postalCodePattern))) {
-			setFinalTotalFound(false)
-			return;
+		if (paypal_error) {
+			console.error("PAYPAL ERROR", paypal_error)
+			toast(`Paypal Error: ${paypal_error.message}`)
+			return
+		}
+		// only use persist customer if coming from paypal
+		if (paypalCustomerInformation) {
+			setCustomerInformation({ ...paypalCustomerInformation, ...persistCustomer })
+			dispatch(removePersistCustomer())
+			setCurrentCheckoutStage(2) // force go to review (because state takes too long 😭)
+			logEvent(analytics(), "checkout_paypal_express")
+			logEvent(analytics(), "checkout_progress", { checkout_step: 2 })
+			return
 		}
 		
-		setCalculatingShipping(true)
-		calculateShipping(cart, customerInformation.address.postal_code)
-		.then(costs => {
-			logEvent(analytics(), "add_shipping_info")
-			setPaymentInformation({
-				...paymentInformation,
-				shipping: cart.reduce((a, p) => a + costs[p.PID] * p.quantity || 0, 0)
-			})
-			setFinalTotalFound(true)
-			setCalculatingShipping(false)
-		})
-		.catch(e=>{
-			// TODO display error
-			logEvent(analytics(), "shipping_info_calculation_error")
-			console.error(e)
-			setCalculatingShipping(false)
-		})
-	}, [customerInformation.address.postal_code, cart])
-	// set subtotal (prices)
+		logEvent(analytics(), "begin_checkout")
+	}, [])
 	useEffect(() => {
+		if (updatedCart) return
 		if (cart.length == 0) {
 			router.push("/products")
 			return
 		}
-		setPaymentInformation({
-			...paymentInformation,
-			subtotal: cart.reduce((acc, p) => acc + (p.product?.price || 0) * p.quantity, 0),
-		})
-	}, [cart])
-	// set tax
-	useEffect(() => {
-		if (!paymentInformation.subtotal) return
-		setPaymentInformation({
-			...paymentInformation,
-			tax: (paymentInformation.subtotal + paymentInformation.shipping) * TAX_RATE
-		})
-	}, [paymentInformation.subtotal, paymentInformation.shipping])
-	// set total from order and shipping
-	useEffect(() => {
-		if(!paymentInformation.subtotal || !paymentInformation.shipping || !paymentInformation.tax) return
-		setPaymentInformation({
-			...paymentInformation,
-			total: paymentInformation.subtotal + paymentInformation.shipping + paymentInformation.tax
-		})
-	}, [paymentInformation.subtotal, paymentInformation.shipping, paymentInformation.tax])
+		(async () => {
+			setCalculatingPI(true)
+			// token=44S86873MC079910N & PayerID=CEPBDHWUALZTA
+			const { orderID, paymentInformation: pi, redirect_link } = await createPayPalOrderLink(cart)
+			// create paypal object
+			router.push({
+				pathname: '/checkout',
+				query: { token: orderID },
+			}, undefined, { shallow: true })
 
-	return ( 
+			setRedirectLink(redirect_link)
+			setCheckoutCart(cart)
+			setPaymentInformation(pi)
+			setUpdatedCart(true)
+			setCalculatingPI(false)
+		})()
+	}, [cart])
+	useEffect(()=>{
+		
+	},[checkoutCart])
+
+	return (
 	<>
 		<Head>
 			<title>Checkout | JHY Electrical</title>
@@ -233,6 +207,7 @@ export default function Checkout({ paypalCustomerInformation, paypal_error }: Ch
 						<hr className="my-4" />
 						{/* Render Numbers */}
 						<AnimatePresence>
+							{/* Subtotal */}
 							<div className="flex flex-row mb-4" key="subtotal">
 								<p className="flex-1"> Subtotal </p>
 								<div>
@@ -243,6 +218,7 @@ export default function Checkout({ paypalCustomerInformation, paypal_error }: Ch
 									}
 								</div>
 							</div>
+							{/* Shipping */}
 							<motion.div className="flex flex-row mb-4" variants={displayVariants} initial="hidden" animate="visible" exit="hidden" key="shipping">
 								<p className="flex flex-row items-center gap-x-2 flex-1">
 									<span> Shipping </span>
@@ -253,12 +229,9 @@ export default function Checkout({ paypalCustomerInformation, paypal_error }: Ch
 									</Tippy>
 								</p>
 								{
-									finalTotalFound
-									? <PriceComponent price={paymentInformation.shipping} className="place-self-end" />
-									:
-									(calculatingShipping
-									? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white"/>
-									: <NoPriceComponent />)
+										calculatingPI
+										? <PriceComponent price={paymentInformation.shipping} className="place-self-end" />
+										: <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
 								}
 							</motion.div>
 							{/* Tax */}
@@ -271,20 +244,12 @@ export default function Checkout({ paypalCustomerInformation, paypal_error }: Ch
 										</svg>
 									</Tippy>
 								</p>
-								{
-									finalTotalFound
-									? <PriceComponent price={paymentInformation.tax} className="place-self-end" />
-									: <NoPriceComponent />
-								}
+								<PriceComponent price={paymentInformation.tax} className="place-self-end" />
 							</motion.div>
 							{/* Total */}
 							<motion.div className="flex flex-row mb-8" variants={displayVariants} initial="hidden" animate="visible" exit="hidden" key="paymentTotal">
 								<p className="flex-1">Total</p>
-								{
-									finalTotalFound
-									? <PriceComponent price={paymentInformation.total} className="place-self-end" />
-									: <NoPriceComponent />
-								}
+								<PriceComponent price={paymentInformation.total} className="place-self-end" />
 							</motion.div>
 						</AnimatePresence>
 					</div>
@@ -297,11 +262,13 @@ export default function Checkout({ paypalCustomerInformation, paypal_error }: Ch
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
-	if (!token) return{ props:{} }
-	
-	let error;
-	const paypalCustomerInformation = await getorder(token).catch(err=>{ error = err })
+	if (!token) return { props: {} }
+	else{
+		// coming back from paypal ordering
+		let error_message;
+		const paypalCustomerInformation = await getorder(token).catch((err: { error_message: string }) => error_message = err)
 
-	if(!paypalCustomerInformation) return{ props:{ paypal_error: error } }
-	return { props: { paypalCustomerInformation } }
+		if (!paypalCustomerInformation) return { props: { paypal_error: error_message } }
+		return { props: { paypalCustomerInformation } as CheckoutProps }
+	}
 }

@@ -1,16 +1,14 @@
-export interface GeocodeAPI {
+interface GeocodeAPI {
 	plus_code?: PlusCode;
 	results: Result[];
 	status: string;
 	error_message?: string;
 }
-
-export interface PlusCode {
+interface PlusCode {
 	compound_code: string;
 	global_code: string;
 }
-
-export interface Result {
+interface Result {
 	address_components: AddressComponent[];
 	formatted_address: string;
 	geometry: Geometry;
@@ -18,44 +16,35 @@ export interface Result {
 	plus_code?: PlusCode;
 	types: string[];
 }
-
-export interface AddressComponent {
+interface AddressComponent {
 	long_name: string;
 	short_name: string;
 	types: string[];
 }
-
-export interface Geometry {
+interface Geometry {
 	location: Location;
 	location_type: LocationType;
 	viewport: Bounds;
 	bounds?: Bounds;
 }
-
-export interface Bounds {
+interface Bounds {
 	northeast: Location;
 	southwest: Location;
 }
-
-export interface Location {
+interface Location {
 	lat: number;
 	lng: number;
 }
-
-export enum LocationType {
+enum LocationType {
 	Approximate = "APPROXIMATE",
 	GeometricCenter = "GEOMETRIC_CENTER",
 	Rooftop = "ROOFTOP",
 }
 
-function getPosition(): Promise<GeolocationPosition>{
-	// Simple wrapper
-	return new Promise((res, rej) => {
-		navigator.geolocation.getCurrentPosition(res, rej);
-	});
-}
+export const postalCodePattern = "^(?!.*[DFIOQUdfioqu])[A-VXYa-vxy][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]$"
 
-const getUserPostcode = async () => {
+const getPosition = () => new Promise((res, rej) => { navigator.geolocation.getCurrentPosition(res, rej) }) as Promise<GeolocationPosition>
+export const getUserPostcode = async () => {
 	if (!navigator.geolocation) {
 		console.error("Sorry, Geolocation is not supported by your browser.")
 		return
@@ -88,8 +77,8 @@ const getUserPostcode = async () => {
 	if (geocodeResponse.status == "REQUEST_DENIED"){
 		throw geocodeResponse.error_message
 	}
-	postalCode = geocodeResponse.results.filter(res => res.types.includes("postal_code"))[0].address_components.filter(res => res.types.includes("postal_code"))[0].long_name
+	postalCode = geocodeResponse.results
+		.filter(res => res.types.includes("postal_code"))[0].address_components
+		.filter(res => res.types.includes("postal_code"))[0].long_name
 	return postalCode
 }
-
-export { getUserPostcode }

@@ -6,7 +6,7 @@ import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/cate
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from 'util/redux/cart.slice';
 import Price from 'components/price'
-import { productInfo } from 'types/order';
+import { OrderProduct } from 'types/order';
 import { MouseEventHandler, useState } from 'react';
 import { motion } from 'framer-motion';
 import Head from 'next/head';
@@ -112,7 +112,7 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 
 const ProductID = ({product}: {product: productType}) => {
 	const [quantity, setQuantity] = useState(1)
-	const cart = useSelector((state: { cart: productInfo[] }) => state.cart) as productInfo[]
+	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const buyNow: MouseEventHandler<HTMLButtonElement> = (e) => {
 		// TODO Implement this
 		return
