@@ -1,54 +1,55 @@
-import { displayVariants } from "util/formVariants";
+import { useState } from "react";
 import { useRouter } from 'next/router';
-import { useDispatch } from 'react-redux';
-import { useEffect, useState } from "react";
-import { setPersistCustomer } from "util/redux/persistCustomer.slice";
-import { createPayPalOrderLink } from 'util/paypal/createOrder';
+// UI
 import { RadioGroup } from '@headlessui/react'
 import { PaypalSVG, PayPalWhiteSVG } from 'components/paypalSVG';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
-import CustomerInterface from "types/customer";
 import { toast } from "react-toastify";
-
+import { displayVariants } from "util/formVariants";
+// types
+import CustomerInterface from "types/customer";
 
 type PaymentFormProps = {
 	prevCheckoutStage: () => void,
 	nextCheckoutStage: () => void,
 	setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
-	removePayPal: () => void,
 	customerInformation: CustomerInterface,
 	redirect_link: string
 }
-const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, removePayPal, customerInformation, redirect_link }:PaymentFormProps) => {
-	const router = useRouter()
-	const dispatch = useDispatch()
-	const [paymentSubmitLoading, setPaymentSubmitLoading] = useState(false)
-	const [clientID, setClientID] = useState("")
 
-	useEffect(() => {
-		fetch("/api/paypal/clienttoken").then(res => {
-			return res.json()
-		}).then(token => {
-			console.log(token)
-			setClientID(token.client_token)
-		})
-	}, [])
+const RadioOption = ({children, value}: {children: (disabled: boolean)=>JSX.Element, value: string})=>{
+	return(
+		<RadioGroup.Option value={value}>
+			{({ checked, disabled }) => (
+				<div className={`bg-white p-3 py-5 ${disabled ? "hover:cursor-default" : "hover:cursor-pointer"} mb-2 flex flex-row items-center gap-x-2 shadow-md`}>
+					<svg className={`h-6 w-6 ${disabled ? "opacity-50" : ""}`} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+						<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
+						<path d="M9 12.75L11.25 15 15 9.75" className="duration-75" style={{ strokeDasharray: 10, strokeDashoffset: checked ? 0 : 10, transitionProperty: "stroke-dashoffset" }} strokeLinecap="round" strokeLinejoin="round" />
+					</svg>
+					{children(disabled)}
+				</div>
+			)}
+		</RadioGroup.Option>
+	)
+}
+const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, customerInformation, redirect_link }:PaymentFormProps) => {
+	const router = useRouter()
+	const [paymentSubmitLoading, setPaymentSubmitLoading] = useState(false)
 
 	const validatePayment = async () => {
 		if (customerInformation.paymentMethod == "paypal") {
 			setPaymentSubmitLoading(true)
 			// 
-			if (customerInformation.paypalInfo) {
+			if (customerInformation.payment_source) {
 				nextCheckoutStage()
 			}
 			else{
-				dispatch(setPersistCustomer(customerInformation))
 				router.push(redirect_link)
 			}
 		}
 		// TODO hosted fields validation
-		else if (customerInformation.paymentMethod == "card" && customerInformation.cardInfo) {
+		else if (customerInformation.paymentMethod == "card") {
 			toast("Card Not Implemented Yet, please try again")
 			return
 		}
@@ -57,38 +58,31 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, r
 		}
 	}
 
+	const RadioGroupDisabled = (!!customerInformation.paymentMethod) && (!!customerInformation.payment_source)
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="paymentForm">
 			{/* Payment Method Select */}
 			<div className="bg-gray-200 p-6 mb-4">
 				<h1 className="text-xl mb-4"> Payment Method </h1>
-				<RadioGroup value={customerInformation.paymentMethod} onChange={setPaymentMethod} className="w-4/5">
-					<RadioGroup.Option value="paypal">
-						{({ checked }) => (
-							<div className={` bg-white p-3 py-5 hover:cursor-pointer mb-2 flex flex-row items-center gap-x-2 shadow-md`}>
-								<svg className="h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-									<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-									<path d="M9 12.75L11.25 15 15 9.75" className="duration-75" style={{ strokeDasharray: 10, strokeDashoffset: checked ? 0 : 10, transitionProperty: "stroke-dashoffset" }} strokeLinecap="round" strokeLinejoin="round" />
-								</svg>
-								<PaypalSVG className="h-5" />
-							</div>
-						)}
-					</RadioGroup.Option>
-					<RadioGroup.Option value="card">
-						{({ checked }) => (
-							<div className="bg-white p-3 hover:cursor-pointer mb-2 flex flex-row items-center gap-x-2 shadow-md">
-								<svg className="h-6 w-6" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-									<path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round" />
-									<path d="M9 12.75L11.25 15 15 9.75" className="duration-75" style={{ strokeDasharray: 10, strokeDashoffset: checked ? 0 : 10, transitionProperty: "stroke-dashoffset" }} strokeLinecap="round" strokeLinejoin="round" />
-								</svg>
-								<svg className="h-10 w-10" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+				<RadioGroup value={customerInformation.paymentMethod} onChange={setPaymentMethod} className="w-4/5" disabled={RadioGroupDisabled}>
+					<RadioOption value="paypal">
+						{(disabled) => <PaypalSVG className={`h-5 ${disabled ? "opacity-50" : ""}`} />}
+					</RadioOption>
+					<RadioOption value="card">
+						{(disabled) =>
+							<>
+								<svg className={`h-10 w-10 ${disabled ? "opacity-50" : ""}`} aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 									<path clipRule="evenodd" d="M2.5 4A1.5 1.5 0 001 5.5V6h18v-.5A1.5 1.5 0 0017.5 4h-15zM19 8.5H1v6A1.5 1.5 0 002.5 16h15a1.5 1.5 0 001.5-1.5v-6zM3 13.25a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zm4.75-.75a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" fillRule="evenodd" />
 								</svg>
-								Card
-							</div>
-						)}
-					</RadioGroup.Option>
+								<p className={disabled ? "opacity-50" : ""}> Card </p>
+							</>
+						}
+					</RadioOption>
 				</RadioGroup>
+				{
+					RadioGroupDisabled && 
+					<p>Payment has been chosen. If you would like to choose a different method of payment, please </p>
+				}
 			</div>
 			{/* hosted fields and paypal information */}
 			<div className="bg-gray-200 p-6 mb-4">
@@ -99,13 +93,11 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, r
 							<h1 className="text-xl">Paypal Information</h1>
 							<AnimatePresence mode="wait">
 								{
-									customerInformation.paypalInfo?.paypalEmail ?
-										<motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} transition={{ duration: 0.1 }} key="authorized">
-											<p>PayPal Email: {customerInformation.paypalInfo?.paypalEmail}</p>
-											<button className="underline" onClick={removePayPal}>Remove</button>
+									customerInformation.payment_source?.paypal?.email_address
+									? <motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} transition={{ duration: 0.1 }} key="authorized">
+											<p>PayPal Email: {customerInformation.payment_source.paypal.email_address}</p>
 										</motion.div>
-										:
-										<motion.p initial="hidden" animate="visible" exit="hidden" variants={displayVariants} transition={{ duration: 0.1 }} key="unauthorized">
+									: <motion.p initial="hidden" animate="visible" exit="hidden" variants={displayVariants} transition={{ duration: 0.1 }} key="unauthorized">
 											No PayPal information Provided
 										</motion.p>
 								}
@@ -175,7 +167,7 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, r
 				<button
 					className={
 						`transition-colors duration-300 bg-black
-					${!customerInformation.paypalInfo && customerInformation.paymentMethod == "paypal" && "bg-blue-400"}
+					${!customerInformation.payment_source && customerInformation.paymentMethod == "paypal" && "bg-blue-400"}
 					text-white py-4 w-64 group`
 					}
 					onClick={validatePayment}
@@ -183,7 +175,7 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, r
 				>
 					{/* TODO (after hosted fields are complete) */}
 					{
-						customerInformation.paymentMethod != "paypal" || customerInformation.paypalInfo ?
+						customerInformation.paymentMethod != "paypal" || customerInformation.payment_source ?
 							<span className="group-disabled:opacity-75">
 								Review
 							</span>

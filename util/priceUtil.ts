@@ -15,14 +15,14 @@ export interface PriceInterface {
 }
 export const makePrice = async (products: OrderProduct[], postal_code?: string) => {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
-	const subtotal = products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0)
+	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))
 
 	const productPackage = products.map(p => {
 		const { weight, length, height, width } = p.product!
-		return { weight, length, height, width } as productPackageInfo
+		return { weight, length, height, width, id: p.PID } as productPackageInfo
 	})
 	const shippingInfo = postal_code ? await calculateShipping(productPackage, postal_code) : undefined
-	const shipping = shippingInfo ? products.reduce((acc, p) => acc + (p.quantity * (shippingInfo[p.PID] || 0)), 0) : 0
+	const shipping = shippingInfo ? roundPriceUp(products.reduce((acc, p) => acc + (p.quantity * (shippingInfo[p.PID] || 0)), 0)) : 0
 	const tax = roundPriceUp((subtotal + shipping) * TAX_RATE)
 	const total = subtotal + shipping + tax
 

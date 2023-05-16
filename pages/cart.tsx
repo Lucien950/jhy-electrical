@@ -13,7 +13,7 @@ import { PaypalSVG } from "components/paypalSVG";
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
 import { Oval } from "react-loader-spinner";
-import { createPayPalOrderLink } from "util/paypal/createOrder";
+import { createPayPalOrderLink } from "util/paypal/createOrderClient";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 import { toast } from "react-toastify";
@@ -105,25 +105,40 @@ export default function Cart() {
 	const cart = useSelector((state: { cart: OrderProduct[] })=>state.cart) as OrderProduct[]
 	const {paymentInformation: {subtotal, tax, total}} = usePrice(cart)
 
-	useEffect(() => {
+	useEffect(() => logEvent(analytics(), "view_cart"), [])
+	useEffect(()=>{
 		// paypal cancel
-		if (router.query.token?.length == 17){
-			router.push("/cart", undefined, { shallow: true })
-			logEvent(analytics(), "cancel_paypal_checkout")
-		}
-		logEvent(analytics(), "view_cart")
-	}, [])
+		router.push("/cart", undefined, { shallow: true })
+		logEvent(analytics(), "cancel_paypal_checkout")
+	}, [router.query.token])
 
 	const [paypalLoading, setPaypalLoading] = useState(false)
 	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
 		try{
-			const { redirect_link } = await createPayPalOrderLink(cart)
+			const { redirect_link } = await createPayPalOrderLink(cart, "cart")
 			router.push(redirect_link)
 		}
 		catch (e){
 			setPaypalLoading(false)
-			toast.error(`PayPal Order Link Error: ${e}`,{theme: "colored"})
+			toast.error(`PayPal Order Link Error, see console for more details`,{theme: "colored"})
+			console.error(e)
+		}
+	}
+
+	const [checkoutLoading, setCheckoutLoading] = useState(false)
+	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
+		setCheckoutLoading(p=>!p)
+		try{
+			const { orderID } = await createPayPalOrderLink(cart, "checkout")
+			router.push({
+				pathname: '/checkout',
+				query: { token: orderID },
+			})
+		}
+		catch(e){
+			setCheckoutLoading(false)
+			toast.error(`Checkout Order Generation Error, see console for more details`, { theme: "colored" })
 			console.error(e)
 		}
 	}
@@ -202,13 +217,14 @@ export default function Cart() {
 								</div>
 							</button>	
 							{/* checkout */}
-							<Link href="/checkout">
-							<button className="text-lg my-2 h-[50px] rounded-sm w-full disabled:text-gray-500 bg-white font-bold"
-							disabled={cart.length <= 0}
-							>
-								Checkout
+							<button className="text-lg my-2 w-full h-[50px] bg-white grid place-items-center relative group"
+								disabled={cart.length <= 0} onClick={goToCheckout}>
+								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black"
+									wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${checkoutLoading && "opacity-100"} left-[25%] absolute`} />
+								<span className="group-disabled:text-gray-500 font-bold">
+									Checkout
+								</span>
 							</button>
-							</Link>
 						</div>
 					</div>
 

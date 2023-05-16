@@ -12,6 +12,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 			"Content-Type": "application/json",
 		},
 	});
-	const data = await response.json();
-	res.status(200).send(data)
+	if(response.ok){
+		const data = await response.json();
+		res.status(200).send(data)
+	}
+	else{
+		// TODO
+	}
 }

@@ -1,16 +1,16 @@
-import { createOrderAPIReturn } from "pages/api/paypal/createorder"
+import { createOrderAPIProps, createOrderAPIReturn } from "pages/api/paypal/createorder"
 import { OrderProduct } from "types/order"
 
 /**
  * Function against local paypal API endpoint
  * @param amount Amount of money to pay
- * @returns 
+ * @returns object of type createOrderAPIReturn
  */
-export const createPayPalOrderLink = async (products: OrderProduct[], postal_code?: string) => {
+export const createPayPalOrderLink = async (products: OrderProduct[], cancel_url: string, postal_code?: string) => {
 	const response = await fetch(`/api/paypal/createorder`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ products: products.map(p => ({ ...p, product: undefined })), postal_code })
+		body: JSON.stringify({ products: products.map(p => ({ ...p, product: undefined })), postal_code, cancel_url } as createOrderAPIProps)
 	})
 
 	const responseData = await response.json() as createOrderAPIReturn
@@ -21,7 +21,7 @@ export const createPayPalOrderLink = async (products: OrderProduct[], postal_cod
 		return responseData
 	}
 	else {
-		console.error(responseData)
+		console.warn(responseData)
 		throw new Error("Response Error: Check console for more details")
 	}
 }

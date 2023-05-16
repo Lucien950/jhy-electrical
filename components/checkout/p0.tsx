@@ -1,5 +1,5 @@
 // react
-import { FormEventHandler, useState } from "react";
+import { Dispatch, FormEventHandler, SetStateAction, useRef, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox } from '@headlessui/react'
@@ -12,19 +12,23 @@ import CustomerInterface from 'types/customer';
 import { OrderProduct } from "types/order";
 import { PriceInterface } from "util/priceUtil";
 import { postalCodePattern } from "util/shipping/postalCode";
+import { Address } from "@paypal/paypal-js"
 
 
-const ProvinceDropdown = ({ province, setProvince }: { province: string, setProvince: (p: string) => void }) => {
+const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
 	const [query, setQuery] = useState('')
 	const provinces = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"]
 	const filteredProvinces = query === '' ? [] : provinces.filter((province) => province.toLowerCase().includes(query.toLowerCase()))
+	const input = useRef<HTMLInputElement>(null)
 
 	return (
-		<Combobox value={province} onChange={setProvince} className="relative" as="div">
+		<Combobox value={province} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
 			<Combobox.Input
 				onChange={(event) => setQuery(event.target.value)}
 				className="w-full h-full p-2 rounded-sm border-2 focus:outline-none focus:ring"
 				placeholder='Province'
+				data-field_id="admin_area_1"
+				ref={input}
 			/>
 			<Combobox.Options className="absolute bg-white z-10 w-full">
 				{filteredProvinces.map((province) => (
@@ -44,45 +48,61 @@ interface ShippingFieldProps {
 	defaultValue?: string,
 	required?: boolean,
 	pattern?: string,
-	customerUpdate: (id: string, val: string) => void
+	setField: (id: string, value: string) => void
 }
-const ShippingField = ({ field_id, field_placeholder, className, defaultValue, required = false, pattern, customerUpdate }: ShippingFieldProps) => (
-	<input
-		type="text" name={field_id} id={field_id}
-		className={`p-2 py-4 border-2 rounded-[5px] focus:outline-none focus:ring-2 ${className}`}
-		placeholder={field_placeholder} defaultValue={defaultValue}
-		onChange={(e) => { customerUpdate(field_id, e.target.value) }}
-		required={required}
-		pattern={pattern}
-	/>
-)
+const ShippingField = ({ field_id, field_placeholder, className, defaultValue, required = false, pattern, setField }: ShippingFieldProps) => {
+	return (
+		<input
+			type="text" name={field_id} id={field_id}
+			onChange={(e)=>setField(field_id, e.target.value)}
+			className={`p-2 py-4 border-2 rounded-[5px] focus:outline-none focus:ring-2 ${className}`}
+			placeholder={field_placeholder} defaultValue={defaultValue}
+			required={required}
+			pattern={pattern}
+		/>
+	)
+}
+
 
 type p0Input = {
 	customerInformation: CustomerInterface,
-	shippingUpdate: (id: string, val: string)=>void,
-	customerUpdate: (id: string, val: string)=>void
 	cart: OrderProduct[], paymentInformation: PriceInterface,
 	nextCheckoutStage: () => void,
-	canGoToPayment: boolean
+	canGoToPayment: boolean,
+	setCustomerInformation: Dispatch<SetStateAction<CustomerInterface>>,
 }
-const p0 = (
-	{ customerInformation, cart, paymentInformation, canGoToPayment,
-		shippingUpdate, customerUpdate, nextCheckoutStage }: p0Input) => {
+const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformation, canGoToPayment, nextCheckoutStage }: p0Input) => {
 
 	const proceedPayment: FormEventHandler<HTMLFormElement> = (e) => {
 		e.preventDefault()
 		// this is the only onr which are not auto handled "required" by the HTML form
-		if (!customerInformation.address.admin_area_1) {
+		if (!customerInformation.address?.admin_area_1) {
 			toast("Province not Filled")
 			return
 		}
-		
+
 		// just for display reasons, nextCheckoutStage will check again
 		if (!paymentInformation.shipping) {
-			toast("Shipping Not Estimated")
+			toast.warn("Shipping Not Estimated", { theme: "colored" })
 			return
 		}
 		nextCheckoutStage()
+	}
+
+	const customerChange = (id: string, val: string)=>{
+		setCustomerInformation(ci=>({
+			...ci,
+			[id]: val
+		}))
+	}
+	const shippingChange = (id: string, val: string)=>{
+		setCustomerInformation(ci=>({
+			...ci,
+			address:{
+				...ci.address,
+				[id]: val
+			} as Address
+		}))
 	}
 
 	return (
@@ -110,13 +130,13 @@ const p0 = (
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4">Shipping</h1>
 					<div className="grid grid-cols-2 gap-x-2 gap-y-2 text-sm">
-						<ShippingField required customerUpdate={customerUpdate} field_id="first_name" field_placeholder="First Name" defaultValue={customerInformation.first_name} />
-						<ShippingField required customerUpdate={customerUpdate} field_id="last_name" field_placeholder="Last Name" defaultValue={customerInformation.last_name} />
-						<ShippingField required customerUpdate={shippingUpdate} field_id="address_line_1" field_placeholder="Address" defaultValue={customerInformation.address.address_line_1!} className="col-span-2" />
-						<ShippingField customerUpdate={shippingUpdate} field_id="address_line_2" field_placeholder="Apt/Suite (Optional)" defaultValue={customerInformation.address.address_line_2!} className="col-span-2" />
-						<ShippingField required customerUpdate={shippingUpdate} field_id="admin_area_2" field_placeholder="City" defaultValue={customerInformation.address.admin_area_2!} />
-						<ProvinceDropdown province={customerInformation.address.admin_area_1!} setProvince={(province: string) => { shippingUpdate("admin_area_1", province) }} />
-						<ShippingField required customerUpdate={shippingUpdate} field_id="postal_code" field_placeholder="Postal Code" defaultValue={customerInformation.address.postal_code!} pattern={postalCodePattern} />
+						<ShippingField required setField={customerChange} field_id="first_name" 		field_placeholder="First Name" 						defaultValue={customerInformation.first_name} />
+						<ShippingField required setField={customerChange} field_id="last_name"			field_placeholder="Last Name" 						defaultValue={customerInformation.last_name} />
+						<ShippingField required setField={shippingChange} field_id="address_line_1" field_placeholder="Address" 							defaultValue={customerInformation.address?.address_line_1} className="col-span-2" />
+						<ShippingField          setField={shippingChange} field_id="address_line_2" field_placeholder="Apt/Suite (Optional)" 	defaultValue={customerInformation.address?.address_line_2} className="col-span-2" />
+						<ShippingField required setField={shippingChange} field_id="admin_area_2"   field_placeholder="City" 									defaultValue={customerInformation.address?.admin_area_2} />
+						<ProvinceDropdown 	 setProvince={shippingChange} province={customerInformation.address?.admin_area_1} />
+						<ShippingField required setField={shippingChange} field_id="postal_code" 		field_placeholder="Postal Code" 					defaultValue={customerInformation.address?.postal_code} pattern={postalCodePattern} />
 						<div className="relative">
 							<input type="text" name="" id="" className="border-2 rounded-[5px] w-full p-2 py-4" disabled />
 							<div className="absolute flex flex-row top-[50%] translate-y-[-50%] left-4 items-center gap-x-1">

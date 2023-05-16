@@ -53,7 +53,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	<PersistGate persistor={persistor}>
 	<CartUpdater />
 	<NavBar />
-	<ToastContainer autoClose={false} transition={Slide}/>
+	<ToastContainer autoClose={process.env.NODE_ENV === "development" ? 10000 : false} transition={Slide}/>
 	<AnimatePresence
 		initial={false}
 		mode = "wait"

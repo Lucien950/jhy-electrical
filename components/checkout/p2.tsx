@@ -17,16 +17,18 @@ import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from "util/firebase/firestore"
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { submitOrder } from "util/paypal/submitOrderClient";
 
 type ReviewViewProps = {
 	customerInformation: CustomerInterface,
 	paymentInformation: PriceInterface,
 	cart: OrderProduct[],
 	goToShipping: MouseEventHandler<HTMLButtonElement>,
-	goToPayment: MouseEventHandler<HTMLButtonElement>
+	goToPayment: MouseEventHandler<HTMLButtonElement>,
+	orderID: string
 }
 
-const ReviewView = ({ customerInformation, paymentInformation, cart, goToShipping, goToPayment }: ReviewViewProps) => {
+const ReviewView = ({ customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID }: ReviewViewProps) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
@@ -34,70 +36,41 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
 		setSubmitOrderLoading(true)
 
-		if(!(paymentInformation.shipping && paymentInformation.subtotal && paymentInformation.tax && paymentInformation.total)){
+		// for extra security
+		if (Object.values(paymentInformation).some(p=>p == 0)){
 			setSubmitOrderLoading(false)
 			console.error("Payment Information is not Complete")
 			return
 		}
-
-		const newOrder = {
-			products: cart,
-			orderPrice: paymentInformation,
-			dateTS: Timestamp.now(),
-			completed: false,
-
-			name: `${customerInformation.first_name} ${customerInformation.last_name}`,
-			email: customerInformation.paypalInfo?.paypalEmail,
-			address: customerInformation.address,
-		} as FirestoreOrderInterface
-
-		if (customerInformation.paymentMethod == "paypal") {
-			if (!customerInformation.paypalInfo) {
-				setSubmitOrderLoading(false)
-				console.error("Payment Method Paypal does not have paypal information object")
-				return
-			}
-			const updateResponse = await fetch("/api/paypal/updateorder", {
-				method: "PATCH",
-				body: JSON.stringify({ amount: paymentInformation.total, token: customerInformation.paypalInfo.token })
-			}).catch(err => console.error(err))
-			if (!updateResponse) return
-			const response = await fetch("/api/paypal/submitorder", {
-				method: "POST",
-				body: JSON.stringify({ token: customerInformation.paypalInfo.token })
-			})
-				.catch(err => {
-					console.error(err)
-				})
-			if (!response) {
-				setSubmitOrderLoading(false)
-				return
-			}
-			newOrder.paypalOrderID = customerInformation.paypalInfo.token
-		}
-		else if (customerInformation.paymentMethod == "card") {
-			// TODO Process Card Hosted Fields
-			console.log("process card")
-		}
-		else {
-			console.log(customerInformation.paymentMethod, "is not a valid payment source")
+		if (!customerInformation.payment_source) {
 			setSubmitOrderLoading(false)
+			console.error("Payment Method Paypal does not have paypal information object")
 			return
 		}
 
-		const doc = await addDoc(collection(db, "orders"), newOrder)
-			.catch(err => {
-				console.error(err)
-			})
-
-		if (!doc) {
-			setSubmitOrderLoading(false)
-			toast(`Paypal has been charged, but order was not submitted. Please contact us with PayPal OrderID ${newOrder.paypalOrderID}`)
-			return
+		let firebaseOrderID;
+		switch (customerInformation.paymentMethod){
+			case "paypal":
+				try{
+					firebaseOrderID = (await submitOrder(orderID)).orderID
+				}
+				catch{
+					setSubmitOrderLoading(false)
+					return
+				}
+				break
+			case "card":
+				// TODO Process Card Hosted Fields
+				console.log("process card")
+				break
+			default:
+				console.log(customerInformation.paymentMethod, "is not a valid payment source")
+				setSubmitOrderLoading(false)
+				return
 		}
 		
 		dispatch(clearCart())
-		router.push(`/order/${doc.id}`)
+		router.push(`/order/${firebaseOrderID}`)
 	}
 	
 	return (
@@ -107,9 +80,9 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 				<h1 className="flex-[2] text-base"> Shipping Address </h1>
 				<div className="flex-[5]">
 					<p> {customerInformation.first_name} {customerInformation.last_name}</p>
-					<p> {customerInformation.address.address_line_1} </p>
-					<p> {customerInformation.address.address_line_2} </p>
-					<p> {customerInformation.address.admin_area_2}, {customerInformation.address.admin_area_1}, {customerInformation.address.postal_code} </p>
+					<p> {customerInformation.address!.address_line_1} </p>
+					<p> {customerInformation.address!.address_line_2} </p>
+					<p> {customerInformation.address!.admin_area_2}, {customerInformation.address!.admin_area_1}, {customerInformation.address!.postal_code} </p>
 				</div>
 				<button className="underline" onClick={goToShipping}>Edit</button>
 			</div>
@@ -121,7 +94,7 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 						customerInformation.paymentMethod == "paypal" &&
 						<div>
 							<PaypalSVG className="h-6" />
-							<p className="text-sm">Email: {customerInformation.paypalInfo?.paypalEmail}</p>
+							<p className="text-sm">Email: {customerInformation.payment_source?.paypal?.email_address}</p>
 						</div>
 					}
 					{
