@@ -22,7 +22,7 @@ import { submitOrder } from "util/paypal/submitOrderClient";
 type ReviewViewProps = {
 	customerInformation: CustomerInterface,
 	paymentInformation: PriceInterface,
-	cart: OrderProduct[],
+	cart?: OrderProduct[],
 	goToShipping: MouseEventHandler<HTMLButtonElement>,
 	goToPayment: MouseEventHandler<HTMLButtonElement>,
 	orderID: string
@@ -111,16 +111,21 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 			<div className="bg-gray-200 p-5 mb-2">
 				<h1 className="mb-4 text-lg"> Items </h1>
 				<div className="grid grid-cols-2">
-					{cart.map(p =>
-						<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
-							<img src={p.product?.productImageURL} alt="Product Image" className="h-16" />
-							<div className="flex-1 text-sm">
-								<h1 className="font-bold text-base">{p.product?.productName}</h1>
-								<p>${p.product?.price.toFixed(2)}</p>
-								<p>{p.product?.description}</p>
+					{cart
+						? cart.map(p =>
+							<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
+								<img src={p.product?.productImageURL} alt="Product Image" className="h-16" />
+								<div className="flex-1 text-sm">
+									<h1 className="font-bold text-base">{p.product?.productName}</h1>
+									<p>${p.product?.price.toFixed(2)}</p>
+									<p>{p.product?.description}</p>
+								</div>
 							</div>
-						</div>
-					)}
+						)
+						: <div>
+								<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
+							</div>
+					}
 				</div>
 			</div>
 			{/* submit buttons */}

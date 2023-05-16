@@ -1,5 +1,6 @@
 import { Address } from "@paypal/paypal-js"
-import { updateOrderProps, updateOrderReturn } from "pages/api/paypal/updateorder"
+import { updateOrderProps, updateOrderRes } from "pages/api/paypal/updateorder"
+import { apiResponse } from "util/api"
 
 // TODO maybe also customer information (name)
 /**
@@ -15,8 +16,7 @@ export const updateOrderAddress = async (orderID: string, address: Address, name
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ token: orderID, address, name } as updateOrderProps)
 	})
-	if (!response.ok){
-		throw new Error(JSON.stringify(await response.json()))
-	}
-	return await response.json() as updateOrderReturn
+	const {res, err} = await response.json() as apiResponse<updateOrderRes, any>
+	if (!response.ok) throw new Error(err)
+	return res!
 }

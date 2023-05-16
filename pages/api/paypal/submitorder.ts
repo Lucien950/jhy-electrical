@@ -9,16 +9,15 @@ import { FirestoreOrderInterface } from "types/order"
 // firebase
 import { Timestamp, addDoc, collection } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
+import { apiRespond } from "util/api"
 
 export type submitOrderProps = { token: string }
-export type submitOrderError = { error_message: string }
 export type submitOrderRes = { orderID: string }
-export type submitOrderReturn = { res?: submitOrderRes, err?: submitOrderError }
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const { token }: submitOrderProps = JSON.parse(req.body)
 	if (!token) {
-		res.status(500).send({ error_message: "Token is required to submit order" } as submitOrderError)
+		apiRespond(res, "error", "Token is required to submit order")
 		return
 	}
 
@@ -32,16 +31,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
 	const authResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/authorize`, options)
 	if (!authResponse.ok) {
-		res.status(500).send({ err: { error_message: JSON.stringify(await authResponse.json()) } } as submitOrderReturn)
+		apiRespond(res, "error", await authResponse.json())
 		return
 	}
 
-	const order = await getOrder(token).catch(e => res.status(500).send({err: { error_message: e.message }} as submitOrderReturn))
+	const order = await getOrder(token).catch(apiRespond(res, "error"))
 	if (!order) return
 
 	const { products: productIDs, paymentInformation, customerInformation } = order
 	const cart = await Promise.all(productIDs.map(async p => {
-		const product = (await getProductByID(p.PID).catch(e => res.status(500).send({ err: { error_message: e.message } } as submitOrderReturn)))
+		const product = (await getProductByID(p.PID).catch(apiRespond(res, "error")))
 		|| 	{
 					productName: "PRODUCT NOT FOUND",
 					quantity: 0,
@@ -63,12 +62,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		paypalOrderID: token,
 	} as FirestoreOrderInterface
 
-	const doc = await addDoc(collection(db, "orders"), newOrder).catch(e=>res.status(500).send({err: {error_message: e.message}}))
+	const doc = await addDoc(collection(db, "orders"), newOrder).catch(apiRespond(res, "error"))
 	if (!doc) return
 	
-	res.status(200).send({
-		res: {
-			orderID: doc.id
-		}
-	} as submitOrderReturn)
+	apiRespond<submitOrderRes>(res, "response", { orderID: doc.id })
 }

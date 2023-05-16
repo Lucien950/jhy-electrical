@@ -79,9 +79,10 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, c
 						}
 					</RadioOption>
 				</RadioGroup>
+
 				{
-					RadioGroupDisabled && 
-					<p>Payment has been chosen. If you would like to choose a different method of payment, please </p>
+					RadioGroupDisabled &&
+					<p className="mt-6 text-sm">Payment has been chosen. If you would like to choose a different method of payment, please create a new order</p>
 				}
 			</div>
 			{/* hosted fields and paypal information */}

@@ -14,6 +14,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
 import { Dialog, Transition } from '@headlessui/react'
 import { Oval } from "react-loader-spinner";
+import { firebaseConsoleBadge } from "util/firebase/console";
 
 type InputFieldPropType = {
 	label: string,
@@ -60,7 +61,6 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		}
 		// checkboxes
 		if (e.target.type == "checkbox") {
-			console.log("checkbox")
 			setAddProduct((oldAddProduct) => {return {...oldAddProduct, [productAttribute]: e.target.checked}})
 			return
 		}
@@ -68,7 +68,6 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		if (e.target.type == "text") {
 			let inputFieldValue: string | number = e.target.value
 			const isNumberValue = e.target.getAttribute("data-numberValue") === "true"
-			console.log("is number value, value", isNumberValue)
 			if (isNumberValue) inputFieldValue = parseFloat(inputFieldValue)
 			setAddProduct(oldAddProduct => {
 				(oldAddProduct as any)[productAttribute] = inputFieldValue
@@ -114,7 +113,6 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		})
 	}
 	const addProductSubmit = async (e: FormEvent<HTMLFormElement>) => {
-		console.log("submit")
 		e.preventDefault()
 		e.stopPropagation()
 
@@ -147,7 +145,6 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 				setUploading(false)
 				return
 			}
-			console.log("Image Upload Successful")
 		}
 
 		// FIRESTORE Update
@@ -177,7 +174,7 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 			return
 		}
 
-		console.log("Firestore Update Success")
+		console.log(...firebaseConsoleBadge, "Firestore Update Success")
 		closeModal()
 	}
 
@@ -212,15 +209,11 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 	}
 	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => {
 		stopProp(e)
-
-		console.log("drag enter")
 		setFileActive(true)
 	}
 	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => {
 		stopProp(e)
-
 		setFileActive(false)
-		console.log("drag leave")
 	}
 
 	return (
@@ -392,9 +385,7 @@ const useUpdatingProducts = ()=>{
 	// listen to new product changes
 	useEffect(() => {
 		const unSubProducts = onSnapshot(query(collection(db, "products"), orderBy("productName")), (snapshot) => {
-			console.log('%c Firebase ',
-				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
-				'Admin Product Snapshot Updated');
+			console.log(...firebaseConsoleBadge, 'Admin Product Snapshot Updated');
 			const newProducts = snapshot.docs.map(productDoc => fillProductDoc(productDoc))
 
 			Promise.all(newProducts).then(newProducts => {

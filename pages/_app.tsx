@@ -22,6 +22,7 @@ import { cartFillProducts } from "util/redux/cart.slice";
 import { OrderProduct } from "types/order"
 import { collection, onSnapshot } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
+import { firebaseConsoleBadge } from 'util/firebase/console'
 
 // dispatch here in order to be inside the provider
 const CartUpdater = ()=>{
@@ -29,9 +30,7 @@ const CartUpdater = ()=>{
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	useEffect(() => {
 		const unsub = onSnapshot(collection(db, "products"), async (snapshot) => {
-			console.log('%c Firebase ',
-				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
-				'Cart Snapshot Updated');
+			console.log(...firebaseConsoleBadge ,'Cart Snapshot Updated');
 			const cartIds = cart.map(p => p.PID)
 			const changedDocs = snapshot.docChanges().map(doc => doc.doc)
 			const requiredProducts = await Promise.all(changedDocs.filter	(doc => cartIds.includes(doc.id)).map(fillProductDoc))

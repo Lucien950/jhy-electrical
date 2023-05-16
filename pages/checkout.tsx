@@ -29,16 +29,21 @@ import { getProductByID } from 'util/productUtil'
 import { updateOrderAddress } from 'util/paypal/updateOrderClient'
 import { postalCodePattern } from 'util/shipping/postalCode'
 
+const findFinalTotalFound = (pi: PriceInterface) => Object.values(pi).every(v => v != 0)
+const findPaymentMethodFound = (ci: CustomerInterface) => (ci.paymentMethod == "paypal" && !!ci.payment_source?.paypal) || (ci.paymentMethod == "card" && !!ci.payment_source?.card)
+
 type CheckoutProps = {
 	paypalCustomerInformation: CustomerInterface,
 	paypal_error?: string,
-	products: OrderProduct[],
+	productIDs: OrderProduct[],
 	paypalPaymentInformation: PriceInterface,
 	orderID: string,
 	redirect_link: string,
 	status: string
+	initialCheckoutStage: number
 }
-export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, products, paypal_error, orderID, redirect_link, status }: CheckoutProps) {
+export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, productIDs, paypal_error, orderID, redirect_link, status, initialCheckoutStage }: CheckoutProps)
+{
 	if (paypal_error) {
 		logEvent(analytics(), "checkout_error_paypal_SSR")
 		return (
@@ -61,19 +66,15 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 		)
 	}
 
-	// ONLOAD
+	// onload analytics
+	const [cart, setCart] = useState<OrderProduct[]>()
 	useEffect(() => {
-		logEvent(analytics(), "begin_checkout")
-		// go to latest possible checkout stage
-		if (finalTotalFound && !paymentMethodFound) {
-			goToPayment()
-		}
-		else if (paymentMethodFound) {
-			goToReview()
-		}
-		else{
-			goToShipping()
-		}
+		logEvent(analytics(), "begin_checkout");
+		logEvent(analytics(), "checkout_progress", { checkout_step: initialCheckoutStage });
+		(async () => {
+			const newCart = await Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
+			setCart(newCart)
+		})()
 	}, [])
 
 	// customer
@@ -85,17 +86,16 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 	const [paymentInformation, setPaymentInformation] = useState<PriceInterface>(paypalPaymentInformation)
 	// pricing UI
 	const [calculatingShipping, setCalculatingShipping] = useState(false)
-	const finalTotalFound = Object.values(paymentInformation).every(v => v != 0)
-	const paymentMethodFound =
-		(customerInformation.paymentMethod == "paypal" && !!customerInformation.payment_source?.paypal) ||
-		(customerInformation.paymentMethod == "card" && !!customerInformation.payment_source?.card)
+	const finalTotalFound = findFinalTotalFound(paymentInformation)
+	const paymentMethodFound = findPaymentMethodFound(customerInformation)
 
 	useEffect(()=>{
 		// validate admin province is not empty (rest is required in input)
-		if (!(currentCheckoutStage == 0) || !foundCheckoutStage) return
+		if (!(currentCheckoutStage == 0)) return
 		if (!customerInformation.address?.admin_area_1) return
 		if (!customerInformation.address?.postal_code?.match(new RegExp(postalCodePattern))) return
 
+		console.log("recalculating");
 		(async ()=>{
 			setCalculatingShipping(true)
 			// update order with postal code
@@ -117,28 +117,24 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 	}, [customerInformation])
 
 	// CHECKOUT STAGES
-	const [foundCheckoutStage, setFoundCheckoutStage] = useState(false) 
-	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(0)
+	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(initialCheckoutStage)
 	const canGoToPayment = finalTotalFound
 	const canGoToReview = finalTotalFound && paymentMethodFound
 	// CHECKOUT STAGES
 	const goToShipping = () => {
 		setCurrentCheckoutStage(0)
 		logEvent(analytics(), "checkout_progress", { checkout_step: 0 })
-		setFoundCheckoutStage(true)
 	}
 	const goToPayment = () => {
 		if (canGoToPayment) {
 			setCurrentCheckoutStage(1)
 			logEvent(analytics(), "checkout_progress", { checkout_step: 1 })
-			setFoundCheckoutStage(true)
 		}
 	}
 	const goToReview = () => {
 		if (canGoToReview) {
 			setCurrentCheckoutStage(2)
 			logEvent(analytics(), "checkout_progress", { checkout_step: 2 })
-			setFoundCheckoutStage(true)
 		}
 	}
 	const GetCheckoutStageView = () => {
@@ -146,7 +142,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 			case 0:
 				const p1 = {
 					customerInformation, setCustomerInformation,
-					cart: products,
+					cart,
 					canGoToPayment, paymentInformation,
 					nextCheckoutStage: goToPayment,
 				}
@@ -161,7 +157,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 				}
 				return <CheckoutStageOne {...p2} />
 			case 2:
-				const p3 = { customerInformation, paymentInformation, cart: products, goToShipping, goToPayment, orderID}
+				const p3 = { customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID}
 				return <CheckoutStageTwo {...p3} />
 		}
 	}
@@ -264,10 +260,21 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 				redirect_link,
 				status
 			} = await getOrder(token)
-			const products = await Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) } as OrderProduct)))
-			
-			let ret = { paypalCustomerInformation, paypalPaymentInformation, products, orderID: token, status } as CheckoutProps
-			if (redirect_link) ret["redirect_link"] = redirect_link
+			let ret = {
+				paypalCustomerInformation,
+				paypalPaymentInformation,
+				productIDs,
+				orderID: token,
+				status } as CheckoutProps
+			if (redirect_link) ret.redirect_link = redirect_link
+		
+			// determining initial checkout stage
+			const finalTotalFound = findFinalTotalFound(paypalPaymentInformation)
+			const paymentMethodFound = findPaymentMethodFound(paypalCustomerInformation)
+			if (finalTotalFound && !paymentMethodFound) ret.initialCheckoutStage = 1
+			else if (paymentMethodFound) ret.initialCheckoutStage = 2
+			else ret.initialCheckoutStage = 0
+
 			return { props: ret  }
 		}
 		catch (e: any) {

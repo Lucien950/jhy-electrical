@@ -6,6 +6,7 @@ import { baseURL } from 'util/paypal/baseURL';
 import { PriceInterface, makePrice } from 'util/priceUtil';
 import { getProductByID } from 'util/productUtil';
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
+import { apiRespond } from 'util/api';
 
 const createOrderAPICall = async (access_token: string, cancel_url: string, paymentInformation: PriceInterface, productIDS: OrderProduct[]) => {
 	const returnDomain = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://jhycanada.ca"
@@ -59,33 +60,33 @@ const createOrderAPICall = async (access_token: string, cancel_url: string, paym
 }
 
 export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancel_url: string }
-export type createOrderAPIReturn = { orderStatus: string, orderID: string, redirect_link: string, update_link: string, submit_link: string, paymentInformation: PriceInterface}
+export type createOrderAPIRes = { orderStatus: string, orderID: string, redirect_link: string, update_link: string, submit_link: string, paymentInformation: PriceInterface}
 export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	// INPUTS
 	const { products: productIDS, postal_code, cancel_url }: createOrderAPIProps = req.body
 	if (!productIDS || !(productIDS.every(p=>p && p.PID && p.quantity))){
-		res.status(500).send({ error_message: "Products not provided or incorrectly formatted" })
+		apiRespond(res, "error", "Products not provided or incorrectly formatted")
 	}
 
 	// access token
 	const accessToken = await generateAccessToken()
 	if(!accessToken){
-		res.status(500).send({ error_message: "Access Token could not be generated"})
+		apiRespond(res, "error", "Access Token could not be generated")
 		return
 	}
 
 	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
 	const paymentInformation = await makePrice(products, postal_code)
 	
-	const order = await createOrderAPICall(accessToken, cancel_url, paymentInformation, productIDS).catch(e=>res.status(500).send(e.message))
+	const order = await createOrderAPICall(accessToken, cancel_url, paymentInformation, productIDS).catch(apiRespond(res, "error"))
 	if(!order) return
 
-	res.status(200).send({
-		orderID: order.id,
+	apiRespond<createOrderAPIRes>(res, "response", {
 		orderStatus: order.status,
-		redirect_link: order.links.find(l => l.rel =="approve")?.href,
-		update_link: order.links.find(l => l.rel == "update")?.href,
-		submit_link: order.links.find(l => l.rel == "capture")?.href,
+		orderID: order.id,
+		redirect_link: order.links.find(l => l.rel == "approve")?.href!,
+		update_link: order.links.find(l => l.rel == "update")?.href!,
+		submit_link: order.links.find(l => l.rel == "capture")?.href!,
 		paymentInformation
-	} as createOrderAPIReturn)
+	})
 }

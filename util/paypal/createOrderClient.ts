@@ -1,5 +1,6 @@
-import { createOrderAPIProps, createOrderAPIReturn } from "pages/api/paypal/createorder"
+import { createOrderAPIProps, createOrderAPIRes } from "pages/api/paypal/createorder"
 import { OrderProduct } from "types/order"
+import { apiResponse } from "util/api"
 
 /**
  * Function against local paypal API endpoint
@@ -13,15 +14,12 @@ export const createPayPalOrderLink = async (products: OrderProduct[], cancel_url
 		body: JSON.stringify({ products: products.map(p => ({ ...p, product: undefined })), postal_code, cancel_url } as createOrderAPIProps)
 	})
 
-	const responseData = await response.json() as createOrderAPIReturn
-	const { redirect_link, orderStatus } = responseData
+	const { res, err } = await response.json() as apiResponse<createOrderAPIRes, any>
+	const { redirect_link, orderStatus } = res!
 	if(response.ok && redirect_link){
 		if (orderStatus == "COMPLETED") throw new Error("REQUEST ID HAS BEEN USED")
 		if (!redirect_link) throw new Error("Redirect Link could not be found")
-		return responseData
+		return res!
 	}
-	else {
-		console.warn(responseData)
-		throw new Error("Response Error: Check console for more details")
-	}
+	else throw new Error(err)
 }

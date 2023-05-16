@@ -5,9 +5,10 @@ import { generateAccessToken } from "util/paypal/auth";
 import { makePrice } from "util/priceUtil";
 import { getProductByID } from "util/productUtil";
 
-import { updateOrderProps, updateOrderReturn } from ".";
+import { updateOrderProps, updateOrderRes } from ".";
 import { Address } from "@paypal/paypal-js"
 import { FIRSTLASTDENOM } from "util/paypal/getOrder";
+import { apiRespond } from "util/api";
 
 const updateOrderAddress = async (token: string, newAddress: Address, name: { firstName: string, lastName: string }) => {
 	const { products: productIDS } = await getOrder(token)
@@ -70,19 +71,19 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		case "address":
 			const { token, address, name } = req.body as updateOrderProps
 			if (!token || typeof token != "string" || !address || !name || !(typeof name == "object")) {
-				res.status(500).send({ error_message: "Did not send all required body props" })
+				apiRespond(res, "error", "Did not send all required body props")
 				return
 			}
 			try {
 				const { newPrice } = await updateOrderAddress(token, address, name)
-				res.status(200).send({ newPrice } as updateOrderReturn)
+				apiRespond<updateOrderRes>(res, "response", { newPrice })
 			}
 			catch (e: any) {
-				res.status(500).send({ error_message: e.message})
+				apiRespond(res, "error", e.error_message)
 			}
 			break
 		default:
-			res.status(500).send({ error_message: "Invalid Order Update" })
+			apiRespond(res, "error", "Invalid Order Update Property")
 			break
 	}
 }

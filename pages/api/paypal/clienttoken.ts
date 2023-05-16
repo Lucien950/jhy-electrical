@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { apiRespond } from 'util/api';
 import { generateAccessToken } from 'util/paypal/auth';
 import { baseURL } from 'util/paypal/baseURL';
 
@@ -13,8 +14,8 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		},
 	});
 	if(response.ok){
-		const data = await response.json();
-		res.status(200).send(data)
+		const data = await response.json(); //TODO type this
+		apiRespond(res, "response", data)
 	}
 	else{
 		// TODO

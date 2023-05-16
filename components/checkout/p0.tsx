@@ -1,5 +1,5 @@
 // react
-import { Dispatch, FormEventHandler, SetStateAction, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, SetStateAction, useEffect, useRef, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox } from '@headlessui/react'
@@ -13,6 +13,8 @@ import { OrderProduct } from "types/order";
 import { PriceInterface } from "util/priceUtil";
 import { postalCodePattern } from "util/shipping/postalCode";
 import { Address } from "@paypal/paypal-js"
+import { getProductByID } from "util/productUtil";
+import { Oval } from "react-loader-spinner";
 
 
 const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
@@ -66,7 +68,7 @@ const ShippingField = ({ field_id, field_placeholder, className, defaultValue, r
 
 type p0Input = {
 	customerInformation: CustomerInterface,
-	cart: OrderProduct[], paymentInformation: PriceInterface,
+	cart?: OrderProduct[], paymentInformation: PriceInterface,
 	nextCheckoutStage: () => void,
 	canGoToPayment: boolean,
 	setCustomerInformation: Dispatch<SetStateAction<CustomerInterface>>,
@@ -113,17 +115,22 @@ const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformat
 					<h1 className="text-xl">Products</h1>
 					<div className="flex flex-col gap-y-2">
 						{/* product component */}
-						{cart.map(productInfo =>
-							<div className="flex flex-row items-center gap-x-2 p-2" key={productInfo.PID}>
-								<img src={productInfo.product?.productImageURL} alt="" className="h-10" />
-								<p>
-									{productInfo.product?.productName}
-								</p>
-								<p>
-									{productInfo.product?.price} x {productInfo.quantity}
-								</p>
-							</div>
-						)}
+						{cart
+							? cart.map(productInfo =>
+								<div className="flex flex-row items-center gap-x-2 p-2" key={productInfo.PID}>
+									<img src={productInfo.product?.productImageURL} alt="" className="h-10" />
+									<p>
+										{productInfo.product?.productName}
+									</p>
+									<p>
+										{productInfo.product?.price} x {productInfo.quantity}
+									</p>
+								</div>
+							)
+							: <div>
+									<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
+								</div>
+						}
 					</div>
 				</div>
 				{/* shipping */}

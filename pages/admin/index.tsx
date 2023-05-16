@@ -18,6 +18,7 @@ import { AdminInterface } from 'types/admin';
 import AnalyticsComponent from 'components/admin/AnalyticsComponent';
 import Link from 'next/link';
 import { OrderInterface } from 'types/order';
+import { firebaseConsoleBadge } from 'util/firebase/console';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics",
@@ -100,9 +101,7 @@ const Admin = () => {
 	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
 	useEffect(() => {
 		const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("completed", "asc") , orderBy("dateTS", "desc"), orderBy("__name__", "asc")), (querySnapshot) => {
-			console.log('%c Firebase ',
-				'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem',
-				'Admin Orders Listing Snapshot Updated');
+			console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
 			Promise.all(querySnapshot.docs.map(fillOrder)).then(newOrders => setAllOrders(newOrders))
 		})
 		return () => unsubOrders();
