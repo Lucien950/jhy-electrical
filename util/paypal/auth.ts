@@ -1,4 +1,4 @@
-import { PayPalAuth } from "types/paypalTypes"
+import { PayPalAuth } from "types/paypal"
 import { baseURL } from "util/paypal/baseURL";
 
 const generateAccessToken = async (): Promise<string | void> => {

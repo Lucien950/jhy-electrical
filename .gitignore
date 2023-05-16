@@ -44,3 +44,4 @@ next-env.d.ts
 firebase-debug.log
 .prettierignore
 type.json
+./analyze

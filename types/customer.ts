@@ -1,5 +1,5 @@
 import {Address} from "@paypal/paypal-js"
-import { PaymentSource } from "./paypalTypes"
+import { PaymentSource } from "./paypal"
 export default interface CustomerInterface {
 	first_name?: string,
 	last_name?: string,

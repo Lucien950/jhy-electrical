@@ -2,7 +2,7 @@ import { doc, DocumentData, getDoc, DocumentSnapshot, getDocs, collection } from
 import { getDownloadURL, ref } from "firebase/storage";
 import { db } from "util/firebase/firestore"
 import { storage } from "util/firebase/storage";
-
+// type
 import productType from "types/product";
 
 const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{
