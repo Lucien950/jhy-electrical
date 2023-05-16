@@ -45,3 +45,5 @@ firebase-debug.log
 .prettierignore
 type.json
 ./analyze
+
+.vscode/settings.json
