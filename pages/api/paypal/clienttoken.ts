@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { PayPalClientToken, PayPalSimpleError } from 'types/paypal';
 import { apiRespond } from 'util/api';
-import { generateAccessToken } from 'util/paypal/auth';
+import { generateAccessToken } from 'util/paypal/server/auth';
 import { baseURL } from 'util/paypal/baseURL';
 
 /**
@@ -22,8 +22,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		apiRespond(res, "response", data)
 	}
 	else{
-		// TODO
 		const data = await response.json() as PayPalSimpleError
-		throw new Error(`${data.error}: ${data.error_description}`)
+		throw data
 	}
 }

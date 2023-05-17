@@ -6,13 +6,13 @@ export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1"
 
 const addressSchema = Joi.object({
 	address_line_1: Joi.string().max(300).required(),
-	address_line_2: Joi.string().max(300).required(),
+	address_line_2: Joi.string().max(300),
 	admin_area_1: Joi.string().required(),
 	admin_area_2: Joi.string().required(),
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().length(2).required(),
 })
-export const validateAddress = (candidate: Address) => addressSchema.validate(candidate)
+export const validateAddress = (candidate: Address) => addressSchema.validate(candidate).error === undefined
 
 /**
  * Token Type

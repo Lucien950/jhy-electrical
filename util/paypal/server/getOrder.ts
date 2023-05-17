@@ -1,4 +1,4 @@
-import { generateAccessToken } from 'util/paypal/auth'
+import { generateAccessToken } from 'util/paypal/server/auth'
 import CustomerInterface from 'types/customer';
 import { PriceInterface } from 'util/priceUtil';
 import { OrderResponseBody } from "@paypal/paypal-js"
@@ -36,7 +36,6 @@ export const getOrder = async (orderID: string)=>{
 	const reJSON = await response.json()
 	if(response.ok){
 		const data = reJSON as OrderResponseBody
-		if ((data as any).name == "RESOURCE_NOT_FOUND") throw new Error("PayPal could not find order")
 
 		// CUSTOMER INFORMATION
 		let customerInformation = {} as CustomerInterface
@@ -76,8 +75,5 @@ export const getOrder = async (orderID: string)=>{
 
 		return { customerInformation, paymentInformation, products, redirect_link, status }
 	}
-	else{
-		// this will do a full page display (no toast)
-		throw new Error(JSON.stringify(reJSON))
-	}
+	else throw reJSON
 }

@@ -1,5 +1,4 @@
 import CanadaPostClient from "canadapost-api"
-import { OrderProduct } from "types/order";
 
 const userID = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_USERID_DEV : process.env.NEXT_PUBLIC_CANADAPOST_USERID
 const password = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD_DEV : process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD
@@ -27,7 +26,7 @@ export const calculateShipping = async (products: productPackageInfo[], destinat
 			originPostalCode: "K4M1B4",
 			destination: {
 				domestic: {
-					postalCode: destination.split(" ").join("").toUpperCase()
+					postalCode: destination.replace(" ", "").toUpperCase()
 				}
 			}
 		})

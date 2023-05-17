@@ -1,5 +1,6 @@
 import { PayPalAuth, PayPalSimpleError } from "types/paypal"
 import { baseURL } from "util/paypal/baseURL";
+import { toB64 } from "util/toB64";
 
 const generateAccessToken = async () => {
 	const clientid = process.env.NODE_ENV === "development"
@@ -18,12 +19,9 @@ const generateAccessToken = async () => {
 		},
 	})
 
-	const data = await response.json();
-	if (response.ok) return (data as PayPalAuth).access_token;
-	else{
-		const error = data as PayPalSimpleError
-		throw new Error(`${error.error} ${error.error_description}`)
-	}
+	const data = await response.json()
+	if (response.ok) return (data as PayPalAuth).access_token
+	else throw data as PayPalSimpleError
 }
 
 export { generateAccessToken }

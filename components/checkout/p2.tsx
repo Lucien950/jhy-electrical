@@ -17,7 +17,7 @@ import { addDoc, collection, Timestamp } from 'firebase/firestore';
 import { db } from "util/firebase/firestore"
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import { submitOrder } from "util/paypal/submitOrderClient";
+import { submitOrder } from "util/paypal/client/submitOrderClient";
 
 type ReviewViewProps = {
 	customerInformation: CustomerInterface,

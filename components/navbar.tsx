@@ -13,7 +13,7 @@ import { removeFromCart } from "util/redux/cart.slice";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 
-import { createPayPalOrderLink } from "util/paypal/createOrderClient";
+import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
 import { toast } from "react-toastify";
 
 const CartIcon = (props: any) => {

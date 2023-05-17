@@ -1,7 +1,8 @@
 import { DocumentData, QueryDocumentSnapshot } from "firebase/firestore"
-import { FirestoreOrderInterface, OrderInterface } from "types/order"
+import { FirestoreOrderInterface, OrderInterface, OrderProduct } from "types/order"
+import { getProductByID } from "./productUtil"
 
-const fillOrder = async (orderDoc: QueryDocumentSnapshot<DocumentData>) => {
+export const fillOrder = async (orderDoc: QueryDocumentSnapshot<DocumentData>) => {
 	const preOrder = orderDoc.data() as FirestoreOrderInterface
 	return {
 		...preOrder,
@@ -11,4 +12,5 @@ const fillOrder = async (orderDoc: QueryDocumentSnapshot<DocumentData>) => {
 	} as OrderInterface
 }
 
-export { fillOrder }
+export const fillOrderProduct = async (productID: OrderProduct) => ({ ...productID, product: await getProductByID(productID.PID) })
+export const fillOrderProducts = async (productIDs: OrderProduct[]) => await Promise.all(productIDs.map(fillOrderProduct))

@@ -38,4 +38,4 @@ const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().required(),
 })
-export const validateOrderProduct = (candidate: OrderProduct) => orderProductSchema.validate(candidate)
+export const validateOrderProduct = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error === undefined

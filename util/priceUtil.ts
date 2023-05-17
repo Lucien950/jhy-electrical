@@ -20,6 +20,12 @@ export interface FinalPriceInterface{
 	total: number
 }
 
+/**
+ * Given products and a optional location, calculates the price of the order
+ * @param products Products in the order, MUST HAVE product field filled in
+ * @param postal_code Postal Code of delievery
+ * @returns Price of the order, subtotal, shipping, tax, total
+ */
 export const makePrice = async (products: OrderProduct[], postal_code?: string) => {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
 	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))

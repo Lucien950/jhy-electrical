@@ -1,5 +1,5 @@
 import { Address } from "@paypal/paypal-js"
-import { updateOrderProps, updateOrderRes } from "pages/api/paypal/updateorder"
+import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder"
 import { apiResponse } from "util/api"
 
 // TODO maybe also customer information (name)
@@ -14,9 +14,9 @@ export const updateOrderAddress = async (orderID: string, address: Address, full
 	const response = await fetch(`/api/paypal/updateorder/address`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderProps)
+		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderAddressProps)
 	})
-	const {res, err} = await response.json() as apiResponse<updateOrderRes, any>
+	const {res, err} = await response.json() as apiResponse<updateOrderAddressRes, any>
 	if (!response.ok) {
 		console.error("Update Product Address Error:", err)
 		throw new Error("Update Product Server Side Error: check console for more details")

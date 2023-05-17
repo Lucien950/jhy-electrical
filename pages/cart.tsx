@@ -12,7 +12,7 @@ import { PaypalSVG } from "components/paypalSVG";
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
 import { Oval } from "react-loader-spinner";
-import { createPayPalOrderLink } from "util/paypal/createOrderClient";
+import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 import { toast } from "react-toastify";

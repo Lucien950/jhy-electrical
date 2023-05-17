@@ -2,14 +2,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { apiRespond } from 'util/api';
 // util
-import { generateAccessToken } from 'util/paypal/auth';
+import { generateAccessToken } from 'util/paypal/server/auth';
 import { baseURL } from 'util/paypal/baseURL';
-import { getProductByID } from 'util/productUtil';
 // types
 import { OrderProduct, validateOrderProduct } from 'types/order';
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
 import { PriceInterface, makePrice } from 'util/priceUtil';
 import { validatePostalCode } from 'util/shipping/postalCode';
+import { fillOrderProducts } from 'util/orderUtil';
+import { PayPalError } from 'types/paypal';
 
 const createOrderAPICall = async (access_token: string, cancelPath: string, paymentInformation: PriceInterface, productIDS: OrderProduct[]) => {
 	const returnDomain = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://jhycanada.ca"
@@ -59,35 +60,42 @@ const createOrderAPICall = async (access_token: string, cancelPath: string, paym
 	})
 	const data = await response.json()
 	if (response.ok) return data as OrderResponseBody
-	else throw new Error(JSON.stringify(data))
+	else throw data as PayPalError
 }
 
 export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancelPath: string }
-export type createOrderAPIRes = { orderStatus: string, orderID: string, redirect_link: string | null, update_link: string | null, submit_link: string | null, paymentInformation: PriceInterface}
+export type createOrderAPIRes = {
+	orderStatus: string, orderID: string,
+	redirect_link: string | null,
+	paymentInformation: PriceInterface
+}
+
+/**
+ * Create Order API Endpoint
+ */
 export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	// INPUTS
-	const { products: productIDS, postal_code, cancelPath ="/" }: createOrderAPIProps = req.body
-	if (!productIDS) return apiRespond(res, "error", "Products not provided")
-	if (!productIDS.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
-	if(!postal_code) return apiRespond(res, "response", "Postal Code not Provided")
-	if(!validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code not Valid")
+	const { products: productIDs, postal_code, cancelPath ="/" }: createOrderAPIProps = req.body
+	if (!productIDs || !postal_code) return apiRespond(res, "error", "Body not complete")
+	if (!productIDs.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
+	if (!validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code is not valid")
 
-	// access token
-	const accessToken = await generateAccessToken().catch(apiRespond(res, "error"))
-	if (!accessToken) return
-
-	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
-	const paymentInformation = await makePrice(products, postal_code)
+	try{
+		// access token
+		const accessToken = await generateAccessToken()
+		// fill products
+		const products = await fillOrderProducts(productIDs)
+		const paymentInformation = await makePrice(products, postal_code)
+		const order = await createOrderAPICall(accessToken, cancelPath, paymentInformation, productIDs)
 	
-	const order = await createOrderAPICall(accessToken, cancelPath, paymentInformation, productIDS).catch(apiRespond(res, "error"))
-	if(!order) return
-
-	apiRespond<createOrderAPIRes>(res, "response", {
-		orderStatus: order.status,
-		orderID: order.id,
-		redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
-		update_link: order.links.find(l => l.rel == "update")?.href || null,
-		submit_link: order.links.find(l => l.rel == "capture")?.href || null,
-		paymentInformation
-	})
+		apiRespond<createOrderAPIRes>(res, "response", {
+			orderStatus: order.status,
+			orderID: order.id,
+			redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
+			paymentInformation
+		})
+	}
+	catch(e){
+		apiRespond(res, "error", e)
+	}
 }

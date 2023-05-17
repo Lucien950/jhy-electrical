@@ -1,19 +1,26 @@
 // api
 import { NextApiRequest, NextApiResponse } from "next";
-// util
-import { getOrder } from "util/paypal/getOrder";
-import { generateAccessToken } from "util/paypal/auth";
-import { makePrice } from "util/priceUtil";
-import { getProductByID } from "util/productUtil";
 import { apiRespond } from "util/api";
 // types
-import { updateOrderProps, updateOrderRes } from ".";
-import { Address } from "@paypal/paypal-js"
+import { updateOrderAddressProps, updateOrderAddressRes } from ".";
 import { validateAddress } from "types/paypal";
+// util
+import { makePrice } from "util/priceUtil";
+import { getOrder } from "util/paypal/server/getOrder";
+import { getProductByID } from "util/productUtil";
+import { generateAccessToken } from "util/paypal/server/auth";
 
-const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
-	const { products: productIDS } = await getOrder(token)
-	const products = await Promise.all(productIDS.map(async p=>({...p, product: await getProductByID(p.PID)})))
+export const updateOrderAddress = async (req: NextApiRequest, res: NextApiResponse) => {
+	const { token, address: newAddress, fullName } = req.body as updateOrderAddressProps
+	// validation
+	if (!token || !newAddress || !fullName) throw "Did not send all required body props"
+	if (typeof token != "string") throw "Token not well formed"
+	if (!validateAddress(newAddress)) throw "Address not well formed"
+	if (typeof fullName != "string") throw "Name not well formed"
+
+	const orders = await getOrder(token)
+	const { products: productIDS } = orders
+	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
 	const newPrice = await makePrice(products, newAddress.postal_code)
 	const body = [
 		{
@@ -59,11 +66,11 @@ const updateOrderAddress = async (token: string, newAddress: Address, fullName: 
 			Authorization: `Bearer ${await generateAccessToken()}`
 		},
 		body: JSON.stringify(body)
-	};
+	}
 
 	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}`, options)
-	if (!response.ok) throw new Error(JSON.stringify({ status: response.status, err: await response.json() }))
-	return { newPrice }
+	if (!response.ok) throw await response.json()
+	apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
 }
 
 /**
@@ -71,20 +78,14 @@ const updateOrderAddress = async (token: string, newAddress: Address, fullName: 
  */
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const { pid } = req.query
-
-	if(pid == "address"){
-		const { token, address, fullName } = req.body as updateOrderProps
-		// validation
-		if (!token || !address || !fullName) return apiRespond(res, "error", "Did not send all required body props")
-		if (typeof token != "string") return apiRespond(res, "error", "Token not well formed")
-		if (!validateAddress(address)) return apiRespond(res, "error", "Address not well formed")
-		if (typeof fullName != "string") return apiRespond(res, "error", "Name not well formed")
-
-		try {
-			const { newPrice } = await updateOrderAddress(token, address, fullName)
-			return apiRespond<updateOrderRes>(res, "response", { newPrice })
-		}
-		catch (e) { return apiRespond(res, "error", (e as Error).message) }
+	if(!pid) return apiRespond(res, "error", "PID is required")
+	if(typeof pid != "string") return apiRespond(res, "error", "PID must be a string")
+	// launchpad
+	try{
+		if (pid == "address") await updateOrderAddress(req, res)
+		else return apiRespond(res, "error", "Invalid Order Update Property")
 	}
-	else return apiRespond(res, "error", "Invalid Order Update Property")
+	catch(e){
+		apiRespond(res, "error", e)
+	}
 }

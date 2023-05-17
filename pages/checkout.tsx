@@ -11,7 +11,7 @@ import Tippy from '@tippyjs/react';
 import { toast } from 'react-toastify';
 import { displayVariants } from 'util/formVariants'
 // api
-import { getOrder } from 'util/paypal/getOrder'
+import { getOrder } from 'util/paypal/server/getOrder'
 // types
 import CustomerInterface from 'types/customer'
 import { OrderProduct } from 'types/order'
@@ -26,7 +26,7 @@ import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
 import { getProductByID } from 'util/productUtil'
 
-import { updateOrderAddress } from 'util/paypal/updateOrderClient'
+import { updateOrderAddress } from 'util/paypal/client/updateOrderClient'
 import { postalCodePattern } from 'util/shipping/postalCode'
 
 const findFinalTotalFound = (pi: PriceInterface) => Object.values(pi).every(v => v != 0)
