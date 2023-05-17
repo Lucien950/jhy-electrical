@@ -12,7 +12,6 @@ import Price from "components/price";
 
 // get products
 import { getAllProducts } from "util/productUtil";
-import { JsxElement } from "typescript";
 
 const ProductItem = ({ product }: {product: productType})=>{
 	// const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
@@ -47,7 +46,7 @@ const ProductItem = ({ product }: {product: productType})=>{
 	)
 }
 
-const FilterButton = ({isSelected, setFilterActive, children}: {children: any, isSelected: boolean, setFilterActive: ()=>void})=>{
+const FilterButton = ({ isSelected, setFilterActive, children }: { children: (string | JSX.Element)[],  isSelected: boolean, setFilterActive: ()=>void})=>{
 	return(
 		<button className={`flex flex-row items-center gap-x-2 py-2 px-4 border-4 rounded-full leading-none
 			transition-colors duration-75 hover:bg-blue-200 hover:border-blue-300
@@ -60,7 +59,6 @@ const FilterButton = ({isSelected, setFilterActive, children}: {children: any, i
 	)
 }
 
-type handleFilterFunc = (property: "residential" | "industrial" | "commercial") => void
 const Products = () => {
 	const [filter, setFilter] = useState({
 		residential: false,
@@ -70,7 +68,7 @@ const Products = () => {
 	const [products, setProducts] = useState([] as productType[])
 	const [displayProducts, setDisplayProducts] = useState([] as productType[])
 
-	const handleFilter: handleFilterFunc = (property)=>{
+	const handleFilter = (property: "residential" | "industrial" | "commercial")=>{
 		setFilter({...filter, [property]: !filter[property]})
 	}
 
@@ -87,7 +85,7 @@ const Products = () => {
 	useEffect(()=>{
 		if(!Object.values(filter).some(p=>p)) setDisplayProducts(products)
 		else setDisplayProducts(products.filter(p => p.residential && filter.residential || p.commercial && filter.commercial || p.industrial && filter.industrial))
-	}, [filter])
+	}, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<>

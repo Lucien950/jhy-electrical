@@ -82,7 +82,7 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 				console.error("File not found")
 				return
 			}
-			var fr = new FileReader();
+			const fr = new FileReader();
 			fr.onload = () => {
 				const fileReadResult = fr.result
 				if (typeof (fileReadResult) != "string") {
@@ -148,7 +148,7 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		}
 
 		// FIRESTORE Update
-		const { productImageURL, productImageFile, firestoreID, ...firestoreAddProduct } = addProduct
+		const { firestoreID, ...firestoreAddProduct } = addProduct
 		let error = false;
 		switch(mode){
 			case "edit":

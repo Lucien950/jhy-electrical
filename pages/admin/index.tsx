@@ -63,7 +63,7 @@ const Admin = () => {
 			if (!authUser) router.push('/admin/login')
 			else setUpPage(authUser)
 		})
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 	const setUpPage = async (authUser: User) =>{
 		const adminUser = await getDoc(doc(db, "admins", authUser.uid)).catch(err => { console.error(err) })
 

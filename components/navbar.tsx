@@ -25,7 +25,7 @@ const CartIcon = (props: any) => {
 	)
 }
 
-type HamButtonProps = { isOpen: Boolean, className?: string, onClick: () => void, id: string }
+type HamButtonProps = { isOpen: boolean, className?: string, onClick: () => void, id: string }
 const HamButton = ({ isOpen, className, onClick, id }: HamButtonProps) => {
 	// animations
 	const variant = isOpen ? "opened" : "closed";
@@ -148,7 +148,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 											{
 												p.product && p.product?.quantity > 0
 													?
-													<span> <Price price={p.product?.price!} /> x {p.quantity} </span>
+													<span> <Price price={p.product?.price} /> x {p.quantity} </span>
 													:
 													<span>Out of Stock, <span className="underline text-blue-500 hover:cursor-pointer" onClick={() => HandleRemoveFromCart(p)}>remove</span></span>
 											}

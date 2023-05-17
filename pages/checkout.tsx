@@ -44,28 +44,6 @@ type CheckoutProps = {
 }
 export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, productIDs, paypal_error, orderID, redirect_link, status, initialCheckoutStage }: CheckoutProps)
 {
-	if (paypal_error) {
-		logEvent(analytics(), "checkout_error_paypal_SSR")
-		return (
-			<div className="w-full h-screen grid place-items-center">
-				<div>
-					<h1>Paypal Error</h1>
-					<p>{paypal_error}</p>
-				</div>
-			</div>
-		)
-	}
-	if(status === "COMPLETED"){
-		return (
-			<div className="w-full h-screen grid place-items-center">
-				<div>
-					<h1>Paypal Error</h1>
-					<p>Order has already been completed</p>
-				</div>
-			</div>
-		)
-	}
-
 	// onload analytics
 	const [cart, setCart] = useState<OrderProduct[]>()
 	useEffect(() => {
@@ -75,7 +53,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 			const newCart = await Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
 			setCart(newCart)
 		})()
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// customer
 	const [customerInformation, setCustomerInformation] = useState<CustomerInterface>({
@@ -100,8 +78,11 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 			setCalculatingShipping(true)
 			// update order with postal code
 			try {
+				// fine because form validated
+				//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 				const name = { firstName: customerInformation.first_name!, lastName: customerInformation.last_name! }
-				const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, name)
+				//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, name) 
 				setPaymentInformation(newPrice)
 			}
 			catch (e) {
@@ -114,7 +95,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 				setCalculatingShipping(false)
 			}
 		})()
-	}, [customerInformation])
+	}, [customerInformation]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// CHECKOUT STAGES
 	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(initialCheckoutStage)
@@ -138,30 +119,55 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 		}
 	}
 	const GetCheckoutStageView = () => {
-		switch (currentCheckoutStage) {
-			case 0:
-				const p1 = {
-					customerInformation, setCustomerInformation,
-					cart,
-					canGoToPayment, paymentInformation,
-					nextCheckoutStage: goToPayment,
-				}
-				return <CheckoutStageZero {...p1} />
-			case 1:
-				const setPaymentMethod = (newPaymentMethod: "paypal" | "card") => setCustomerInformation(ci => ({ ...ci, paymentMethod: newPaymentMethod }))
-				const p2 = {
-					prevCheckoutStage: goToShipping, nextCheckoutStage: goToReview,
-					customerInformation,
-					redirect_link,
-					setPaymentMethod
-				}
-				return <CheckoutStageOne {...p2} />
-			case 2:
-				const p3 = { customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID}
-				return <CheckoutStageTwo {...p3} />
+		if(currentCheckoutStage == 0){
+			const p1 = {
+				customerInformation, setCustomerInformation,
+				cart,
+				canGoToPayment, paymentInformation,
+				nextCheckoutStage: goToPayment,
+			}
+			return <CheckoutStageZero {...p1} />
+		}
+		else if(currentCheckoutStage == 1){
+			const setPaymentMethod = (newPaymentMethod: "paypal" | "card") => setCustomerInformation(ci => ({ ...ci, paymentMethod: newPaymentMethod }))
+			const p2 = {
+				prevCheckoutStage: goToShipping, nextCheckoutStage: goToReview,
+				customerInformation,
+				redirect_link,
+				setPaymentMethod
+			}
+			return <CheckoutStageOne {...p2} />
+		}
+		else if(currentCheckoutStage == 2){
+			const p3 = { customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID}
+			return <CheckoutStageTwo {...p3} />
+		}
+		else{
+			throw new Error("Current checkout stage is not a valid value")
 		}
 	}
 
+	if (paypal_error) {
+		logEvent(analytics(), "checkout_error_paypal_SSR")
+		return (
+			<div className="w-full h-screen grid place-items-center">
+				<div>
+					<h1>Paypal Error</h1>
+					<p>{paypal_error}</p>
+				</div>
+			</div>
+		)
+	}
+	if (status === "COMPLETED") {
+		return (
+			<div className="w-full h-screen grid place-items-center">
+				<div>
+					<h1>Paypal Error</h1>
+					<p>Order has already been completed</p>
+				</div>
+			</div>
+		)
+	}
 	return (
 		<>
 			<Head>
@@ -260,7 +266,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 				redirect_link,
 				status
 			} = await getOrder(token)
-			let ret = {
+			const ret = {
 				paypalCustomerInformation,
 				paypalPaymentInformation,
 				productIDs,

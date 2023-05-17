@@ -19,7 +19,7 @@ const AdminLogin = () => {
 			if (authUser) router.push('/admin', undefined, { shallow: true })
 			else setLoading(false)
 		})
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 	const submitLogin = async (e: FormEvent<HTMLFormElement>)=>{
 		e.preventDefault()
 		const email = ((e.target as HTMLFormElement).querySelector("#email")as HTMLInputElement).value

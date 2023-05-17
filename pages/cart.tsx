@@ -1,7 +1,6 @@
 // react
 import { MouseEventHandler, useEffect, useState } from "react";
 import Head from "next/head";
-import Link from "next/link";
 // redux
 import { useSelector, useDispatch } from "react-redux"
 import { removeFromCart, setQuantity } from "util/redux/cart.slice";

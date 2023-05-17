@@ -104,7 +104,7 @@ const Order = ({ order }: { order: OrderInterface }) => {
 							<p>Subtotal</p>
 							<p className="justify-self-end">{order.orderPrice.subtotal.toFixed(2)}</p>
 							<p>Shipping</p>
-							<p className="justify-self-end">{order.orderPrice.shipping!.toFixed(2)}</p>
+							<p className="justify-self-end">{order.orderPrice.shipping.toFixed(2)}</p>
 							<p>Tax</p>
 							<p className="justify-self-end">{order.orderPrice.tax.toFixed(2)}</p>
 						</div>

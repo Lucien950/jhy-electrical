@@ -67,23 +67,19 @@ const updateOrderAddress = async (token: string, newAddress: Address, name: { fi
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const { pid } = req.query
 
-	switch (pid) {
-		case "address":
-			const { token, address, name } = req.body as updateOrderProps
-			if (!token || typeof token != "string" || !address || !name || !(typeof name == "object")) {
-				apiRespond(res, "error", "Did not send all required body props")
-				return
-			}
-			try {
-				const { newPrice } = await updateOrderAddress(token, address, name)
-				apiRespond<updateOrderRes>(res, "response", { newPrice })
-			}
-			catch (e: any) {
-				apiRespond(res, "error", e.error_message)
-			}
-			break
-		default:
-			apiRespond(res, "error", "Invalid Order Update Property")
-			break
+	if(pid == "address"){
+		const { token, address, name } = req.body as updateOrderProps
+		if (!token || typeof token != "string" || !address || !name || !(typeof name == "object")) {
+			apiRespond(res, "error", "Did not send all required body props")
+			return
+		}
+		try {
+			const { newPrice } = await updateOrderAddress(token, address, name)
+			apiRespond<updateOrderRes>(res, "response", { newPrice })
+		}
+		catch (e: any) {
+			apiRespond(res, "error", e.error_message)
+		}
 	}
+	else apiRespond(res, "error", "Invalid Order Update Property")
 }

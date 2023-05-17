@@ -60,7 +60,7 @@ const createOrderAPICall = async (access_token: string, cancel_url: string, paym
 }
 
 export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancel_url: string }
-export type createOrderAPIRes = { orderStatus: string, orderID: string, redirect_link: string, update_link: string, submit_link: string, paymentInformation: PriceInterface}
+export type createOrderAPIRes = { orderStatus: string, orderID: string, redirect_link: string | null, update_link: string | null, submit_link: string | null, paymentInformation: PriceInterface}
 export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	// INPUTS
 	const { products: productIDS, postal_code, cancel_url }: createOrderAPIProps = req.body
@@ -84,9 +84,9 @@ export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	apiRespond<createOrderAPIRes>(res, "response", {
 		orderStatus: order.status,
 		orderID: order.id,
-		redirect_link: order.links.find(l => l.rel == "approve")?.href!,
-		update_link: order.links.find(l => l.rel == "update")?.href!,
-		submit_link: order.links.find(l => l.rel == "capture")?.href!,
+		redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
+		update_link: order.links.find(l => l.rel == "update")?.href || null,
+		submit_link: order.links.find(l => l.rel == "capture")?.href || null,
 		paymentInformation
 	})
 }
