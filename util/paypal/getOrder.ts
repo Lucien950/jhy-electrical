@@ -20,8 +20,6 @@ const provinceConvert = {
 	"YT": "Yukon",
 } as { [key: string]: string }
 
-export const FIRSTLASTDENOM = "_|_"
-
 /**
  * Gets order of given orderID. THIS IS A SERVER SIDE FUNCTION.
  * @param orderID ID of the order we are interested in
@@ -46,26 +44,13 @@ export const getOrder = async (orderID: string)=>{
 		const purchaseUnit0 = data.purchase_units![0]
 		const shipping = purchaseUnit0.shipping
 		if (shipping?.address?.country_code && shipping.address.country_code != "CA") throw new Error("Do not ship outside Canada")
-		const [first_name, last_name] = shipping?.name?.full_name?.split(FIRSTLASTDENOM) || [undefined, undefined]
-		if(first_name != undefined){
-			customerInformation["first_name"] = first_name
-		}
-		if(last_name != undefined){
-			customerInformation["last_name"] = last_name
-		}
-		if (shipping?.address != undefined){
-			customerInformation["address"] = shipping?.address
-		}
+		if (shipping?.name?.full_name !== undefined) customerInformation.fullName = shipping?.name?.full_name
+		if (shipping?.address !== undefined) customerInformation.address = shipping?.address
 
 		// payer
 		if (["APPROVED", "COMPLETED"].includes(data.status)){
-			const paymentSource = data.payment_source!
-			const paymentMethod = Object.keys(paymentSource)[0] as "card" | "paypal"
-			customerInformation = {
-				...customerInformation,
-				paymentMethod,
-				payment_source: paymentSource
-			}
+			customerInformation.payment_source = data.payment_source!
+			customerInformation.paymentMethod = Object.keys(customerInformation.payment_source)[0] as "card" | "paypal"
 		}
 
 		// PAYMENT INFORMATION

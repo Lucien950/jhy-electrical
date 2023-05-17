@@ -1,8 +1,23 @@
 import { Address } from "@paypal/paypal-js"
+import Joi from "joi"
+import { postalCodePattern, postalCodeSchema } from "util/shipping/postalCode"
 
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"
 
-// Generate Token
+const addressSchema = Joi.object({
+	address_line_1: Joi.string().max(300).required(),
+	address_line_2: Joi.string().max(300).required(),
+	admin_area_1: Joi.string().required(),
+	admin_area_2: Joi.string().required(),
+	postal_code: postalCodeSchema,
+	country_code: Joi.string().length(2).required(),
+})
+export const validateAddress = (candidate: Address) => addressSchema.validate(candidate)
+
+/**
+ * Token Type
+ * https://developer.paypal.com/api/rest/authentication/#sample-response
+ */
 export interface PayPalAuth {
 	scope: string;
 	access_token: string;
@@ -10,6 +25,15 @@ export interface PayPalAuth {
 	app_id: string;
 	expires_in: number;
 	nonce: string;
+}
+
+/**
+ * Client Token
+ * https://developer.paypal.com/docs/multiparty/checkout/advanced/integrate/#link-sampleclienttokenrequest
+ */
+export interface PayPalClientToken {
+	client_token: string;
+	expires_in: number;
 }
 
 /**
@@ -32,51 +56,82 @@ export interface PaymentSource {
 	venmo?: Venmo;
 }
 
-export interface PaymentMethod {
+/**
+ * Default Type for Errors (use mostly for Order API)
+ */
+export interface PayPalError {
+	name: string;
+	message: string;
+	debug_id: string;
+	details: Detail[];
+	links: Link[];
+}
+
+export interface Detail {
+	field: string;
+	value: string;
+	location: string;
+	issue: string;
+	description: string;
+}
+
+export interface Link {
+	href: string;
+	rel: string;
+	encType: string;
+}
+
+export interface PayPalSimpleError {
+	error: string;
+	error_description: string;
+}
+
+
+interface PaymentMethod {
 	standard_entry_class_code: string;
 	payee_preferred: string;
 }
-export interface Stored {
+interface Stored {
 	payment_initiator: string;
 	payment_type: string;
 	usage: string;
 	previous_network_transaction_reference: PreviousNetworkTransactionReference;
 }
-export interface PreviousNetworkTransactionReference {
+interface PreviousNetworkTransactionReference {
 	id: string;
 	date: string;
 	network: string;
 }
-export interface Name {
+interface Name {
 	given_name: string;
 	surname: string;
 }
-export interface Phone {
+interface Phone {
 	phone_type: string;
 	phone_number: PhoneNumber;
 }
-export interface PhoneNumber {
+interface PhoneNumber {
 	national_number: string;
 }
-export interface TaxInfo {
+interface TaxInfo {
 	tax_id: string;
 	tax_id_type: string;
 }
-export interface Bancontact {
+interface Bancontact {
 	name: string;
 	country_code: string;
 	experience_context: BancontactExperienceContext;
 	email?: string;
 	bic?: string;
 }
-export interface BancontactExperienceContext {
+interface BancontactExperienceContext {
 	brand_name: string;
 	shipping_preference: string;
 	locale: string;
 	return_url: string;
 	cancel_url: string;
 }
-export interface PaymentSourceCard {
+interface PaymentSourceCard {
 	name: string;
 	number: string;
 	security_code: string;
@@ -86,19 +141,19 @@ export interface PaymentSourceCard {
 	stored_credential: Stored;
 	vault_id: string;
 }
-export interface CardAttributes {
+interface CardAttributes {
 	customer: PurpleCustomer;
 	vault: PurpleVault;
 }
-export interface PurpleCustomer {
+interface PurpleCustomer {
 	id: string;
 	email_address: string;
 	phone: Phone;
 }
-export interface PurpleVault {
+interface PurpleVault {
 	store_in_vault: string;
 }
-export interface Context {
+interface Context {
 	brand_name: string;
 	landing_page: string;
 	shipping_preference: string;
@@ -111,7 +166,7 @@ export interface Context {
 	payment_method_preference?: string;
 	payment_method_selected?: string;
 }
-export interface Paypal {
+interface Paypal {
 	experience_context: Context;
 	billing_agreement_id: string;
 	vault_id: string;
@@ -123,14 +178,14 @@ export interface Paypal {
 	address: Address;
 	attributes: PaypalAttributes;
 }
-export interface PaypalAttributes {
+interface PaypalAttributes {
 	customer: FluffyCustomer;
 	vault: FluffyVault;
 }
-export interface FluffyCustomer {
+interface FluffyCustomer {
 	id: string;
 }
-export interface FluffyVault {
+interface FluffyVault {
 	store_in_vault: string;
 	description: string;
 	usage_pattern: string;
@@ -138,17 +193,17 @@ export interface FluffyVault {
 	customer_type: string;
 	permit_multiple_payment_tokens: boolean;
 }
-export interface Token {
+interface Token {
 	id: string;
 	type: string;
 }
-export interface Venmo {
+interface Venmo {
 	experience_context: VenmoExperienceContext;
 	vault_id: string;
 	email_address: string;
 	attributes: PaypalAttributes;
 }
-export interface VenmoExperienceContext {
+interface VenmoExperienceContext {
 	brand_name: string;
 	shipping_preference: string;
 }

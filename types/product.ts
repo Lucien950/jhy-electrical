@@ -1,11 +1,11 @@
 type cm = number
 type kg = number
-export default interface ProductInterface{
+export interface ProductInterface{
 	productName: string,
 	quantity: number,
 	price: number,
 	description: string,
-	productImage: string, // name of file inside firebase storage
+	productImage: string, // name of file inside firebase storage, not the URL
 	
 	commercial: boolean,
 	industrial: boolean,

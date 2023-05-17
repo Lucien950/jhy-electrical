@@ -1,14 +1,17 @@
 // SERVERSIDE
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { OrderProduct } from 'types/order';
+import { apiRespond } from 'util/api';
+// util
 import { generateAccessToken } from 'util/paypal/auth';
 import { baseURL } from 'util/paypal/baseURL';
-import { PriceInterface, makePrice } from 'util/priceUtil';
 import { getProductByID } from 'util/productUtil';
+// types
+import { OrderProduct, validateOrderProduct } from 'types/order';
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
-import { apiRespond } from 'util/api';
+import { PriceInterface, makePrice } from 'util/priceUtil';
+import { validatePostalCode } from 'util/shipping/postalCode';
 
-const createOrderAPICall = async (access_token: string, cancel_url: string, paymentInformation: PriceInterface, productIDS: OrderProduct[]) => {
+const createOrderAPICall = async (access_token: string, cancelPath: string, paymentInformation: PriceInterface, productIDS: OrderProduct[]) => {
 	const returnDomain = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://jhycanada.ca"
 	const orderInformation = {
 		intent: "AUTHORIZE",
@@ -41,7 +44,7 @@ const createOrderAPICall = async (access_token: string, cancel_url: string, paym
 			}}],
 		application_context:{
 			return_url: `${returnDomain}/checkout`,
-			cancel_url: `${returnDomain}/${cancel_url}`,
+			cancel_url: `${returnDomain}/${cancelPath}`,
 			brand_name: "JHY Electrical"
 		},
 	} as CreateOrderRequestBody
@@ -59,26 +62,24 @@ const createOrderAPICall = async (access_token: string, cancel_url: string, paym
 	else throw new Error(JSON.stringify(data))
 }
 
-export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancel_url: string }
+export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancelPath: string }
 export type createOrderAPIRes = { orderStatus: string, orderID: string, redirect_link: string | null, update_link: string | null, submit_link: string | null, paymentInformation: PriceInterface}
 export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	// INPUTS
-	const { products: productIDS, postal_code, cancel_url }: createOrderAPIProps = req.body
-	if (!productIDS || !(productIDS.every(p=>p && p.PID && p.quantity))){
-		apiRespond(res, "error", "Products not provided or incorrectly formatted")
-	}
+	const { products: productIDS, postal_code, cancelPath ="/" }: createOrderAPIProps = req.body
+	if (!productIDS) return apiRespond(res, "error", "Products not provided")
+	if (!productIDS.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
+	if(!postal_code) return apiRespond(res, "response", "Postal Code not Provided")
+	if(!validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code not Valid")
 
 	// access token
-	const accessToken = await generateAccessToken()
-	if(!accessToken){
-		apiRespond(res, "error", "Access Token could not be generated")
-		return
-	}
+	const accessToken = await generateAccessToken().catch(apiRespond(res, "error"))
+	if (!accessToken) return
 
 	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
 	const paymentInformation = await makePrice(products, postal_code)
 	
-	const order = await createOrderAPICall(accessToken, cancel_url, paymentInformation, productIDS).catch(apiRespond(res, "error"))
+	const order = await createOrderAPICall(accessToken, cancelPath, paymentInformation, productIDS).catch(apiRespond(res, "error"))
 	if(!order) return
 
 	apiRespond<createOrderAPIRes>(res, "response", {

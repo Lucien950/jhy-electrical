@@ -1,3 +1,5 @@
+import Joi from "joi";
+
 interface GeocodeAPI {
 	plus_code?: PlusCode;
 	results: Result[];
@@ -42,6 +44,8 @@ enum LocationType {
 }
 
 export const postalCodePattern = "^(?!.*[DFIOQUdfioqu])[A-VXYa-vxy][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]$"
+export const postalCodeSchema = Joi.string().regex(new RegExp(postalCodePattern)).required()
+export const validatePostalCode = (candidate: string)=> postalCodeSchema.validate(candidate)
 
 const getPosition = () => new Promise((res, rej) => { navigator.geolocation.getCurrentPosition(res, rej) }) as Promise<GeolocationPosition>
 export const getUserPostcode = async () => {

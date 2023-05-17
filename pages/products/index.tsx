@@ -3,7 +3,7 @@ import Link from "next/link";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 // types
-import productType from "types/product";
+import { ProductInterface } from "types/product";
 // UI
 import { Residential, Industrial, Commercial, ResidentialIcon, IndustrialIcon, CommercialIcon } from "components/categoryIcons";
 import seedRandom from "seedrandom";
@@ -13,7 +13,7 @@ import Price from "components/price";
 // get products
 import { getAllProducts } from "util/productUtil";
 
-const ProductItem = ({ product }: {product: productType})=>{
+const ProductItem = ({ product }: {product: ProductInterface})=>{
 	// const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
 	const backgroundColours = ["bg-slate-800"]
 	const backgroundColour = backgroundColours[Math.round(seedRandom(product.firestoreID)() * (backgroundColours.length - 1))]
@@ -65,8 +65,8 @@ const Products = () => {
 		industrial: false,
 		commercial: false
 	})
-	const [products, setProducts] = useState([] as productType[])
-	const [displayProducts, setDisplayProducts] = useState([] as productType[])
+	const [products, setProducts] = useState([] as ProductInterface[])
+	const [displayProducts, setDisplayProducts] = useState([] as ProductInterface[])
 
 	const handleFilter = (property: "residential" | "industrial" | "commercial")=>{
 		setFilter({...filter, [property]: !filter[property]})

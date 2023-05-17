@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { OrderProduct } from 'types/order';
-import productType from "types/product"
+import { ProductInterface } from "types/product"
 
 const cartSlice = createSlice({
 	name: 'cart',
@@ -38,7 +38,7 @@ const cartSlice = createSlice({
 		},
 		cartFillProducts: (state, action)=>{
 			// return action.payload
-			const products = action.payload as productType[]
+			const products = action.payload as ProductInterface[]
 			state.forEach(productInfo=>{
 				const newProduct = products.find(product => product.firestoreID == productInfo.PID)
 				productInfo.product = newProduct || productInfo.product

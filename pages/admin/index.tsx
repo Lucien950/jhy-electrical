@@ -9,7 +9,7 @@ import { auth } from "util/firebase/auth"
 import { db } from 'util/firebase/firestore';
 import { fillOrder } from "util/orderUtil"
 // types
-import ProductInterface from 'types/product';
+import { ProductInterface } from 'types/product';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
 import { ProductsComponent, ProductModal } from 'components/admin/ProductsComponents';

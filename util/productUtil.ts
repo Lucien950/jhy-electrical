@@ -3,10 +3,10 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { db } from "util/firebase/firestore"
 import { storage } from "util/firebase/storage";
 // type
-import productType from "types/product";
+import { ProductInterface } from "types/product";
 
 const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{
-	const product = productDoc.data() as productType
+	const product = productDoc.data() as ProductInterface
 	product.firestoreID = productDoc.id
 	product.productImageURL = await getDownloadURL(ref(storage, `products/${product.productImage}`))
 	return product
@@ -24,7 +24,7 @@ const getProductsByIDs = async(productList: string[])=>{
 
 const getAllProducts = async()=>{
 	const productsQS = await getDocs(collection(db, "products"));
-	let products: productType[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
+	let products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
 	return products
 }
 

@@ -10,13 +10,16 @@ import { apiResponse } from "util/api"
  * @param address to this address
  * @returns 
  */
-export const updateOrderAddress = async (orderID: string, address: Address, name: { firstName: string, lastName: string })=>{
+export const updateOrderAddress = async (orderID: string, address: Address, fullName: string)=>{
 	const response = await fetch(`/api/paypal/updateorder/address`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ token: orderID, address, name } as updateOrderProps)
+		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderProps)
 	})
 	const {res, err} = await response.json() as apiResponse<updateOrderRes, any>
-	if (!response.ok) throw new Error(err)
+	if (!response.ok) {
+		console.error("Update Product Address Error:", err)
+		throw new Error("Update Product Server Side Error: check console for more details")
+	}
 	return res!
 }

@@ -109,13 +109,17 @@ export default function Cart() {
 		// paypal cancel
 		router.push("/cart", undefined, { shallow: true })
 		logEvent(analytics(), "cancel_paypal_checkout")
-	}, [router.query.token])
+	}, [router.query.token]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	const [paypalLoading, setPaypalLoading] = useState(false)
 	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
 		try{
 			const { redirect_link } = await createPayPalOrderLink(cart, "cart")
+			if(!redirect_link){
+				toast.error("Redirect Link could not be found. Please try again")
+				return
+			}
 			router.push(redirect_link)
 		}
 		catch (e){

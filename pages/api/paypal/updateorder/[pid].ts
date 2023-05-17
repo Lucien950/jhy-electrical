@@ -1,16 +1,17 @@
+// api
 import { NextApiRequest, NextApiResponse } from "next";
-
+// util
 import { getOrder } from "util/paypal/getOrder";
 import { generateAccessToken } from "util/paypal/auth";
 import { makePrice } from "util/priceUtil";
 import { getProductByID } from "util/productUtil";
-
+import { apiRespond } from "util/api";
+// types
 import { updateOrderProps, updateOrderRes } from ".";
 import { Address } from "@paypal/paypal-js"
-import { FIRSTLASTDENOM } from "util/paypal/getOrder";
-import { apiRespond } from "util/api";
+import { validateAddress } from "types/paypal";
 
-const updateOrderAddress = async (token: string, newAddress: Address, name: { firstName: string, lastName: string }) => {
+const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const { products: productIDS } = await getOrder(token)
 	const products = await Promise.all(productIDS.map(async p=>({...p, product: await getProductByID(p.PID)})))
 	const newPrice = await makePrice(products, newAddress.postal_code)
@@ -24,7 +25,7 @@ const updateOrderAddress = async (token: string, newAddress: Address, name: { fi
 			op: "add",
 			path: "/purchase_units/@reference_id=='default'/shipping/name",
 			value: {
-				full_name: [name.firstName, name.lastName].join(FIRSTLASTDENOM)
+				full_name: fullName
 			}
 		},
 		{
@@ -40,7 +41,7 @@ const updateOrderAddress = async (token: string, newAddress: Address, name: { fi
 					},
 					shipping: {
 						currency_code: "CAD",
-						value: newPrice.shipping!.toFixed(2)
+						value: newPrice.shipping!.toFixed(2) // eslint-disable-line @typescript-eslint/no-non-null-assertion
 					},
 					tax_total: {
 						currency_code: "CAD",
@@ -64,22 +65,26 @@ const updateOrderAddress = async (token: string, newAddress: Address, name: { fi
 	if (!response.ok) throw new Error(JSON.stringify({ status: response.status, err: await response.json() }))
 	return { newPrice }
 }
+
+/**
+ * Update Order API Endpoint
+ */
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const { pid } = req.query
 
 	if(pid == "address"){
-		const { token, address, name } = req.body as updateOrderProps
-		if (!token || typeof token != "string" || !address || !name || !(typeof name == "object")) {
-			apiRespond(res, "error", "Did not send all required body props")
-			return
-		}
+		const { token, address, fullName } = req.body as updateOrderProps
+		// validation
+		if (!token || !address || !fullName) return apiRespond(res, "error", "Did not send all required body props")
+		if (typeof token != "string") return apiRespond(res, "error", "Token not well formed")
+		if (!validateAddress(address)) return apiRespond(res, "error", "Address not well formed")
+		if (typeof fullName != "string") return apiRespond(res, "error", "Name not well formed")
+
 		try {
-			const { newPrice } = await updateOrderAddress(token, address, name)
-			apiRespond<updateOrderRes>(res, "response", { newPrice })
+			const { newPrice } = await updateOrderAddress(token, address, fullName)
+			return apiRespond<updateOrderRes>(res, "response", { newPrice })
 		}
-		catch (e: any) {
-			apiRespond(res, "error", e.error_message)
-		}
+		catch (e) { return apiRespond(res, "error", (e as Error).message) }
 	}
-	else apiRespond(res, "error", "Invalid Order Update Property")
+	else return apiRespond(res, "error", "Invalid Order Update Property")
 }

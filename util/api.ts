@@ -3,7 +3,7 @@ import { NextApiResponse } from "next"
 
 export interface apiResponse<ResType, ErrType> {
 	res?: ResType,
-	err?: ErrType, //must send string unless want to serialize error?
+	err?: ErrType,
 }
 
 /**
@@ -33,11 +33,10 @@ function apiRespond<T>(res: NextApiResponse, responseType: string, payload?: T) 
 	switch (responseType) {
 		case "response":
 			if(!payload) throw new Error("No Payload")
-			res.status(200).send({ res: payload } as apiResponse<T, never>)
-			break
+			return res.status(200).send({ res: payload } as apiResponse<T, never>)
 		case "error":
-			if (payload) res.status(500).send({ err: payload } as apiResponse<never, T>)
-			else return ((errorPayload: Error) =>{
+			if (payload) return res.status(500).send({ err: payload } as apiResponse<never, T>)
+			else return ((errorPayload: Error) => {
 				res.status(500).send({ err: errorPayload.message } as apiResponse<never, string>)
 				return false
 			})

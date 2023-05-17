@@ -137,8 +137,7 @@ const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformat
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4">Shipping</h1>
 					<div className="grid grid-cols-2 gap-x-2 gap-y-2 text-sm">
-						<ShippingField required setField={customerChange} field_id="first_name" 		field_placeholder="First Name" 						defaultValue={customerInformation.first_name} />
-						<ShippingField required setField={customerChange} field_id="last_name"			field_placeholder="Last Name" 						defaultValue={customerInformation.last_name} />
+						<ShippingField required setField={customerChange} field_id="fullName" 		field_placeholder="Full Name" 						  defaultValue={customerInformation.fullName} />
 						<ShippingField required setField={shippingChange} field_id="address_line_1" field_placeholder="Address" 							defaultValue={customerInformation.address?.address_line_1} className="col-span-2" />
 						<ShippingField          setField={shippingChange} field_id="address_line_2" field_placeholder="Apt/Suite (Optional)" 	defaultValue={customerInformation.address?.address_line_2} className="col-span-2" />
 						<ShippingField required setField={shippingChange} field_id="admin_area_2"   field_placeholder="City" 									defaultValue={customerInformation.address?.admin_area_2} />

@@ -1,7 +1,8 @@
 import { Timestamp } from "firebase/firestore";
-import ProductInterface from "./product";
+import { ProductInterface } from "./product";
 import { Address } from "@paypal/paypal-js"
-import { PriceInterface } from "util/priceUtil";
+import { FinalPriceInterface } from "util/priceUtil";
+import Joi from "joi";
 
 export interface OrderProduct{
 	PID: string,
@@ -12,7 +13,7 @@ export interface OrderProduct{
 
 export interface OrderInterface {
 	products: OrderProduct[],
-	orderPrice: PriceInterface,
+	orderPrice: FinalPriceInterface,
 	completed: boolean,
 	// convert
 	date: Date,
@@ -32,3 +33,9 @@ export interface FirestoreOrderInterface extends OrderInterface{
 	date: never,
 	dateTS: Timestamp,
 }
+
+const orderProductSchema = Joi.object({
+	PID: Joi.string().required(),
+	quantity: Joi.number().required(),
+})
+export const validateOrderProduct = (candidate: OrderProduct) => orderProductSchema.validate(candidate)

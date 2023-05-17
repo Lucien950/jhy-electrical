@@ -13,6 +13,13 @@ export interface PriceInterface {
 	tax: number,
 	total: number
 }
+export interface FinalPriceInterface{
+	subtotal: number,
+	shipping: number,
+	tax: number,
+	total: number
+}
+
 export const makePrice = async (products: OrderProduct[], postal_code?: string) => {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
 	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))

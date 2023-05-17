@@ -57,7 +57,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 
 	// customer
 	const [customerInformation, setCustomerInformation] = useState<CustomerInterface>({
-		first_name: "", last_name: "", paymentMethod: null, address:{ address_line_1: "", address_line_2: "", admin_area_1: "", admin_area_2: "", postal_code: "", country_code: "CA"},
+		fullName: "", paymentMethod: null, address:{ address_line_1: "", address_line_2: "", admin_area_1: "", admin_area_2: "", postal_code: "", country_code: "CA"},
 		...paypalCustomerInformation
 	})
 	// pricing
@@ -80,9 +80,7 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 			try {
 				// fine because form validated
 				//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const name = { firstName: customerInformation.first_name!, lastName: customerInformation.last_name! }
-				//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, name) 
+				const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!) 
 				setPaymentInformation(newPrice)
 			}
 			catch (e) {

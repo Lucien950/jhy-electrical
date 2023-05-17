@@ -79,7 +79,7 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 			<div className="bg-gray-200 p-5 flex flex-row mb-2">
 				<h1 className="flex-[2] text-base"> Shipping Address </h1>
 				<div className="flex-[5]">
-					<p> {customerInformation.first_name} {customerInformation.last_name}</p>
+					<p> {customerInformation.fullName}</p>
 					<p> {customerInformation.address!.address_line_1} </p>
 					<p> {customerInformation.address!.address_line_2} </p>
 					<p> {customerInformation.address!.admin_area_2}, {customerInformation.address!.admin_area_1}, {customerInformation.address!.postal_code} </p>

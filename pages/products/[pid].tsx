@@ -1,6 +1,6 @@
 import { GetServerSideProps } from 'next'
 import { getProductByID } from 'util/productUtil'
-import productType from 'types/product'
+import { ProductInterface } from 'types/product'
 import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +14,7 @@ import Head from 'next/head';
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 
-const AddCartButton = ({ product, quantity }: {product: productType, quantity: number})=>{
+const AddCartButton = ({ product, quantity }: {product: ProductInterface, quantity: number})=>{
 	// HANDLE CART
 	const dispatch = useDispatch()
 	// ANIMATIONS
@@ -110,7 +110,7 @@ const AddCartButton = ({ product, quantity }: {product: productType, quantity: n
 	)
 }
 
-const ProductID = ({product}: {product: productType}) => {
+const ProductID = ({product}: {product: ProductInterface}) => {
 	const [quantity, setQuantity] = useState(1)
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const buyNow: MouseEventHandler<HTMLButtonElement> = (e) => {

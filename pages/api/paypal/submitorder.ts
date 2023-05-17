@@ -4,7 +4,7 @@ import { generateAccessToken } from "util/paypal/auth"
 import { getOrder } from "util/paypal/getOrder"
 // types
 import { getProductByID } from "util/productUtil"
-import ProductInterface from "types/product"
+import { ProductInterface } from "types/product"
 import { FirestoreOrderInterface } from "types/order"
 // firebase
 import { Timestamp, addDoc, collection } from "firebase/firestore"
@@ -56,7 +56,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 		completed: true,
 		dateTS: Timestamp.now(),
 
-		name: `${customerInformation.first_name} ${customerInformation.last_name}`,
+		name: customerInformation.fullName,
 		email: customerInformation.payment_source?.paypal?.email_address,
 		address: customerInformation.address,
 		paypalOrderID: token,

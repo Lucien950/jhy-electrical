@@ -11,6 +11,6 @@ export const submitOrder = async (orderID: string) => {
 	if (response.ok) return res!
 	else{
 		console.error(`Submit Order Error: ${err}`)
-		throw new Error(err)
+		throw new Error("Submit Order Server Side Error: Check Console for more details")
 	}
 }

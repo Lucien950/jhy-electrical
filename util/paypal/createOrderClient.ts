@@ -11,7 +11,7 @@ export const createPayPalOrderLink = async (products: OrderProduct[], cancel_url
 	const response = await fetch(`/api/paypal/createorder`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ products: products.map(p => ({ ...p, product: undefined })), postal_code, cancel_url } as createOrderAPIProps)
+		body: JSON.stringify({ products: products.map(p => ({ ...p, product: undefined })), postal_code, cancelPath: cancel_url } as createOrderAPIProps)
 	})
 
 	const { res, err } = await response.json() as apiResponse<createOrderAPIRes, any>
@@ -21,5 +21,8 @@ export const createPayPalOrderLink = async (products: OrderProduct[], cancel_url
 		if (!redirect_link) throw new Error("Redirect Link could not be found")
 		return res!
 	}
-	else throw new Error(err)
+	else {
+		console.error(err)
+		throw new Error("Order Link Server Error: Check console for more information")
+	}
 }

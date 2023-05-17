@@ -8,7 +8,7 @@ import { storage } from "util/firebase/storage"
 // utils
 import { fillProductDoc } from "util/productUtil";
 import { toSentenceCase } from "util/stringManipulation";
-import ProductInterface from 'types/product';
+import { ProductInterface } from 'types/product';
 // UIs
 import { AnimatePresence, motion } from "framer-motion";
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
