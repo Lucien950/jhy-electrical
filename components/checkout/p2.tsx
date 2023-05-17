@@ -5,18 +5,15 @@ import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
 import CustomerInterface from "types/customer";
-import { FirestoreOrderInterface, OrderProduct } from "types/order";
-import { PriceInterface } from "util/priceUtil";
+import { OrderProduct } from "types/order";
+import { PriceInterface } from "types/price";
 // react
 import { MouseEventHandler, useState } from "react";
 import { useRouter } from "next/router"
 // state
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
-import { addDoc, collection, Timestamp } from 'firebase/firestore';
-import { db } from "util/firebase/firestore"
 import { useDispatch } from "react-redux";
-import { toast } from "react-toastify";
 import { submitOrder } from "util/paypal/client/submitOrderClient";
 
 type ReviewViewProps = {
@@ -80,9 +77,14 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 				<h1 className="flex-[2] text-base"> Shipping Address </h1>
 				<div className="flex-[5]">
 					<p> {customerInformation.fullName}</p>
-					<p> {customerInformation.address!.address_line_1} </p>
-					<p> {customerInformation.address!.address_line_2} </p>
-					<p> {customerInformation.address!.admin_area_2}, {customerInformation.address!.admin_area_1}, {customerInformation.address!.postal_code} </p>
+					{
+						customerInformation.address &&
+						<>
+							<p> {customerInformation.address.address_line_1} </p>
+							<p> {customerInformation.address.address_line_2} </p>
+							<p> {customerInformation.address.admin_area_2}, {customerInformation.address.admin_area_1}, {customerInformation.address.postal_code} </p>
+						</>
+					}
 				</div>
 				<button className="underline" onClick={goToShipping}>Edit</button>
 			</div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react"
+import { SVGProps, useEffect, useRef, useState } from "react"
 import { useRouter } from "next/router";
 
 import { AnimatePresence, motion, useScroll } from "framer-motion"
@@ -16,8 +16,7 @@ import { analytics } from "util/firebase/analytics";
 import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
 import { toast } from "react-toastify";
 
-const CartIcon = (props: any) => {
-	const { dim, ...rest } = props
+const CartIcon = ({ dim, ...rest }: { dim: number } & SVGProps<SVGSVGElement>) => {
 	return (
 		<svg {...rest} style={{ width: `${dim}rem`, height: `${dim}rem` }} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
 			<path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clipRule="evenodd" />
@@ -183,7 +182,7 @@ const useMenu: (menuIds: string[]) => [boolean, (() => void)] = (menuIds) => {
 	useEffect(() => {
 		window.addEventListener("click", suppressMenuClose)
 		return () => { window.removeEventListener("click", suppressMenuClose) }
-	}, [])
+	}, []) //eslint-disable-line react-hooks/exhaustive-deps
 
 	const toggleMenuOpen = () => setMenuOpen(e => !e)
 	return [menuOpen, toggleMenuOpen]
@@ -201,10 +200,11 @@ const NavBar = () => {
 
 	// styling
 	const { scrollY } = useScroll();
-	const whiteBG = useRef(null)
+	const whiteBG = useRef<HTMLDivElement>(null)
 	useEffect(() => {
 		const unsub = scrollY.on("change", v => {
-			const bgElement = whiteBG.current! as HTMLDivElement
+			const bgElement = whiteBG.current
+			if(!bgElement) return
 			bgElement.style.backgroundColor = (v > 10) ? "white" : "transparent";
 			bgElement.style.color = (v > 10) ? "black" : "";
 
@@ -212,7 +212,7 @@ const NavBar = () => {
 			else bgElement.classList.remove("shadow-md")
 		})
 		return unsub
-	}, [])
+	}, []) //eslint-disable-line react-hooks/exhaustive-deps
 	const whiteNavs = ["/", "/order/[pid]", "/products", "/services"]
 	const noNavbar = ["/checkout", "/admin"]
 
@@ -246,11 +246,8 @@ const NavBar = () => {
 
 				{/* CART */}
 				<div className="relative w-[74.63px]">
-					<CartIcon
-						dim={2.5} tabIndex={0}
-						onClick={toggleCartOpen}
-						className="hover:cursor-pointer float-right outline-none focus:fill-blue-500 focus:drop-shadow-lg" id="cartButton"
-					/>
+					<CartIcon dim={2.5} tabIndex={0} id="cartButton" onClick={toggleCartOpen}
+						className="hover:cursor-pointer float-right outline-none focus:fill-blue-500 focus:drop-shadow-lg"/>
 					{/* BUTTON */}
 					<AnimatePresence>
 						{

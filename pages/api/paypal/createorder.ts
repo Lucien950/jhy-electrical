@@ -7,7 +7,8 @@ import { baseURL } from 'util/paypal/baseURL';
 // types
 import { OrderProduct, validateOrderProduct } from 'types/order';
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
-import { PriceInterface, makePrice } from 'util/priceUtil';
+import { makePrice } from 'util/priceUtil';
+import { PriceInterface } from "types/price";
 import { validatePostalCode } from 'util/shipping/postalCode';
 import { fillOrderProducts } from 'util/orderUtil';
 import { PayPalError } from 'types/paypal';

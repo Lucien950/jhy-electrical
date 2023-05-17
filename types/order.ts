@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 import { ProductInterface } from "./product";
 import { Address } from "@paypal/paypal-js"
-import { FinalPriceInterface } from "util/priceUtil";
+import { FinalPriceInterface } from "types/price";
 import Joi from "joi";
 
 export interface OrderProduct{

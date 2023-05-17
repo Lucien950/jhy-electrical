@@ -1,4 +1,6 @@
-const PaypalSVG = (props:any) => (
+import { JSX, SVGProps } from "react"
+
+const PaypalSVG = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
 <svg {...props} viewBox="0 0 64 17" version="1.1" xmlns="http://www.w3.org/2000/svg">
 	<g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
 		<g transform="translate(-77.000000, -305.000000)" fillRule="nonzero">
@@ -16,8 +18,7 @@ const PaypalSVG = (props:any) => (
 	</g>
 </svg>
 )
-
-const PayPalWhiteSVG = (props: any) => (
+const PayPalWhiteSVG = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
 	<svg {...props} viewBox="0 0 64 17" version="1.1" xmlns="http://www.w3.org/2000/svg">
 		<g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd" className="fill-white">
 			<g transform="translate(-77.000000, -305.000000)" fillRule="nonzero">

@@ -113,7 +113,7 @@ const AddCartButton = ({ product, quantity }: {product: ProductInterface, quanti
 const ProductID = ({product}: {product: ProductInterface}) => {
 	const [quantity, setQuantity] = useState(1)
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
-	const buyNow: MouseEventHandler<HTMLButtonElement> = (e) => {
+	const buyNow: MouseEventHandler<HTMLButtonElement> = () => {
 		// TODO Implement this
 		return
 	}
@@ -124,7 +124,7 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 			</Head>
 			<div className="grid grid-cols-1 lg:grid-cols-2 mt-36 container mx-auto px-6 lg:px-36 gap-x-24">
 				<div>
-					<img src={product.productImageURL} className="w-full" />
+					<img src={product.productImageURL} alt={`Product Image for ${product.productName}`} className="w-full" />
 				</div>
 				<div>
 					<div className="p-4">

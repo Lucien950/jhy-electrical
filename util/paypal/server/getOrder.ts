@@ -1,6 +1,6 @@
 import { generateAccessToken } from 'util/paypal/server/auth'
 import CustomerInterface from 'types/customer';
-import { PriceInterface } from 'util/priceUtil';
+import { PriceInterface } from "types/price";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 
@@ -25,7 +25,7 @@ const provinceConvert = {
  * @param orderID ID of the order we are interested in
  * @returns Order we are interested in
  */
-export const getOrder = async (orderID: string)=>{
+export const getOrder = async (orderID: string) => {
 	const accessToken = await generateAccessToken()
 	const response = await fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${orderID}`, {
 		method: 'GET',

@@ -1,5 +1,5 @@
 // react
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 // firebase
 import { OrderInterface } from 'types/order'
@@ -18,7 +18,8 @@ export const OrdersComponent = ({allOrders}: {allOrders: OrderInterface[]}) => {
 	return (
 		<Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
 			{/* Top Selector */}
-			<Tab.List className="p-1 rounded-lg inline-flex flex-row gap-x-1 relative mb-3">
+			<Tab.List className="p-1 rounded-lg inline-flex flex-row gap-x-1 relative mb-3 focus-within:ring-4">
+				{/* background */}
 				<div className="w-full h-full absolute rounded-lg bg-slate-100 -z-[1] top-0 left-0"></div>
 				{["Incomplete Orders", "Completed Orders", "All Orders"].map((t, i)=>
 					<Tab className="p-2 rounded-md relative outline-none" key={i}>
@@ -63,12 +64,17 @@ export const OrdersComponent = ({allOrders}: {allOrders: OrderInterface[]}) => {
 							<td className="px-4 py-3 overflow-hidden relative">
 								<p className="whitespace-nowrap">
 									{
-										order.products.map(productInfo => `${productInfo.product!.productName} x ${productInfo.quantity}`).join(", ")
+										order.products.map(productInfo => productInfo.product ? `${productInfo.product.productName} x ${productInfo.quantity}` : `INVALID PRODUCT ID ${productInfo.PID}`).join(", ")
 									}
 								</p>
 								<div className="absolute h-full w-24 right-0 top-0 bg-gradient-to-r from-transparent group-odd:to-white group-even:to-gray-100"></div>
 							</td>
-							<td></td>
+							<td className="px-4 py-3">
+								{/* TODO Complete button */}
+								{
+									order.completed ? "Completed" : "Incomplete"
+								}
+							</td>
 						</tr>
 					)}
 				</Tab.Panel>

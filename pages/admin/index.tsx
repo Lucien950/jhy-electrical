@@ -32,15 +32,17 @@ const SidebarButton = ({name, scrollRef}: SidebarButtonProps)=>{
 	}
 
 	return(
-		<div className="
-			group
-			flex flex-row items-center gap-x-3
-			px-4 py-4 mx-0 relative rounded-md
-			hover:bg-gray-200
-			transition-colors overflow-hidden
-			hover:cursor-pointer
-		"
-			onClick={() => scrollRef.current?.scrollIntoView()}>
+		<div tabIndex={0} onClick={() => scrollRef.current?.scrollIntoView()}
+			className="
+				group
+				flex flex-row items-center gap-x-3
+				px-4 py-4 mx-0 relative rounded-md
+				hover:bg-gray-200
+				transition-colors overflow-hidden
+				hover:cursor-pointer
+				outline-none focus:ring-4
+			"
+		>
 			{/* <div className="h-full w-[5px] rounded-r-md bg-blue-500 absolute left-0 translate-x-[-5px] group-hover:translate-x-0 transition-transform"/> */}
 			<svg className="w-6 h-6 fill-black group-hover:fill-blue-500" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"> {icon[name]} </svg>
 			<p className="text-black text-xl group-hover:text-blue-500">{name}</p>
@@ -133,9 +135,9 @@ const Admin = () => {
 					</div>
 					<h1 className="text-2xl font-bold mb-4">{admin.name}</h1>
 					{/* TODO Implement this behaviour */}
-					<button className="rounded-full px-5 py-1 border-2 border-slate-800">Edit</button>
+					<button className="rounded-full px-5 py-1 border-2 border-slate-800 outline-none focus:ring-2">Edit</button>
 				</div>
-				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1">
+				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1 py-2">
 					<SidebarButton name="Analytics" scrollRef={analytics}/>
 					<SidebarButton name="Orders" scrollRef={orders}/>
 					<SidebarButton name="Products" scrollRef={products}/>

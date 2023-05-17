@@ -1,23 +1,11 @@
 import { OrderProduct } from "types/order"
 import { calculateShipping, productPackageInfo } from "./shipping/calculateShipping"
+import { PriceInterface } from "types/price"
 
 export const TAX_RATE = 0.13
 
 export const roundPriceUp = (n: number)=>{
 	return Math.ceil(n*100)/100
-}
-
-export interface PriceInterface {
-	subtotal: number,
-	shipping?: number,
-	tax: number,
-	total: number
-}
-export interface FinalPriceInterface{
-	subtotal: number,
-	shipping: number,
-	tax: number,
-	total: number
 }
 
 /**

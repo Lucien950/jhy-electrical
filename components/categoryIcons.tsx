@@ -1,6 +1,7 @@
 import Tippy from "@tippyjs/react"
+import { JSX, SVGProps } from "react"
 // icon images
-const CommercialIcon = (props: any)=>(
+const CommercialIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>)=>(
 	// <svg {...props} version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" viewBox="0 0 512.001 512.001">
 	// 	<g>
 	// 		<g>
@@ -109,7 +110,7 @@ const CommercialIcon = (props: any)=>(
 		c0-12.5-5.1-23.9-13.4-32.2S282.1,420.8,269.6,420.8L269.6,420.8z M447.6,0h-356v45.2h356V0z"/>
 	</svg>
 )
-const IndustrialIcon = (props: any) =>(
+const IndustrialIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) =>(
 	<svg {...props} version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
 		viewBox="0 0 330.02 330.02">
 		<g id="XMLID_312_">
@@ -122,8 +123,7 @@ const IndustrialIcon = (props: any) =>(
 		</g>
 	</svg>
 )
-
-const ResidentialIcon = (props: any)=>(
+const ResidentialIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>)=>(
 	<svg {...props}  fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
 )
 
@@ -141,7 +141,6 @@ const Industrial = ()=>(
 		</span>
 	</Tippy>
 )
-
 const Residential = ()=>(
 	<Tippy content="Residential" delay={200}>
 		<span>

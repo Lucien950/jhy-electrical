@@ -20,7 +20,7 @@ import CheckoutStageZero from "components/checkout/p0"
 import CheckoutStageOne from "components/checkout/p1"
 import CheckoutStageTwo from "components/checkout/p2"
 // util
-import { PriceInterface } from 'util/priceUtil'
+import { PriceInterface } from "types/price"
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
@@ -254,35 +254,35 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 			permanent: true
 		}
 	}
-	else {
-		// coming back from paypal ordering
-		try {
-			const {
-				customerInformation: paypalCustomerInformation,
-				paymentInformation: paypalPaymentInformation,
-				products: productIDs,
-				redirect_link,
-				status
-			} = await getOrder(token)
-			const ret = {
-				paypalCustomerInformation,
-				paypalPaymentInformation,
-				productIDs,
-				orderID: token,
-				status } as CheckoutProps
-			if (redirect_link) ret.redirect_link = redirect_link
+	// coming back from paypal ordering
+	try {
+		const {
+			customerInformation: paypalCustomerInformation,
+			paymentInformation: paypalPaymentInformation,
+			products: productIDs,
+			redirect_link,
+			status
+		} = await getOrder(token)
+		const ret = {
+			paypalCustomerInformation,
+			paypalPaymentInformation,
+			productIDs,
+			orderID: token,
+			status
+		} as CheckoutProps
+		if (redirect_link) ret.redirect_link = redirect_link
 		
-			// determining initial checkout stage
-			const finalTotalFound = findFinalTotalFound(paypalPaymentInformation)
-			const paymentMethodFound = findPaymentMethodFound(paypalCustomerInformation)
-			if (finalTotalFound && !paymentMethodFound) ret.initialCheckoutStage = 1
-			else if (paymentMethodFound) ret.initialCheckoutStage = 2
-			else ret.initialCheckoutStage = 0
-
-			return { props: ret  }
-		}
-		catch (e: any) {
-			return { props: { paypal_error: e.message } as CheckoutProps }
-		}
+		// determining initial checkout stage
+		const finalTotalFound = findFinalTotalFound(paypalPaymentInformation)
+		const paymentMethodFound = findPaymentMethodFound(paypalCustomerInformation)
+		if (finalTotalFound && !paymentMethodFound) ret.initialCheckoutStage = 1
+		else if (paymentMethodFound) ret.initialCheckoutStage = 2
+		else ret.initialCheckoutStage = 0
+		
+		return { props: ret }
 	}
+	catch (e) {
+		return { props: { paypal_error: e } as CheckoutProps }
+	}
+
 }

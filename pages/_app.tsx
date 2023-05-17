@@ -37,7 +37,7 @@ const CartUpdater = ()=>{
 			dispatch(cartFillProducts(requiredProducts))
 		})
 		return unsub
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }
 

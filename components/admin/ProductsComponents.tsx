@@ -8,13 +8,14 @@ import { storage } from "util/firebase/storage"
 // utils
 import { fillProductDoc } from "util/productUtil";
 import { toSentenceCase } from "util/stringManipulation";
-import { ProductInterface } from 'types/product';
+import { ProductInterface, validateProduct } from 'types/product';
 // UIs
 import { AnimatePresence, motion } from "framer-motion";
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
 import { Dialog, Transition } from '@headlessui/react'
 import { Oval } from "react-loader-spinner";
 import { firebaseConsoleBadge } from "util/firebase/console";
+import { toast } from "react-toastify";
 
 type InputFieldPropType = {
 	label: string,
@@ -43,7 +44,6 @@ type ProductModalProp = { open: boolean, product: ProductInterface, mode: string
 export const ProductModal = ({ open, product, mode, closeModal }: ProductModalProp) => {
 	const [uploading, setUploading] = useState(false)
 	const [addProduct, setAddProduct] = useState({} as ProductInterface)
-	const [changedImage, setChangedImage] = useState(false)
 
 	useEffect(()=>{
 		if(Object.keys(product).length > 0) {
@@ -65,18 +65,15 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 			return
 		}
 		// textboxes
-		if (e.target.type == "text") {
+		else if (e.target.type == "text") {
 			let inputFieldValue: string | number = e.target.value
 			const isNumberValue = e.target.getAttribute("data-numberValue") === "true"
 			if (isNumberValue) inputFieldValue = parseFloat(inputFieldValue)
-			setAddProduct(oldAddProduct => {
-				(oldAddProduct as any)[productAttribute] = inputFieldValue
-				return oldAddProduct
-			})
+			setAddProduct(oldAddProduct => ({ ...oldAddProduct, [productAttribute]: inputFieldValue }))
 			return
 		}
 		// files
-		if (e.target.type == "file") {
+		else if (e.target.type == "file") {
 			const files = e.target.files
 			if (!files) {
 				console.error("File not found")
@@ -89,20 +86,19 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 					console.error("Image display error, file type not string")
 					return
 				}
-				setAddProduct(oldAddProduct => {
-					return {
-						...oldAddProduct,
-						productImage: files[0].name,
-						productImageFile: files[0],
-						productImageURL: fileReadResult
-					}
-				})
+				setAddProduct(oldAddProduct => ({
+					...oldAddProduct,
+					productImage: files[0].name,
+					productImageFile: files[0],
+					productImageURL: fileReadResult
+				}))
 			}
 			fr.readAsDataURL(files[0]);
 		}
-
-		// if not any of the input types, error out
-		console.error("Input box not checkbox or text, it is", e.target.type)
+		else{
+			// if not any of the input types, error out
+			toast.error(`Input box not checkbox or text, it is ${e.target.type}`)
+		}
 	}
 	const addProductChangeTA = (e: ChangeEvent<HTMLTextAreaElement>) => {
 		setAddProduct(oldAddProduct => {
@@ -116,14 +112,15 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		e.preventDefault()
 		e.stopPropagation()
 
-		// SUBMITTING
-		if (
-			!addProduct ||
-			!addProduct.productImageURL || !addProduct.productName ||
-			addProduct.price <= 0 || addProduct.quantity < 0 || addProduct.width < 0 || addProduct.height < 0 || addProduct.length < 0 ||
-			!addProduct.description) {
-			// TODO Display Error Here
-			console.error("[Input Error] Product not complete")
+		// validation
+		
+		if(!addProduct){
+			return
+		}
+		const productValidation = validateProduct(addProduct)
+		if (productValidation.error){
+			console.error("Product Validation Error", productValidation.error)
+			toast.error(productValidation.error.message, {theme: "colored"})
 			return
 		}
 
@@ -179,10 +176,9 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 	}
 
 	const [fileActive, setFileActive] = useState(false)
-	const stopProp: DragEventHandler<HTMLDivElement> = (e)=>{
-		e.preventDefault()
-		e.stopPropagation()
-	}
+	const stopProp: DragEventHandler<HTMLDivElement> = (e) => {e.preventDefault(); e.stopPropagation()}
+	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => { stopProp(e); setFileActive(true) }
+	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => { stopProp(e); setFileActive(false) }
 	const dropListener: DragEventHandler<HTMLDivElement> = (e) => {
 		stopProp(e)
 
@@ -204,17 +200,9 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 			productImageURL: imageURL,
 			productImageFile: imageFile
 		}})
-		setChangedImage(true)
 		setFileActive(false)
 	}
-	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => {
-		stopProp(e)
-		setFileActive(true)
-	}
-	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => {
-		stopProp(e)
-		setFileActive(false)
-	}
+
 
 	return (
 		<Transition show={open} as={Fragment}>
@@ -378,9 +366,9 @@ const useUpdatingProducts = ()=>{
 			if (initialLoaded) setPendingEmpty(true)
 			return
 		}
-		setProducts(items => [...items, pendingItems.at(0)!])
+		setProducts(items => [...items, pendingItems[0]])
 		setTimeout(() => setPendingItems(pi => pi.slice(1, pi.length)), 70);
-	}, [pendingItems])
+	}, [pendingItems]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// listen to new product changes
 	useEffect(() => {
@@ -395,7 +383,7 @@ const useUpdatingProducts = ()=>{
 			setInitialLoaded(true)
 		})
 		return unSubProducts
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return { products, initialLoaded, pendingEmpty }
 }

@@ -17,7 +17,8 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 import { toast } from "react-toastify";
 // util price
-import { PriceInterface, TAX_RATE } from "util/priceUtil";
+import { TAX_RATE } from "util/priceUtil";
+import { PriceInterface } from "types/price";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
 	const product = orderProduct.product

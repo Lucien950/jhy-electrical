@@ -1,5 +1,5 @@
 // react
-import { Dispatch, FormEventHandler, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, SetStateAction, useRef, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox } from '@headlessui/react'
@@ -7,13 +7,12 @@ import { motion } from "framer-motion";
 import Tippy from "@tippyjs/react";
 import { toast } from "react-toastify";
 import { displayVariants } from "util/formVariants";
-
+// types
 import CustomerInterface from 'types/customer';
 import { OrderProduct } from "types/order";
-import { PriceInterface } from "util/priceUtil";
+import { PriceInterface } from "types/price";
 import { postalCodePattern } from "util/shipping/postalCode";
 import { Address } from "@paypal/paypal-js"
-import { getProductByID } from "util/productUtil";
 import { Oval } from "react-loader-spinner";
 
 
