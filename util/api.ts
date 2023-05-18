@@ -20,7 +20,6 @@ const ResError = <T,>(res: NextApiResponse, payload: T) => {
 		throw payload
 	}
 	else res.send({ err: payload } as apiResponse<never, T>)
-	return false
 }
 
 /**

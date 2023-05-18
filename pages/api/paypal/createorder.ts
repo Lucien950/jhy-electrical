@@ -6,7 +6,7 @@ import { generateAccessToken } from 'util/paypal/server/auth';
 import { baseURL } from 'util/paypal/baseURL';
 // types
 import { OrderProduct, validateOrderProduct } from 'types/order';
-import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
+import { CreateOrderRequestBody, OrderResponseBody, OrderResponseBodyMinimal } from "@paypal/paypal-js"
 import { makePrice } from 'util/priceUtil';
 import { PriceInterface } from "types/price";
 import { validatePostalCode } from 'util/shipping/postalCode';
@@ -66,7 +66,7 @@ const createOrderAPICall = async (access_token: string, cancelPath: string, paym
 
 export type createOrderAPIProps = { products: OrderProduct[], postal_code?: string, cancelPath: string }
 export type createOrderAPIRes = {
-	orderStatus: string, orderID: string,
+	orderStatus: OrderResponseBodyMinimal["status"], orderID: string,
 	redirect_link: string | null,
 	paymentInformation: PriceInterface
 }
@@ -76,10 +76,13 @@ export type createOrderAPIRes = {
  */
 export default async (req: NextApiRequest, res: NextApiResponse) =>{
 	// INPUTS
-	const { products: productIDs, postal_code, cancelPath ="/" }: createOrderAPIProps = req.body
-	if (!productIDs || !postal_code) return apiRespond(res, "error", "Body not complete")
+	const { products: productIDs, postal_code, cancelPath = "/" }: createOrderAPIProps = req.body
+	if (!productIDs){
+		if (process.env.NODE_ENV === "development") return apiRespond(res, "error", "Product IDs not complete")
+		return apiRespond(res, "error", "Body not complete")
+	}
 	if (!productIDs.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
-	if (!validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code is not valid")
+	if (postal_code && !validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code is not valid")
 
 	try{
 		// access token
@@ -92,6 +95,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) =>{
 		apiRespond<createOrderAPIRes>(res, "response", {
 			orderStatus: order.status,
 			orderID: order.id,
+			// this must be present
 			redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
 			paymentInformation
 		})

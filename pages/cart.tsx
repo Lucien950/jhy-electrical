@@ -117,16 +117,11 @@ export default function Cart() {
 		setPaypalLoading(true)
 		try{
 			const { redirect_link } = await createPayPalOrderLink(cart, "cart")
-			if(!redirect_link){
-				toast.error("Redirect Link could not be found. Please try again")
-				return
-			}
 			router.push(redirect_link)
 		}
 		catch (e){
+			toast.error((e as Error).message ,{theme: "colored"})
 			setPaypalLoading(false)
-			toast.error(`PayPal Order Link Error, see console for more details`,{theme: "colored"})
-			console.error(e)
 		}
 	}
 

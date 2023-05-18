@@ -36,6 +36,6 @@ export interface FirestoreOrderInterface extends OrderInterface{
 
 const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
-	quantity: Joi.number().required(),
+	quantity: Joi.number().greater(0).required(),
 })
 export const validateOrderProduct = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error === undefined

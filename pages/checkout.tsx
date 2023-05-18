@@ -68,31 +68,20 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 	const paymentMethodFound = findPaymentMethodFound(customerInformation)
 
 	useEffect(()=>{
+		console.log("recalculating");
 		// validate admin province is not empty (rest is required in input)
-		if (!(currentCheckoutStage == 0)) return
 		if (!customerInformation.address?.admin_area_1) return
 		if (!customerInformation.address?.postal_code?.match(new RegExp(postalCodePattern))) return
 
-		console.log("recalculating");
-		(async ()=>{
-			setCalculatingShipping(true)
-			// update order with postal code
-			try {
-				// fine because form validated
-				//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!) 
-				setPaymentInformation(newPrice)
-			}
-			catch (e) {
-				console.error(e)
-				toast.error("Error with updating PayPal Address, check console for more information", {
-					theme: "colored"
-				})
-			}
-			finally {
-				setCalculatingShipping(false)
-			}
-		})()
+		if(paymentInformation.shipping) return
+
+		// fine because form validated
+		setCalculatingShipping(true)
+		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!)
+			.then(({ newPrice }) => setPaymentInformation(newPrice))
+			.catch(e => toast.error((e as Error).message, { theme: "colored" }))
+			.finally(() => setCalculatingShipping(false))
 	}, [customerInformation]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// CHECKOUT STAGES
@@ -244,7 +233,6 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 		</>
 	);
 }
-
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string

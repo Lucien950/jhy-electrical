@@ -23,7 +23,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 	if (!token) return apiRespond(res, "error", "Token is required to submit order")
 	if (typeof token != "string") return apiRespond(res, "error", "Token is not a string")
 
-
 	const options = {
 		method: 'POST',
 		headers: {

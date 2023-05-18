@@ -1,7 +1,10 @@
 import { Address } from "@paypal/paypal-js"
 import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder"
 import { apiResponse } from "util/api"
+import { clientErrorFactory } from "util/clientErrorFactory"
 
+
+const updateOrderAddressError = clientErrorFactory("Update Product Server Side Error: check console for more details")
 // TODO maybe also customer information (name)
 /**
  * Interface to update order address (consequently shipping price)
@@ -18,8 +21,7 @@ export const updateOrderAddress = async (orderID: string, address: Address, full
 	})
 	const {res, err} = await response.json() as apiResponse<updateOrderAddressRes, any>
 	if (!response.ok) {
-		console.error("Update Product Address Error:", err)
-		throw new Error("Update Product Server Side Error: check console for more details")
+		return updateOrderAddressError(err)
 	}
 	return res!
 }

@@ -1,18 +1,27 @@
+// next
 import { GetServerSideProps } from 'next'
-import { getProductByID } from 'util/productUtil'
-import { ProductInterface } from 'types/product'
-import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
-
+import { MouseEventHandler, useState } from 'react';
+import Head from 'next/head';
+import { useRouter } from 'next/router';
+// redux
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from 'util/redux/cart.slice';
-import Price from 'components/price'
+// types
+import { ProductInterface } from 'types/product'
 import { OrderProduct } from 'types/order';
-import { MouseEventHandler, useState } from 'react';
-import { motion } from 'framer-motion';
-import Head from 'next/head';
-
+// analytics
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
+// util
+import { getProductByID } from 'util/productUtil'
+import { createPayPalOrderLink } from 'util/paypal/client/createOrderClient';
+// ui
+import Price from 'components/price'
+import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
+import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
+import { PayPalWhiteSVG, PaypalSVG } from 'components/paypalSVG';
+import { Oval } from 'react-loader-spinner';
 
 const AddCartButton = ({ product, quantity }: {product: ProductInterface, quantity: number})=>{
 	// HANDLE CART
@@ -112,10 +121,20 @@ const AddCartButton = ({ product, quantity }: {product: ProductInterface, quanti
 
 const ProductID = ({product}: {product: ProductInterface}) => {
 	const [quantity, setQuantity] = useState(1)
+	const router = useRouter()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
-	const buyNow: MouseEventHandler<HTMLButtonElement> = () => {
-		// TODO Implement this
-		return
+
+	const [buyNowButtonLoading, setbuyNowButtonLoading] = useState(false)
+	const buyNow: MouseEventHandler<HTMLButtonElement> = async () => {
+		setbuyNowButtonLoading(true)
+		try{
+			const {redirect_link} = await createPayPalOrderLink([{ PID: product.firestoreID, quantity, product }], `/products/${product.firestoreID}`)
+			router.push(redirect_link)
+		}
+		catch(e){
+			toast.error((e as Error).message, {theme: "colored"})
+			setbuyNowButtonLoading(false)
+		}
 	}
 	return (
 		<>
@@ -168,8 +187,21 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 
 						{/* Add Cart */}
 						<AddCartButton product={product} quantity={quantity}/>
-						<button onClick={buyNow} className={`mt-2 p-3 w-full hover:scale-[102%] transition-transform font-bold bg-blue-700 text-white active:scale-[97%] ${product.quantity <= 0 && "disabled:bg-blue-300 disabled:scale-100"}`} disabled={product.quantity <= 0}>
-							{product.quantity <= 0 && "Cannot"} Buy Now
+						<button
+							onClick={buyNow} disabled={product.quantity <= 0}
+							className={
+								`mt-2 p-3 w-full relative grid place-items-center
+								font-bold bg-blue-700 text-white 
+								hover:scale-[102%] transition-transform active:scale-[97%]
+								${product.quantity <= 0 ? "disabled:bg-blue-300 disabled:scale-100" : ""}`
+							}
+						>
+							<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="white" secondaryColor="white"
+								wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${buyNowButtonLoading && "opacity-100"} justify-self-start`} />
+							<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${buyNowButtonLoading && "translate-x-[14px] !delay-[0s]"}`}>
+								<PayPalWhiteSVG className="h-4 translate-y-[2px]" />
+								<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
+							</div>
 						</button>
 					</div>
 				</div>
