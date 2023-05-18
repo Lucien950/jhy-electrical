@@ -10,7 +10,6 @@ import { displayVariants } from "util/formVariants";
 // types
 import CustomerInterface from 'types/customer';
 import { OrderProduct } from "types/order";
-import { PriceInterface } from "types/price";
 import { postalCodePattern } from "util/shipping/postalCode";
 import { Address } from "@paypal/paypal-js"
 import { Oval } from "react-loader-spinner";
@@ -23,7 +22,7 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 	const input = useRef<HTMLInputElement>(null)
 
 	return (
-		<Combobox value={province} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
+		<Combobox value={province || ""} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
 			<Combobox.Input
 				onChange={(event) => setQuery(event.target.value)}
 				className="w-full h-full p-2 rounded-sm border-2 focus:outline-none focus:ring"
@@ -66,28 +65,20 @@ const ShippingField = ({ field_id, field_placeholder, className, defaultValue, r
 
 
 type p0Input = {
-	customerInformation: CustomerInterface,
-	cart?: OrderProduct[], paymentInformation: PriceInterface,
-	nextCheckoutStage: () => void,
-	canGoToPayment: boolean,
-	setCustomerInformation: Dispatch<SetStateAction<CustomerInterface>>,
+	customerInformation: CustomerInterface, setCustomerInformation: Dispatch<SetStateAction<CustomerInterface>>,
+	cart?: OrderProduct[],
+	nextCheckoutStage: () => Promise<void>, canGoToPayment: boolean
 }
-const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformation, canGoToPayment, nextCheckoutStage }: p0Input) => {
+const p0 = ({ customerInformation, setCustomerInformation, cart, canGoToPayment, nextCheckoutStage }: p0Input) => {
 
-	const proceedPayment: FormEventHandler<HTMLFormElement> = (e) => {
+	const proceedPayment: FormEventHandler<HTMLFormElement> = async (e) => {
 		e.preventDefault()
 		// this is the only onr which are not auto handled "required" by the HTML form
 		if (!customerInformation.address?.admin_area_1) {
 			toast("Province not Filled")
 			return
 		}
-
-		// just for display reasons, nextCheckoutStage will check again
-		if (!paymentInformation.shipping) {
-			toast.warn("Shipping Not Estimated", { theme: "colored" })
-			return
-		}
-		nextCheckoutStage()
+		await nextCheckoutStage()
 	}
 
 	const customerChange = (id: string, val: string)=>{
@@ -136,7 +127,7 @@ const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformat
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4">Shipping</h1>
 					<div className="grid grid-cols-2 gap-x-2 gap-y-2 text-sm">
-						<ShippingField required setField={customerChange} field_id="fullName" 		field_placeholder="Full Name" 						  defaultValue={customerInformation.fullName} />
+						<ShippingField required setField={customerChange} field_id="fullName" 		field_placeholder="Full Name" 						  defaultValue={customerInformation.fullName} className="col-span-2"/>
 						<ShippingField required setField={shippingChange} field_id="address_line_1" field_placeholder="Address" 							defaultValue={customerInformation.address?.address_line_1} className="col-span-2" />
 						<ShippingField          setField={shippingChange} field_id="address_line_2" field_placeholder="Apt/Suite (Optional)" 	defaultValue={customerInformation.address?.address_line_2} className="col-span-2" />
 						<ShippingField required setField={shippingChange} field_id="admin_area_2"   field_placeholder="City" 									defaultValue={customerInformation.address?.admin_area_2} />
@@ -159,7 +150,9 @@ const p0 = ({ customerInformation, setCustomerInformation, cart, paymentInformat
 					<Link href="/cart" className="underline">
 						Back to Cart
 					</Link>
-					<button className="bg-black text-white py-4 px-16 disabled:text-gray-400" type="submit" disabled={!canGoToPayment}>Proceed to Payment</button>
+					<button className="bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color]" type="submit" disabled={!canGoToPayment}>
+						Proceed to Payment
+					</button>
 				</div>
 			</form>
 		</motion.div>

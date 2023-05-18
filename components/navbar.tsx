@@ -15,6 +15,8 @@ import { analytics } from "util/firebase/analytics";
 
 import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
 import { toast } from "react-toastify";
+import { Oval } from "react-loader-spinner";
+import { Transition } from "@headlessui/react";
 
 const CartIcon = ({ dim, ...rest }: { dim: number } & SVGProps<SVGSVGElement>) => {
 	return (
@@ -97,7 +99,10 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 		logEvent(analytics(), "view_item_list")
 	}, [])
 
-	const gotocheckout = async ()=>{
+
+	const [checkoutLoading, setCheckoutLoading] = useState(false)
+	const goToCheckout = async ()=>{
+		setCheckoutLoading(true)
 		try {
 			const { orderID } = await createPayPalOrderLink(cart, "checkout")
 			router.push({
@@ -109,6 +114,9 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 		catch (e) {
 			toast.error(`Checkout Order Generation Error, see console for more details`, { theme: "colored" })
 			console.error(e)
+		}
+		finally{
+			setCheckoutLoading(false)
 		}
 	}
 
@@ -160,8 +168,20 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 											Open Cart
 										</button>
 									</Link>
-									<button className="p-3 px-10 rounded-sm border-2 font-medium text-gray-600 border-gray-300" onClick={gotocheckout}>
-										Checkout
+									<button className="p-3 px-10 rounded-sm border-2 font-medium text-gray-600 border-gray-300 relative overflow-hidden" onClick={goToCheckout}>
+										<div className={"transition-transform " + (!checkoutLoading ? "translate-y-0" : "translate-y-[-150%]")}>
+											Checkout
+										</div>
+										<Transition
+											className="absolute left-[50%] translate-x-[-50%] transition-[transform,top]"
+											show={checkoutLoading}
+											enterFrom="top-[100%] translate-y-0"
+											enterTo="top-[50%] translate-y-[-50%]"
+											leaveFrom="top-[50%] translate-y-[-50%]"
+											leaveTo="top-[100%] translate-y-0"
+										>
+											<Oval height={20} strokeWidth={10} color="#28a9fa" secondaryColor="#28a9fa"/>
+										</Transition>
 									</button>
 								</div>
 							</div>

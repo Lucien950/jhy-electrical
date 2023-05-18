@@ -134,7 +134,7 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 			<div className="flex flex-row items-center justify-end gap-x-6">
 				<button className="underline" onClick={goToPayment}>Back to Payment</button>
 				<button className="bg-black p-4 px-24 text-white text-bold relative grid place-items-center" onClick={handleOrder}>
-					<Oval height={20} width={20} strokeWidth={8} strokeWidthSecondary={8} color="#28a9fa" secondaryColor="#28a9fa" wrapperClass={`absolute translate-x-[-60px] transition-[opacity] opacity-0 ${submitOrderLoading && "!opacity-100"}`} />
+					<Oval height={20} width={20} strokeWidth={8} strokeWidthSecondary={8} color="white" secondaryColor="white" wrapperClass={`absolute translate-x-[-60px] transition-[opacity] opacity-0 ${submitOrderLoading && "!opacity-100"}`} />
 					<span className={`absolute transition-transform ${submitOrderLoading && "translate-x-[10px]"}`}>
 						Submit Order
 					</span>

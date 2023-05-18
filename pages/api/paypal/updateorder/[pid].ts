@@ -4,20 +4,15 @@ import { apiRespond } from "util/api";
 // types
 import { updateOrderAddressProps, updateOrderAddressRes } from ".";
 import { validateAddress } from "types/paypal";
+import { Address } from "@paypal/paypal-js"
 // util
 import { makePrice } from "util/priceUtil";
 import { getOrder } from "util/paypal/server/getOrder";
 import { getProductByID } from "util/productUtil";
 import { generateAccessToken } from "util/paypal/server/auth";
 
-export const updateOrderAddress = async (req: NextApiRequest, res: NextApiResponse) => {
-	const { token, address: newAddress, fullName } = req.body as updateOrderAddressProps
-	// validation
-	if (!token || !newAddress || !fullName) throw "Did not send all required body props"
-	if (typeof token != "string") throw "Token not well formed"
-	if (!validateAddress(newAddress)) throw "Address not well formed"
-	if (typeof fullName != "string") throw "Name not well formed"
 
+export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getOrder(token)
 	const { products: productIDS } = orders
 	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
@@ -70,7 +65,25 @@ export const updateOrderAddress = async (req: NextApiRequest, res: NextApiRespon
 
 	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}`, options)
 	if (!response.ok) throw await response.json()
-	apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
+
+	return newPrice
+}
+
+export const updateOrderAddressAPI = async (req: NextApiRequest, res: NextApiResponse) => {
+	const { token, address: newAddress, fullName } = req.body as updateOrderAddressProps
+	// validation
+	if (!token || !newAddress || !fullName) throw "Did not send all required body props"
+	if (typeof token != "string") throw "Token not well formed"
+	if (!validateAddress(newAddress)) throw "Address not well formed"
+	if (typeof fullName != "string") throw "Name not well formed"
+
+	try {
+		const newPrice = await updateOrderAddress(token, newAddress, fullName)
+		apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
+	}
+	catch (e) {
+		apiRespond(res, "error", e)
+	}
 }
 
 /**
@@ -78,14 +91,9 @@ export const updateOrderAddress = async (req: NextApiRequest, res: NextApiRespon
  */
 export default async (req: NextApiRequest, res: NextApiResponse) => {
 	const { pid } = req.query
-	if(!pid) return apiRespond(res, "error", "PID is required")
-	if(typeof pid != "string") return apiRespond(res, "error", "PID must be a string")
+	if (!pid) return apiRespond(res, "error", "PID is required")
+	if (typeof pid != "string") return apiRespond(res, "error", "PID must be a string")
 	// launchpad
-	try{
-		if (pid == "address") await updateOrderAddress(req, res)
-		else return apiRespond(res, "error", "Invalid Order Update Property")
-	}
-	catch(e){
-		apiRespond(res, "error", e)
-	}
+	if (pid == "address") await updateOrderAddressAPI(req, res)
+	else return apiRespond(res, "error", "Invalid Order Update Property")
 }

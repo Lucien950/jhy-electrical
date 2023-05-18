@@ -20,17 +20,21 @@ import CheckoutStageZero from "components/checkout/p0"
 import CheckoutStageOne from "components/checkout/p1"
 import CheckoutStageTwo from "components/checkout/p2"
 // util
-import { PriceInterface } from "types/price"
+import { PriceInterface, validateFinalPrice } from "types/price"
+import { getProductByID } from 'util/productUtil'
+import { updateOrderAddress } from 'util/paypal/client/updateOrderClient'
+import { validatePostalCode } from 'util/shipping/postalCode'
+import { validateAddress, validateAddressError } from 'types/paypal'
+import {isEqual as objectIsEqual} from "lodash"
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
-import { getProductByID } from 'util/productUtil'
 
-import { updateOrderAddress } from 'util/paypal/client/updateOrderClient'
-import { postalCodePattern } from 'util/shipping/postalCode'
 
-const findFinalTotalFound = (pi: PriceInterface) => Object.values(pi).every(v => v != 0)
+
+const findAddressFound = (ci: CustomerInterface) => validateAddress(ci.address)
 const findPaymentMethodFound = (ci: CustomerInterface) => (ci.paymentMethod == "paypal" && !!ci.payment_source?.paypal) || (ci.paymentMethod == "card" && !!ci.payment_source?.card)
+const findFinalPriceCalculated = (pi: PriceInterface) => validateFinalPrice(pi)
 
 type CheckoutProps = {
 	paypalCustomerInformation: CustomerInterface,
@@ -39,101 +43,106 @@ type CheckoutProps = {
 	paypalPaymentInformation: PriceInterface,
 	orderID: string,
 	redirect_link: string,
-	status: string
 	initialCheckoutStage: number
 }
-export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, productIDs, paypal_error, orderID, redirect_link, status, initialCheckoutStage }: CheckoutProps)
-{
-	// onload analytics
-	const [cart, setCart] = useState<OrderProduct[]>()
-	useEffect(() => {
-		logEvent(analytics(), "begin_checkout");
-		logEvent(analytics(), "checkout_progress", { checkout_step: initialCheckoutStage });
-		(async () => {
-			const newCart = await Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
-			setCart(newCart)
-		})()
-	}, []) // eslint-disable-line react-hooks/exhaustive-deps
-
+export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, productIDs, paypal_error, orderID, redirect_link, initialCheckoutStage }: CheckoutProps) {
 	// customer
 	const [customerInformation, setCustomerInformation] = useState<CustomerInterface>({
-		fullName: "", paymentMethod: null, address:{ address_line_1: "", address_line_2: "", admin_area_1: "", admin_area_2: "", postal_code: "", country_code: "CA"},
+		paymentMethod: null, address: { country_code: "CA" },
 		...paypalCustomerInformation
 	})
 	// pricing
 	const [paymentInformation, setPaymentInformation] = useState<PriceInterface>(paypalPaymentInformation)
 	// pricing UI
 	const [calculatingShipping, setCalculatingShipping] = useState(false)
-	const finalTotalFound = findFinalTotalFound(paymentInformation)
-	const paymentMethodFound = findPaymentMethodFound(customerInformation)
-
+	const [finalPriceCalculated, setFinalPriceCalculated] = useState(false)
+	const [addressFound, setAddressFound] = useState(false)
+	const [paymentMethodFound, setPaymentMethodFound] = useState(false)
+	const [addressChanges, setAddressChanges] = useState(-1) //will go to 0 onload
 	useEffect(()=>{
+		setAddressChanges(ac=>ac+1)
+		setAddressFound(findAddressFound(customerInformation))
+		setPaymentMethodFound(findPaymentMethodFound(customerInformation))
+		setFinalPriceCalculated(findFinalPriceCalculated(paymentInformation))
+	}, [customerInformation.address])
+
+	//recalculate only when navigating away from shipping screen
+	//recalculate on load if shipping is not found
+	const uo = async () => {
+		// due dilligence
+		if (!validatePostalCode(customerInformation.address?.postal_code)) return
 		console.log("recalculating");
-		// validate admin province is not empty (rest is required in input)
-		if (!customerInformation.address?.admin_area_1) return
-		if (!customerInformation.address?.postal_code?.match(new RegExp(postalCodePattern))) return
-
-		if(paymentInformation.shipping) return
-
-		// fine because form validated
 		setCalculatingShipping(true)
-		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!)
-			.then(({ newPrice }) => setPaymentInformation(newPrice))
-			.catch(e => toast.error((e as Error).message, { theme: "colored" }))
-			.finally(() => setCalculatingShipping(false))
-	}, [customerInformation]) // eslint-disable-line react-hooks/exhaustive-deps
+		try {
+			//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!)
+			setPaymentInformation(newPrice)
+		}
+		catch (e) {
+			toast.error((e as Error).message, { theme: "colored" })
+		}
+		finally {
+			setCalculatingShipping(false)
+		}
+	}
+	const [cart, setCart] = useState<OrderProduct[]>()
+	useEffect(() => {
+		logEvent(analytics(), "begin_checkout");
+		logEvent(analytics(), "checkout_progress", { checkout_step: initialCheckoutStage })
+
+		// update shipping (if paypal express checkout and no shipping)
+		if (addressFound && !paymentInformation.shipping) uo();
+		// update displayed cart
+		Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
+			.then(newCart => setCart(newCart))
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// CHECKOUT STAGES
 	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(initialCheckoutStage)
-	const canGoToPayment = finalTotalFound
-	const canGoToReview = finalTotalFound && paymentMethodFound
-	// CHECKOUT STAGES
-	const goToShipping = () => {
-		setCurrentCheckoutStage(0)
-		logEvent(analytics(), "checkout_progress", { checkout_step: 0 })
-	}
-	const goToPayment = () => {
-		if (canGoToPayment) {
-			setCurrentCheckoutStage(1)
-			logEvent(analytics(), "checkout_progress", { checkout_step: 1 })
+	const canGoToPayment = addressFound || finalPriceCalculated
+	const canGoToReview = finalPriceCalculated && paymentMethodFound
+	const canGoToStage = [true, canGoToPayment, canGoToReview]
+	const goToStage = (stage: number) => (async () => {
+		if (canGoToStage[stage]) {
+			if (currentCheckoutStage == 0) {
+				if (addressChanges > 0) await uo()
+				setAddressChanges(0)
+			}
+			setCurrentCheckoutStage(stage)
+			logEvent(analytics(), "checkout_progress", { checkout_step: stage })
 		}
-	}
-	const goToReview = () => {
-		if (canGoToReview) {
-			setCurrentCheckoutStage(2)
-			logEvent(analytics(), "checkout_progress", { checkout_step: 2 })
-		}
-	}
-	const GetCheckoutStageView = () => {
-		if(currentCheckoutStage == 0){
+	})
+
+	const CheckoutStageView = () => {
+		if (currentCheckoutStage == 0) {
 			const p1 = {
-				customerInformation, setCustomerInformation,
-				cart,
-				canGoToPayment, paymentInformation,
-				nextCheckoutStage: goToPayment,
+				customerInformation, setCustomerInformation, cart,
+				canGoToPayment, nextCheckoutStage: goToStage(1)
 			}
 			return <CheckoutStageZero {...p1} />
 		}
-		else if(currentCheckoutStage == 1){
+		else if (currentCheckoutStage == 1) {
 			const setPaymentMethod = (newPaymentMethod: "paypal" | "card") => setCustomerInformation(ci => ({ ...ci, paymentMethod: newPaymentMethod }))
 			const p2 = {
-				prevCheckoutStage: goToShipping, nextCheckoutStage: goToReview,
+				prevCheckoutStage: goToStage(0), nextCheckoutStage: goToStage(2),
 				customerInformation,
 				redirect_link,
 				setPaymentMethod
 			}
 			return <CheckoutStageOne {...p2} />
 		}
-		else if(currentCheckoutStage == 2){
-			const p3 = { customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID}
+		else if (currentCheckoutStage == 2) {
+			const p3 = {
+				customerInformation, paymentInformation,
+				cart, orderID,
+				goToShipping: goToStage(0), goToPayment: goToStage(1)
+			}
 			return <CheckoutStageTwo {...p3} />
 		}
-		else{
-			throw new Error("Current checkout stage is not a valid value")
-		}
+		else throw new Error("Current checkout stage is not a valid value")
 	}
 
+	// rendering conditions
 	if (paypal_error) {
 		logEvent(analytics(), "checkout_error_paypal_SSR")
 		return (
@@ -141,16 +150,6 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 				<div>
 					<h1>Paypal Error</h1>
 					<p>{paypal_error}</p>
-				</div>
-			</div>
-		)
-	}
-	if (status === "COMPLETED") {
-		return (
-			<div className="w-full h-screen grid place-items-center">
-				<div>
-					<h1>Paypal Error</h1>
-					<p>Order has already been completed</p>
 				</div>
 			</div>
 		)
@@ -166,18 +165,18 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 					<div className="flex flex-row justify-between mb-6">
 						{/* Logo */} <Link href="/"> <img src="/logo.svg" className="h-20" alt="" /> </Link>
 						<div className="flex flex-row items-center self-end text-xl gap-x-5 text-gray-300 stroke-gray-300 transition-colors">
-							{/* shipping */} <button className="text-black hover:underline" onClick={goToShipping}>Shipping</button>
+							{/* shipping */} <button className="text-black hover:underline" onClick={goToStage(0)}>Shipping</button>
 							{/* arrow */} <svg className="h-4 w-4 stroke-black" fill="none" stroke="currentColor" strokeWidth={6} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /> </svg>
-							{/* payment */} <button className={`transition-colors ${canGoToPayment && "text-black hover:underline"}`} onClick={goToPayment} disabled={!canGoToPayment}>Payment</button>
+							{/* payment */} <button className={`transition-colors ${canGoToPayment && "text-black hover:underline"}`} onClick={goToStage(1)} disabled={!canGoToPayment}>Payment</button>
 							{/* arrow */} <svg className={`transition-colors h-4 w-4 ${canGoToPayment && "stroke-black"}`} fill="none" stroke="currentColor" strokeWidth={6} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /> </svg>
-							{/* review */} <button className={`transition-colors ${canGoToReview && "text-black hover:underline"}`} onClick={goToReview} disabled={!canGoToReview}>Review</button>
+							{/* review */} <button className={`transition-colors ${canGoToReview && "text-black hover:underline"}`} onClick={goToStage(2)} disabled={!canGoToReview}>Review</button>
 						</div>
 					</div>
 
 					{/* CONTENT */}
 					<div className="flex flex-row gap-x-4 relative align-top">
 						{/* left side (forms and review area) */}
-						<div className="flex-[2]"> <AnimatePresence mode="wait" > {GetCheckoutStageView()} </AnimatePresence> </div>
+						<div className="flex-[2]"> <AnimatePresence mode="wait" > {CheckoutStageView()} </AnimatePresence> </div>
 
 						{/* right side (numbers, black box area)*/}
 						<div className="sticky top-[1rem] flex-[1] self-start p-6 bg-black text-white">
@@ -236,41 +235,27 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
-	if (!token) return {
-		redirect: {
-			destination: "/cart",
-			permanent: true
-		}
-	}
+	if (!token) return { redirect: { destination: "/cart", permanent: true } }
+
 	// coming back from paypal ordering
 	try {
 		const {
-			customerInformation: paypalCustomerInformation,
-			paymentInformation: paypalPaymentInformation,
-			products: productIDs,
-			redirect_link,
-			status
-		} = await getOrder(token)
-		const ret = {
-			paypalCustomerInformation,
-			paypalPaymentInformation,
-			productIDs,
-			orderID: token,
-			status
-		} as CheckoutProps
-		if (redirect_link) ret.redirect_link = redirect_link
+			customerInformation: paypalCustomerInformation, paymentInformation: paypalPaymentInformation,
+			products: productIDs, redirect_link, status} = await getOrder(token)
 		
+		if(status == "COMPLETED") return { props: { paypal_error: "Order has already been completed" } }
+
+		const ret = { paypalCustomerInformation, paypalPaymentInformation, productIDs, orderID: token, } as CheckoutProps
+		if (redirect_link) ret.redirect_link = redirect_link
+
 		// determining initial checkout stage
-		const finalTotalFound = findFinalTotalFound(paypalPaymentInformation)
+		const addressFound = findAddressFound(paypalCustomerInformation)
 		const paymentMethodFound = findPaymentMethodFound(paypalCustomerInformation)
-		if (finalTotalFound && !paymentMethodFound) ret.initialCheckoutStage = 1
+		if (addressFound && !paymentMethodFound) ret.initialCheckoutStage = 1
 		else if (paymentMethodFound) ret.initialCheckoutStage = 2
 		else ret.initialCheckoutStage = 0
-		
+
 		return { props: ret }
 	}
-	catch (e) {
-		return { props: { paypal_error: e } as CheckoutProps }
-	}
-
+	catch (e) { return { props: { paypal_error: e } as CheckoutProps } }
 }

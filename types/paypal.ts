@@ -1,18 +1,19 @@
 import { Address } from "@paypal/paypal-js"
 import Joi from "joi"
-import { postalCodePattern, postalCodeSchema } from "util/shipping/postalCode"
+import { postalCodeSchema } from "util/shipping/postalCode"
 
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"
 
 const addressSchema = Joi.object({
 	address_line_1: Joi.string().max(300).required(),
-	address_line_2: Joi.string().max(300),
+	address_line_2: Joi.string().max(300).optional().allow(""),
 	admin_area_1: Joi.string().required(),
 	admin_area_2: Joi.string().required(),
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().length(2).required(),
 })
-export const validateAddress = (candidate: Address) => addressSchema.validate(candidate).error === undefined
+export const validateAddress = (candidate?: Address) => (candidate !== undefined) && (addressSchema.validate(candidate).error === undefined)
+export const validateAddressError = (candidate?: Address) => addressSchema.validate(candidate).error
 
 /**
  * Token Type

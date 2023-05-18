@@ -10,14 +10,6 @@ import { displayVariants } from "util/formVariants";
 // types
 import CustomerInterface from "types/customer";
 
-type PaymentFormProps = {
-	prevCheckoutStage: () => void,
-	nextCheckoutStage: () => void,
-	setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
-	customerInformation: CustomerInterface,
-	redirect_link: string
-}
-
 const RadioOption = ({children, value}: {children: (disabled: boolean)=>JSX.Element, value: string})=>{
 	return(
 		<RadioGroup.Option value={value}>
@@ -33,20 +25,26 @@ const RadioOption = ({children, value}: {children: (disabled: boolean)=>JSX.Elem
 		</RadioGroup.Option>
 	)
 }
-const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, customerInformation, redirect_link }:PaymentFormProps) => {
+
+type PaymentFormProps = {
+	prevCheckoutStage: () => Promise<void>, nextCheckoutStage: () => Promise<void>,
+	setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
+	customerInformation: CustomerInterface,
+	redirect_link: string
+}
+const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, customerInformation, redirect_link }: PaymentFormProps) => {
 	const router = useRouter()
 	const [paymentSubmitLoading, setPaymentSubmitLoading] = useState(false)
+	const paymentMethodSelected = !!customerInformation.paymentMethod
+	const paymentInfoFound = !!customerInformation.payment_source
+	const RadioGroupDisabled = paymentMethodSelected && paymentInfoFound
 
 	const validatePayment = async () => {
 		if (customerInformation.paymentMethod == "paypal") {
 			setPaymentSubmitLoading(true)
 			// 
-			if (customerInformation.payment_source) {
-				nextCheckoutStage()
-			}
-			else{
-				router.push(redirect_link)
-			}
+			if (paymentInfoFound) nextCheckoutStage()
+			else router.push(redirect_link)
 		}
 		// TODO hosted fields validation
 		else if (customerInformation.paymentMethod == "card") {
@@ -58,7 +56,6 @@ const PaymentForm = ({ prevCheckoutStage, nextCheckoutStage, setPaymentMethod, c
 		}
 	}
 
-	const RadioGroupDisabled = (!!customerInformation.paymentMethod) && (!!customerInformation.payment_source)
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="paymentForm">
 			{/* Payment Method Select */}
