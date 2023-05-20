@@ -3,7 +3,7 @@ import { OrderProduct } from "types/order"
 import { apiResponse } from "util/api"
 import { clientErrorFactory } from "util/clientErrorFactory"
 
-const throwCreateOrderError = clientErrorFactory("Order Link Server Error: Check console for more information")
+const createOrderError = clientErrorFactory("Order Link Server Error: Check console for more information")
 /**
  * Function against local paypal API endpoint
  * @param amount Amount of money to pay
@@ -18,10 +18,10 @@ export const createPayPalOrderLink = async (products: OrderProduct[], cancel_url
 
 	const { res, err } = await response.json() as apiResponse<createOrderAPIRes, any>
 	if(response.ok){
-		if(!res) return throwCreateOrderError("This code should not be reachable, since response.ok is true")
-		if (res.orderStatus == "COMPLETED") return throwCreateOrderError("REQUEST ID HAS BEEN USED")
-		if (!res.redirect_link) return throwCreateOrderError("Redirect Link could not be found")
+		if(!res) return createOrderError("This code should not be reachable, since response.ok is true")
+		if (res.orderStatus == "COMPLETED") return createOrderError("REQUEST ID HAS BEEN USED")
+		if (!res.redirect_link) return createOrderError("Redirect Link could not be found")
 		return Object.assign(res, {redirect_link: res.redirect_link})
 	}
-	else return throwCreateOrderError(err)
+	else return createOrderError(err)
 }

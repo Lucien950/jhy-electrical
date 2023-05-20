@@ -19,6 +19,7 @@ import { toast } from "react-toastify";
 // util price
 import { TAX_RATE } from "util/priceUtil";
 import { PriceInterface } from "types/price";
+import { Transition } from "@headlessui/react";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
 	const product = orderProduct.product
@@ -112,6 +113,7 @@ export default function Cart() {
 		logEvent(analytics(), "cancel_paypal_checkout")
 	}, [router.query.token]) // eslint-disable-line react-hooks/exhaustive-deps
 
+	// PayPal Express Checkout
 	const [paypalLoading, setPaypalLoading] = useState(false)
 	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
@@ -124,7 +126,7 @@ export default function Cart() {
 			setPaypalLoading(false)
 		}
 	}
-
+	// Form Checkout
 	const [checkoutLoading, setCheckoutLoading] = useState(false)
 	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
 		setCheckoutLoading(p=>!p)
@@ -208,8 +210,18 @@ export default function Cart() {
 							{/* paypal */}
 							<button className="text-lg p-3 w-full h-[50px] bg-white grid place-items-center relative group"
 							onClick={paypalCheckout} disabled={!total}>
-								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="#28a9fa" secondaryColor="#28a9fa"
-								wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${paypalLoading && "opacity-100"} justify-self-start`}/>
+								<Transition
+									show={paypalLoading}
+									enter="transition-opacity duration-200"
+									enterFrom="opacity-0"
+									enterTo="opacity-100"
+									leave="transition-opacity duration-200"
+									leaveFrom="opacity-100"
+									leaveTo="opacity-0"
+									className="ml-3 mr-2 justify-self-start"
+								>
+									<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="#28a9fa" secondaryColor="#28a9fa" />
+								</Transition>
 								<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${paypalLoading && "translate-x-[14px] !delay-[0s]"}`}>
 									<PaypalSVG className="h-4 translate-y-[2px]"/>
 									<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
@@ -218,8 +230,18 @@ export default function Cart() {
 							{/* checkout */}
 							<button className="text-lg my-2 w-full h-[50px] bg-white grid place-items-center relative group"
 								disabled={cart.length <= 0} onClick={goToCheckout}>
-								<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black"
-									wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${checkoutLoading && "opacity-100"} left-[25%] absolute`} />
+								<Transition
+									show={checkoutLoading}
+									enter="transition-opacity duration-200"
+									enterFrom="opacity-0"
+									enterTo="opacity-100"
+									leave="transition-opacity duration-200"
+									leaveFrom="opacity-100"
+									leaveTo="opacity-0"
+									className="ml-3 mr-2 left-[25%] absolute"
+								>
+									<Oval height={18} width={18} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
+								</Transition>
 								<span className="group-disabled:text-gray-500 font-bold">
 									Checkout
 								</span>

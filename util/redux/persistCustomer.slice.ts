@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import CustomerInterface from 'types/customer';
+import { CustomerInterface } from 'types/customer';
 
 const persistCustomerSlice = createSlice({
 	name: 'persistCustomer',

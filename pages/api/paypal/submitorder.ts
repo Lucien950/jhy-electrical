@@ -10,61 +10,63 @@ import { FirestoreOrderInterface } from "types/order"
 import { Timestamp, addDoc, collection } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 import { apiRespond } from "util/api"
+import { validateCustomer, validateCustomerError } from "types/customer"
+import { validateFinalPrice, validateFinalPriceError } from "types/price"
 
 export type submitOrderProps = { token: string }
-export type submitOrderRes = { orderID: string }
+export type submitOrderRes = { firebaseOrderID: string }
 
 /**
  * Submitting Order API Endpoint
  */
-export default async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
 	// INPUT VALIDATION
 	const { token }: submitOrderProps = req.body
 	if (!token) return apiRespond(res, "error", "Token is required to submit order")
 	if (typeof token != "string") return apiRespond(res, "error", "Token is not a string")
 
-	const options = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${await generateAccessToken()}`
-		},
-	};
-
-	const authResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/authorize`, options)
-	if (!authResponse.ok) return apiRespond(res, "error", await authResponse.json())
-
 	try{
-		const order = await getOrder(token)
-	
-		const { products: productIDs, paymentInformation, customerInformation } = order
+		// make sure order is well formed before authorizing the payment
+		const { products: productIDs, priceInfo, customerInfo, status } = await getOrder(token)
+
+		// validation
+		// validates p1 completion
+		if (!validateCustomer(customerInfo)) {console.error("customer error"); return apiRespond(res, "error", validateCustomerError(customerInfo))}
+		// this validates that p0 has been completed
+		if (!validateFinalPrice(priceInfo)) { console.error("price error"); return apiRespond(res, "error", validateFinalPriceError(priceInfo))}
+		if(status !== "APPROVED") return apiRespond(res, "error", "Order is not approved")
+
+		// populate cart (fossilize the cart in case products change/are removed)
 		const cart = await Promise.all(productIDs.map(async p => {
 			const product = await getProductByID(p.PID)
-			|| 	{
-						productName: `PRODUCT ${p.PID} NOT FOUND`,
-						quantity: p.quantity,
-						price: 1,
-						description: "COULD NOT FIND PRODUCT WHEN SUBMITTING ORDER"
-					} as ProductInterface
 			return { ...p, product }
 		}))
-	
+
+		// add order to firebase
 		const newOrder = {
 			products: cart,
-			orderPrice: paymentInformation,
-			completed: true,
+			orderPrice: priceInfo,
+			completed: false,
 			dateTS: Timestamp.now(),
 	
-			name: customerInformation.fullName,
-			email: customerInformation.payment_source?.paypal?.email_address,
-			address: customerInformation.address,
+			name: customerInfo.fullName,
+			payment_source: customerInfo.payment_source, //problem
+			address: customerInfo.address,
 			paypalOrderID: token,
 		} as FirestoreOrderInterface
-	
+		
+		console.log(newOrder)
 		const doc = await addDoc(collection(db, "orders"), newOrder)
-		apiRespond<submitOrderRes>(res, "response", { orderID: doc.id })
+
+		// authorize payment
+		const options = { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await generateAccessToken()}` }, };
+		const authResponse = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/authorize`, options)
+		if (!authResponse.ok) return apiRespond(res, "error", await authResponse.json())
+
+		// POINT OF NO RETURN
+		return apiRespond<submitOrderRes>(res, "response", { firebaseOrderID: doc.id })
 	}
 	catch(e){
-		apiRespond(res, "error", e)
+		return apiRespond(res, "error", e)
 	}
 }

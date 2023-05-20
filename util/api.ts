@@ -7,22 +7,6 @@ export interface apiResponse<ResType, ErrType> {
 }
 
 /**
- * Sends the error to the client
- * @param res API Response Object
- * @param payload Error Payload
- * @returns false
- */
-const ResError = <T,>(res: NextApiResponse, payload: T) => {
-	res.status(500)
-	if (payload instanceof Error) {
-		if (process.env.NODE_ENV === "development") res.send({ err: `${payload.name}: ${payload.message}` } as apiResponse<never, string>)
-		else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
-		throw payload
-	}
-	else res.send({ err: payload } as apiResponse<never, T>)
-}
-
-/**
  * Gives a API response handler for data
  * @param res NextAPI res object
  * @param responseType "response"
@@ -39,16 +23,22 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response", payload: 
  */
 function apiRespond<T>(res: NextApiResponse, responseType: "error", payload: T): void;
 function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error", payload: T) {
+	if(!["response", "error"].includes(responseType)) throw new Error("API Response Type Not Valid") // 1
+	if(!payload) throw new Error("No Payload")  // 2
 	switch (responseType) {
-		case "response":
-			if(!payload) throw new Error("No Payload")  // 1
-			return res.status(200).send({ res: payload } as apiResponse<T, never>)
+		case "response": return res.status(200).send({ res: payload } as apiResponse<T, never>)
 		case "error":
-			if (payload) return ResError(res, payload)
-			else return (errorPayload: T) => ResError(res, errorPayload)
-		default: throw new Error("API Response Type Not Valid") // 2
+			res.status(500)
+			if (payload instanceof Error) {
+				if (process.env.NODE_ENV === "development") res.send({ err: `${payload.name}: ${payload.message}` } as apiResponse<never, string>)
+				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
+				throw payload
+			}
+			else res.send({ err: payload } as apiResponse<never, T>)
+			return
+		default: throw new Error("API Response Type Not Valid") // 3
 	}
-	// 1 and 2 are only if apiResponse is not well formed (typescript will catch this)
+	// 1, 2, 3 are only if apiResponse is not well formed (typescript will catch this)
 }
 
 export { apiRespond }

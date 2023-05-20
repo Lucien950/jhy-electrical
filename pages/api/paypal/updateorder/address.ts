@@ -11,7 +11,6 @@ import { getOrder } from "util/paypal/server/getOrder";
 import { getProductByID } from "util/productUtil";
 import { generateAccessToken } from "util/paypal/server/auth";
 
-
 export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getOrder(token)
 	const { products: productIDS } = orders
@@ -69,31 +68,19 @@ export const updateOrderAddress = async (token: string, newAddress: Address, ful
 	return newPrice
 }
 
-export const updateOrderAddressAPI = async (req: NextApiRequest, res: NextApiResponse) => {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
 	const { token, address: newAddress, fullName } = req.body as updateOrderAddressProps
 	// validation
-	if (!token || !newAddress || !fullName) throw "Did not send all required body props"
-	if (typeof token != "string") throw "Token not well formed"
-	if (!validateAddress(newAddress)) throw "Address not well formed"
-	if (typeof fullName != "string") throw "Name not well formed"
+	if (!token || !newAddress || !fullName) return apiRespond(res, "error", "Did not send all required body props")
+	if (typeof token != "string") return apiRespond(res, "error", "Token not well formed")
+	if (!validateAddress(newAddress)) return apiRespond(res, "error", "Address not well formed")
+	if (typeof fullName != "string") return apiRespond(res, "error", "Name not well formed")
 
 	try {
 		const newPrice = await updateOrderAddress(token, newAddress, fullName)
-		apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
+		return apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
 	}
 	catch (e) {
-		apiRespond(res, "error", e)
+		return apiRespond(res, "error", e)
 	}
-}
-
-/**
- * Update Order API Endpoint
- */
-export default async (req: NextApiRequest, res: NextApiResponse) => {
-	const { pid } = req.query
-	if (!pid) return apiRespond(res, "error", "PID is required")
-	if (typeof pid != "string") return apiRespond(res, "error", "PID must be a string")
-	// launchpad
-	if (pid == "address") await updateOrderAddressAPI(req, res)
-	else return apiRespond(res, "error", "Invalid Order Update Property")
 }

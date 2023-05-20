@@ -20,7 +20,7 @@ import Price from 'components/price'
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
-import { PayPalWhiteSVG, PaypalSVG } from 'components/paypalSVG';
+import { PayPalWhiteSVG } from 'components/paypalSVG';
 import { Oval } from 'react-loader-spinner';
 
 const AddCartButton = ({ product, quantity }: {product: ProductInterface, quantity: number})=>{
@@ -128,7 +128,7 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 	const buyNow: MouseEventHandler<HTMLButtonElement> = async () => {
 		setbuyNowButtonLoading(true)
 		try{
-			const {redirect_link} = await createPayPalOrderLink([{ PID: product.firestoreID, quantity, product }], `/products/${product.firestoreID}`)
+			const {redirect_link} = await createPayPalOrderLink([{ PID: product.firestoreID, quantity, product }], `products/${product.firestoreID}`)
 			router.push(redirect_link)
 		}
 		catch(e){

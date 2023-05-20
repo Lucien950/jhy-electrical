@@ -8,7 +8,7 @@ export const fillOrder = async (orderDoc: QueryDocumentSnapshot<DocumentData>) =
 		...preOrder,
 		dateTS: undefined,
 		date: preOrder.dateTS.toDate(),
-		orderID: orderDoc.id
+		firebaseOrderID: orderDoc.id
 	} as OrderInterface
 }
 

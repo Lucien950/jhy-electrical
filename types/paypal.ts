@@ -3,8 +3,7 @@ import Joi from "joi"
 import { postalCodeSchema } from "util/shipping/postalCode"
 
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"
-
-const addressSchema = Joi.object({
+export const addressSchema = Joi.object({
 	address_line_1: Joi.string().max(300).required(),
 	address_line_2: Joi.string().max(300).optional().allow(""),
 	admin_area_1: Joi.string().required(),
@@ -12,8 +11,8 @@ const addressSchema = Joi.object({
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().length(2).required(),
 })
-export const validateAddress = (candidate?: Address) => (candidate !== undefined) && (addressSchema.validate(candidate).error === undefined)
-export const validateAddressError = (candidate?: Address) => addressSchema.validate(candidate).error
+export const validateAddress = (candidate: Address | null) => (candidate !==  null) && (addressSchema.validate(candidate).error === undefined)
+export const validateAddressError = (candidate: Address | null) => addressSchema.validate(candidate).error
 
 /**
  * Token Type
@@ -38,26 +37,6 @@ export interface PayPalClientToken {
 }
 
 /**
- * Payment source in @paypal/paypal-js is empty [key]: value type defined
- * Source: https://developer.paypal.com/docs/api/orders/v2/#definition-payment_source
- */
-export interface PaymentSource {
-	card?: PaymentSourceCard;
-	token?: Token;
-	paypal?: Paypal;
-	bancontact?: Bancontact;
-	blik?: Bancontact;
-	eps?: Bancontact;
-	giropay?: Bancontact;
-	ideal?: Bancontact;
-	mybank?: Bancontact;
-	p24?: Bancontact;
-	sofort?: Bancontact;
-	trustly?: Bancontact;
-	venmo?: Venmo;
-}
-
-/**
  * Default Type for Errors (use mostly for Order API)
  */
 export interface PayPalError {
@@ -67,7 +46,6 @@ export interface PayPalError {
 	details: Detail[];
 	links: Link[];
 }
-
 export interface Detail {
 	field: string;
 	value: string;
@@ -87,124 +65,111 @@ export interface PayPalSimpleError {
 	error_description: string;
 }
 
-
-interface PaymentMethod {
-	standard_entry_class_code: string;
-	payee_preferred: string;
+/**
+ * Payment source in @paypal/paypal-js is empty [key]: value type defined
+ * This is the payment source object returning from the API (to be distinguished from the one given to the API)
+ * https://developer.paypal.com/docs/api/orders/v2/#definition-payment_source_response
+ */
+export interface PaymentSource {
+	card?: Card;
+	paypal?: Paypal;
+	blik?: Blik;
+	p24?: P24;
+	venmo?: Venmo;
+	bancontact?: INCard;
+	sofort?: INCard;
+	trustly?: INCard;
+	eps?: INBank;
+	giropay?: INBank;
+	ideal?: INBank;
+	mybank?: INBank;
 }
-interface Stored {
-	payment_initiator: string;
-	payment_type: string;
-	usage: string;
-	previous_network_transaction_reference: PreviousNetworkTransactionReference;
-}
-interface PreviousNetworkTransactionReference {
-	id: string;
-	date: string;
-	network: string;
-}
-interface Name {
-	given_name: string;
-	surname: string;
-}
-interface Phone {
-	phone_type: string;
-	phone_number: PhoneNumber;
-}
-interface PhoneNumber {
-	national_number: string;
-}
-interface TaxInfo {
-	tax_id: string;
-	tax_id_type: string;
-}
-interface Bancontact {
+export interface INBank {
 	name: string;
 	country_code: string;
-	experience_context: BancontactExperienceContext;
-	email?: string;
-	bic?: string;
+	bic: string;
+	iban_last_chars?: string;
 }
-interface BancontactExperienceContext {
-	brand_name: string;
-	shipping_preference: string;
-	locale: string;
-	return_url: string;
-	cancel_url: string;
+export interface INCard extends INBank {
+	card_last_digits?: string;
 }
-interface PaymentSourceCard {
+export interface Blik {
 	name: string;
-	number: string;
-	security_code: string;
+	country_code: string;
+	email: string;
+}
+export interface Card {
+	name: string;
+	last_digits: string;
+	type: string;
+	from_request: FromRequest;
+	brand: string;
+	authentication_result: AuthenticationResult;
+	attributes: { vault: Vault; };
 	expiry: string;
-	billing_address: Address;
-	attributes: CardAttributes;
-	stored_credential: Stored;
-	vault_id: string;
 }
-interface CardAttributes {
-	customer: PurpleCustomer;
-	vault: PurpleVault;
-}
-interface PurpleCustomer {
+export interface Vault {
 	id: string;
+	status: string;
+	links: Link[];
+	customer: {
+		id: string;
+	};
+}
+
+export interface Link {
+	href: string;
+	rel: string;
+	method: string;
+}
+export interface AuthenticationResult {
+	liability_shift: string;
+	three_d_secure: ThreeDSecure;
+}
+export interface ThreeDSecure {
+	authentication_status: string;
+	enrollment_status: string;
+}
+export interface FromRequest {
+	last_digits: string;
+	expiry: string;
+}
+export interface P24 {
+	payment_descriptor: string;
+	method_id: string;
+	method_description: string;
+	name: string;
+	email: string;
+	country_code: string;
+}
+export interface Paypal {
+	phone_type: string;
+	attributes: { vault: Vault; };
 	email_address: string;
-	phone: Phone;
-}
-interface PurpleVault {
-	store_in_vault: string;
-}
-interface Context {
-	brand_name: string;
-	landing_page: string;
-	shipping_preference: string;
-	user_action: string;
-	return_url: string;
-	cancel_url: string;
-	locale: string;
-	payment_method?: PaymentMethod;
-	stored_payment_source?: Stored;
-	payment_method_preference?: string;
-	payment_method_selected?: string;
-}
-interface Paypal {
-	experience_context: Context;
-	billing_agreement_id: string;
-	vault_id: string;
-	email_address: string;
+	account_id: string;
 	name: Name;
-	phone: Phone;
+	phone_number: PhoneNumber;
 	birth_date: string;
 	tax_info: TaxInfo;
 	address: Address;
-	attributes: PaypalAttributes;
 }
-interface PaypalAttributes {
-	customer: FluffyCustomer;
-	vault: FluffyVault;
+export interface Name {
+	given_name: string;
+	surname: string;
 }
-interface FluffyCustomer {
-	id: string;
+export interface PhoneNumber {
+	national_number: string;
 }
-interface FluffyVault {
-	store_in_vault: string;
-	description: string;
-	usage_pattern: string;
-	usage_type: string;
-	customer_type: string;
-	permit_multiple_payment_tokens: boolean;
+export interface TaxInfo {
+	tax_id: string;
+	tax_id_type: string;
 }
-interface Token {
-	id: string;
-	type: string;
-}
-interface Venmo {
-	experience_context: VenmoExperienceContext;
-	vault_id: string;
+export interface Venmo {
+	user_name: string;
+	attributes: { vault: Vault; };
 	email_address: string;
-	attributes: PaypalAttributes;
-}
-interface VenmoExperienceContext {
-	brand_name: string;
-	shipping_preference: string;
+	account_id: string;
+	name: Name;
+	phone_number: PhoneNumber;
+	address: Address;
 }

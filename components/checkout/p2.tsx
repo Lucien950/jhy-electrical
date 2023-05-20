@@ -4,66 +4,54 @@ import { displayVariants } from "util/formVariants";
 import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
-import CustomerInterface from "types/customer";
+import { CustomerInterface } from "types/customer";
 import { OrderProduct } from "types/order";
 import { PriceInterface } from "types/price";
 // react
-import { MouseEventHandler, useState } from "react";
+import { Dispatch, MouseEventHandler, SetStateAction, useState } from "react";
 import { useRouter } from "next/router"
 // state
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
 import { useDispatch } from "react-redux";
 import { submitOrder } from "util/paypal/client/submitOrderClient";
+import { CardElement } from "components/cardElement";
+import { toast } from "react-toastify";
 
 type ReviewViewProps = {
-	customerInformation: CustomerInterface,
-	paymentInformation: PriceInterface,
-	cart?: OrderProduct[],
-	goToShipping: MouseEventHandler<HTMLButtonElement>,
-	goToPayment: MouseEventHandler<HTMLButtonElement>,
+	customerInfo: CustomerInterface,
+	priceInfo: PriceInterface,
+	orderCart: OrderProduct[] | null,
+	setStage: Dispatch<SetStateAction<number>>,
 	orderID: string
 }
 
-const ReviewView = ({ customerInformation, paymentInformation, cart, goToShipping, goToPayment, orderID }: ReviewViewProps) => {
+const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: ReviewViewProps) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
 	
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
-		setSubmitOrderLoading(true)
 
 		// for extra security
-		if (Object.values(paymentInformation).some(p=>p == 0)){
-			setSubmitOrderLoading(false)
+		if (Object.values(priceInfo).some(p=>p == 0)){
 			console.error("Payment Information is not Complete")
 			return
 		}
-		if (!customerInformation.payment_source) {
-			setSubmitOrderLoading(false)
+		if (!customerInfo.payment_source) {
 			console.error("Payment Method Paypal does not have paypal information object")
 			return
 		}
 
+		setSubmitOrderLoading(true)
 		let firebaseOrderID;
-		switch (customerInformation.paymentMethod){
-			case "paypal":
-				try{
-					firebaseOrderID = (await submitOrder(orderID)).orderID
-				}
-				catch{
-					setSubmitOrderLoading(false)
-					return
-				}
-				break
-			case "card":
-				// TODO Process Card Hosted Fields
-				console.log("process card")
-				break
-			default:
-				console.log(customerInformation.paymentMethod, "is not a valid payment source")
-				setSubmitOrderLoading(false)
-				return
+		try {
+			firebaseOrderID = (await submitOrder(orderID)).firebaseOrderID
+		}
+		catch(e) {
+			toast.error((e as Error).message, {theme: "colored"})
+			setSubmitOrderLoading(false)
+			return
 		}
 		
 		dispatch(clearCart())
@@ -76,45 +64,44 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 			<div className="bg-gray-200 p-5 flex flex-row mb-2">
 				<h1 className="flex-[2] text-base"> Shipping Address </h1>
 				<div className="flex-[5]">
-					<p> {customerInformation.fullName}</p>
+					<p> {customerInfo.fullName}</p>
 					{
-						customerInformation.address &&
+						customerInfo.address &&
 						<>
-							<p> {customerInformation.address.address_line_1} </p>
-							<p> {customerInformation.address.address_line_2} </p>
-							<p> {customerInformation.address.admin_area_2}, {customerInformation.address.admin_area_1}, {customerInformation.address.postal_code} </p>
+							<p> {customerInfo.address.address_line_1} </p>
+							<p> {customerInfo.address.address_line_2} </p>
+							<p> {customerInfo.address.admin_area_2}, {customerInfo.address.admin_area_1}, {customerInfo.address.postal_code} </p>
 						</>
 					}
 				</div>
-				<button className="underline" onClick={goToShipping}>Edit</button>
+				<button className="underline" onClick={()=>setStage(0)}>Edit</button>
 			</div>
 			{/* payment method */}
-			<div className="bg-gray-200 p-5 flex flex-row mb-2">
+			<div className="bg-gray-200 p-5 flex flex-row mb-2 items-start">
 				<h1 className="flex-[2] text-base"> Payment Method </h1>
 				<div className="flex-[5]">
 					{
-						customerInformation.paymentMethod == "paypal" &&
+						customerInfo.paymentMethod == "paypal" &&
 						<div>
 							<PaypalSVG className="h-6" />
-							<p className="text-sm">Email: {customerInformation.payment_source?.paypal?.email_address}</p>
+							<p className="text-sm">Email: {customerInfo.payment_source?.paypal?.email_address}</p>
 						</div>
 					}
 					{
-						customerInformation.paymentMethod == "card" &&
+						(customerInfo.paymentMethod == "card" && customerInfo.payment_source?.card) &&
 						<div>
-							{/* TODO After getting cards sorted */}
-							testing testing
+							<CardElement cardInformation={customerInfo.payment_source.card} />
 						</div>
 					}
 				</div>
-				<button className="underline" onClick={goToPayment}>Edit</button>
+				<button className="underline" onClick={()=>setStage(1)}>Edit</button>
 			</div>
 			{/* items */}
 			<div className="bg-gray-200 p-5 mb-2">
 				<h1 className="mb-4 text-lg"> Items </h1>
 				<div className="grid grid-cols-2">
-					{cart
-						? cart.map(p =>
+					{orderCart
+						? orderCart.map(p =>
 							<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
 								<img src={p.product?.productImageURL} alt="Product Image" className="h-16" />
 								<div className="flex-1 text-sm">
@@ -132,7 +119,7 @@ const ReviewView = ({ customerInformation, paymentInformation, cart, goToShippin
 			</div>
 			{/* submit buttons */}
 			<div className="flex flex-row items-center justify-end gap-x-6">
-				<button className="underline" onClick={goToPayment}>Back to Payment</button>
+				<button className="underline" onClick={()=>setStage(1)}>Back to Payment</button>
 				<button className="bg-black p-4 px-24 text-white text-bold relative grid place-items-center" onClick={handleOrder}>
 					<Oval height={20} width={20} strokeWidth={8} strokeWidthSecondary={8} color="white" secondaryColor="white" wrapperClass={`absolute translate-x-[-60px] transition-[opacity] opacity-0 ${submitOrderLoading && "!opacity-100"}`} />
 					<span className={`absolute transition-transform ${submitOrderLoading && "translate-x-[10px]"}`}>

@@ -1,159 +1,144 @@
-// react and next
+// react/next
+import { GetServerSideProps } from 'next'
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { GetServerSideProps } from 'next'
 // ui
-import { AnimatePresence, motion } from 'framer-motion'
-import { Oval } from 'react-loader-spinner'
+import { AnimatePresence } from 'framer-motion'
 import PriceComponent from 'components/price'
-import Tippy from '@tippyjs/react';
-import { toast } from 'react-toastify';
-import { displayVariants } from 'util/formVariants'
-// api
-import { getOrder } from 'util/paypal/server/getOrder'
-// types
-import CustomerInterface from 'types/customer'
-import { OrderProduct } from 'types/order'
-// checkout stages
-import CheckoutStageZero from "components/checkout/p0"
-import CheckoutStageOne from "components/checkout/p1"
-import CheckoutStageTwo from "components/checkout/p2"
+import { Oval } from 'react-loader-spinner'
+import Tippy from '@tippyjs/react'
 // util
-import { PriceInterface, validateFinalPrice } from "types/price"
+import { getOrder } from 'util/paypal/server/getOrder'
 import { getProductByID } from 'util/productUtil'
-import { updateOrderAddress } from 'util/paypal/client/updateOrderClient'
-import { validatePostalCode } from 'util/shipping/postalCode'
 import { validateAddress, validateAddressError } from 'types/paypal'
-import {isEqual as objectIsEqual} from "lodash"
+// types
+import { OrderProduct } from 'types/order'
+import { validateName, CustomerInterface, validateNameError } from 'types/customer'
+import { PriceInterface } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
+// stages
+import CheckoutStageZero from "components/checkout/p0"
+import CheckoutStageOne from "components/checkout/p1"
+import CheckoutStageTwo from "components/checkout/p2"
 
 
+/**
+ * @returns Stage 1.1 Verify that the name and address are valid
+ * @param ci Customer object
+ */
+const validateP0FormData = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => validateP0FormError(name, address) === null
+const validateP0FormError = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => {
+	if (!validateName(name)) {return validateNameError(name)}
+	if (!validateAddress(address)) {return validateAddressError(address)}
+	return null
+}
+/**
+ * @returns Stage 1.2 Price has been updated (from the address)
+ * @param pi payment object
+ */
+// const findFinalPriceCalculated = (pi: PriceInterface) => validateFinalPrice(pi)
+/**
+ * @returns Stage 2.1 If payment has been approved
+ * @param ci customer object
+ */
+const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) =>
+	(paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
+	const [stage, setStage] 	= useState(initialStage)
+	const [p0CusUpdated, setP0CusUpdated] = useState(false)
+	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-const findAddressFound = (ci: CustomerInterface) => validateAddress(ci.address)
-const findPaymentMethodFound = (ci: CustomerInterface) => (ci.paymentMethod == "paypal" && !!ci.payment_source?.paypal) || (ci.paymentMethod == "card" && !!ci.payment_source?.card)
-const findFinalPriceCalculated = (pi: PriceInterface) => validateFinalPrice(pi)
+	useEffect(() => setP0CusUpdated(validateP0FormData(customerInfo.fullName, customerInfo.address)), 						[customerInfo.address, 				customerInfo.fullName])
+	useEffect(() => setP1CusUpdated(validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo.paymentMethod,	customerInfo.payment_source])
+
+	return {stage, setStage, p0CusUpdated, p1CusUpdated}
+}
 
 type CheckoutProps = {
-	paypalCustomerInformation: CustomerInterface,
+	paypalCustomerInfo: CustomerInterface,
 	paypal_error?: string,
 	productIDs: OrderProduct[],
-	paypalPaymentInformation: PriceInterface,
+	paypalPriceInfo: PriceInterface,
 	orderID: string,
-	redirect_link: string,
-	initialCheckoutStage: number
+	initialStage: number
 }
-export default function Checkout({ paypalCustomerInformation, paypalPaymentInformation, productIDs, paypal_error, orderID, redirect_link, initialCheckoutStage }: CheckoutProps) {
-	// customer
-	const [customerInformation, setCustomerInformation] = useState<CustomerInterface>({
-		paymentMethod: null, address: { country_code: "CA" },
-		...paypalCustomerInformation
-	})
-	// pricing
-	const [paymentInformation, setPaymentInformation] = useState<PriceInterface>(paypalPaymentInformation)
-	// pricing UI
-	const [calculatingShipping, setCalculatingShipping] = useState(false)
-	const [finalPriceCalculated, setFinalPriceCalculated] = useState(false)
-	const [addressFound, setAddressFound] = useState(false)
-	const [paymentMethodFound, setPaymentMethodFound] = useState(false)
-	const [addressChanges, setAddressChanges] = useState(-1) //will go to 0 onload
-	useEffect(()=>{
-		setAddressChanges(ac=>ac+1)
-		setAddressFound(findAddressFound(customerInformation))
-		setPaymentMethodFound(findPaymentMethodFound(customerInformation))
-		setFinalPriceCalculated(findFinalPriceCalculated(paymentInformation))
-	}, [customerInformation.address])
-
-	//recalculate only when navigating away from shipping screen
-	//recalculate on load if shipping is not found
-	const uo = async () => {
-		// due dilligence
-		if (!validatePostalCode(customerInformation.address?.postal_code)) return
-		console.log("recalculating");
-		setCalculatingShipping(true)
-		try {
-			//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const { newPrice } = await updateOrderAddress(orderID, customerInformation.address!, customerInformation.fullName!)
-			setPaymentInformation(newPrice)
-		}
-		catch (e) {
-			toast.error((e as Error).message, { theme: "colored" })
-		}
-		finally {
-			setCalculatingShipping(false)
-		}
-	}
-	const [cart, setCart] = useState<OrderProduct[]>()
-	useEffect(() => {
-		logEvent(analytics(), "begin_checkout");
-		logEvent(analytics(), "checkout_progress", { checkout_step: initialCheckoutStage })
-
-		// update shipping (if paypal express checkout and no shipping)
-		if (addressFound && !paymentInformation.shipping) uo();
-		// update displayed cart
-		Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
-			.then(newCart => setCart(newCart))
-	}, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-	// CHECKOUT STAGES
-	const [currentCheckoutStage, setCurrentCheckoutStage] = useState(initialCheckoutStage)
-	const canGoToPayment = addressFound || finalPriceCalculated
-	const canGoToReview = finalPriceCalculated && paymentMethodFound
-	const canGoToStage = [true, canGoToPayment, canGoToReview]
-	const goToStage = (stage: number) => (async () => {
-		if (canGoToStage[stage]) {
-			if (currentCheckoutStage == 0) {
-				if (addressChanges > 0) await uo()
-				setAddressChanges(0)
-			}
-			setCurrentCheckoutStage(stage)
-			logEvent(analytics(), "checkout_progress", { checkout_step: stage })
-		}
-	})
-
-	const CheckoutStageView = () => {
-		if (currentCheckoutStage == 0) {
-			const p1 = {
-				customerInformation, setCustomerInformation, cart,
-				canGoToPayment, nextCheckoutStage: goToStage(1)
-			}
-			return <CheckoutStageZero {...p1} />
-		}
-		else if (currentCheckoutStage == 1) {
-			const setPaymentMethod = (newPaymentMethod: "paypal" | "card") => setCustomerInformation(ci => ({ ...ci, paymentMethod: newPaymentMethod }))
-			const p2 = {
-				prevCheckoutStage: goToStage(0), nextCheckoutStage: goToStage(2),
-				customerInformation,
-				redirect_link,
-				setPaymentMethod
-			}
-			return <CheckoutStageOne {...p2} />
-		}
-		else if (currentCheckoutStage == 2) {
-			const p3 = {
-				customerInformation, paymentInformation,
-				cart, orderID,
-				goToShipping: goToStage(0), goToPayment: goToStage(1)
-			}
-			return <CheckoutStageTwo {...p3} />
-		}
-		else throw new Error("Current checkout stage is not a valid value")
-	}
-
+export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, productIDs, paypal_error, orderID, initialStage }: CheckoutProps){
 	// rendering conditions
 	if (paypal_error) {
-		logEvent(analytics(), "checkout_error_paypal_SSR")
 		return (
 			<div className="w-full h-screen grid place-items-center">
 				<div>
 					<h1>Paypal Error</h1>
 					<p>{paypal_error}</p>
+					<Link href="/cart"> <button className="underline">Go Back</button> </Link>
 				</div>
 			</div>
 		)
 	}
+	// IMPORTANT GLOBAL STATE
+	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
+	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
+	const [orderCart, setOrderCart] = useState<OrderProduct[] | null>(null)
+
+	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
+	const {stage, setStage, p0CusUpdated, p1CusUpdated} = useStage(initialStage, customerInfo)
+	const goToStage = (s: number) => (() => {
+		logEvent(analytics(), "checkout_progress", { checkout_step: s })
+		setStage(s)
+	})
+	const CheckoutStageView = () => {
+		if (stage == 0)
+			return (
+				<CheckoutStageZero
+				{...{
+						setStage,
+						setCustomerInfo,
+						setPriceInfo,
+						customerInfo,
+						validateP0Form: validateP0FormData,
+						validateP0FormError,
+						orderID,
+						orderCart,
+						calculatingShipping,
+						setCalculatingShipping
+					}}
+				/>
+			)
+		else if (stage == 1)
+			return <CheckoutStageOne {...{
+				customerInfo,
+				setCustomerInfo,
+				setStage,
+				orderID
+			}}/>
+		else if (stage == 2)
+			return <CheckoutStageTwo {...{
+				customerInfo,
+				priceInfo,
+				orderCart,
+				setStage,
+				orderID
+			}}/>
+		throw new Error("Current checkout stage is not a valid value")
+	}
+
+	// Variables for NavComponent
+
+	// Variables for PriceComponent
+	const [calculatingShipping, setCalculatingShipping] = useState(false)
+
+	useEffect(() => {
+		if (paypal_error) { logEvent(analytics(), "checkout_error_paypal_SSR"); return }
+		logEvent(analytics(), "begin_checkout");
+		logEvent(analytics(), "checkout_progress", { checkout_step: initialStage })
+		// update displayed cart
+		Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) } as OrderProduct)))
+			.then(newCart => setOrderCart(newCart))
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
+
 	return (
 		<>
 			<Head>
@@ -164,12 +149,14 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 					{/* TOP ROW */}
 					<div className="flex flex-row justify-between mb-6">
 						{/* Logo */} <Link href="/"> <img src="/logo.svg" className="h-20" alt="" /> </Link>
-						<div className="flex flex-row items-center self-end text-xl gap-x-5 text-gray-300 stroke-gray-300 transition-colors">
-							{/* shipping */} <button className="text-black hover:underline" onClick={goToStage(0)}>Shipping</button>
-							{/* arrow */} <svg className="h-4 w-4 stroke-black" fill="none" stroke="currentColor" strokeWidth={6} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /> </svg>
-							{/* payment */} <button className={`transition-colors ${canGoToPayment && "text-black hover:underline"}`} onClick={goToStage(1)} disabled={!canGoToPayment}>Payment</button>
-							{/* arrow */} <svg className={`transition-colors h-4 w-4 ${canGoToPayment && "stroke-black"}`} fill="none" stroke="currentColor" strokeWidth={6} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /> </svg>
-							{/* review */} <button className={`transition-colors ${canGoToReview && "text-black hover:underline"}`} onClick={goToStage(2)} disabled={!canGoToReview}>Review</button>
+						<div className="flex flex-row items-center self-end text-xl gap-x-5">
+							{/* shipping */}<button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(0)} disabled={!true}>Shipping</button>
+							{/* arrow */}   <svg className="h-4 w-4 stroke-black fill-none transition-colors data-[disabled=true]:stroke-gray-300" strokeWidth={6} data-disabled={!true} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+
+							{/* payment */} <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(1)} disabled={!p0CusUpdated}>Payment</button>
+							{/* arrow */}   <svg className="h-4 w-4 stroke-black fill-none transition-colors data-[disabled=true]:stroke-gray-300" strokeWidth={6} data-disabled={!p0CusUpdated} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+
+							{/* review */}  <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(2)} disabled={!(p0CusUpdated && p1CusUpdated)} >Review</button>
 						</div>
 					</div>
 
@@ -182,49 +169,46 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 						<div className="sticky top-[1rem] flex-[1] self-start p-6 bg-black text-white">
 							<h1 className="text-3xl font-bold">Order Summary</h1>
 							<hr className="my-4" />
-							{/* Render Numbers */}
-							<AnimatePresence>
-								{/* Subtotal */}
-								<div className="flex flex-row mb-4" key="subtotal">
-									<p className="flex-1"> Subtotal </p>
-									<div>
-										<PriceComponent price={paymentInformation.subtotal} className="place-self-end" />
-									</div>
+							{/* Subtotal */}
+							<div className="flex flex-row mb-4 justify-between">
+								<span> Subtotal </span>
+								<div>
+									<PriceComponent price={priceInfo.subtotal} />
 								</div>
-								{/* Shipping */}
-								<motion.div className="flex flex-row mb-4" variants={displayVariants} initial="hidden" animate="visible" exit="hidden" key="shipping">
-									<p className="flex flex-row items-center gap-x-2 flex-1">
-										<span> Shipping </span>
-										<Tippy content={"Shipping cost is calculated using the Canada Post rate."} delay={50}>
-											<svg className="h-5 w-5 focus:outline-none hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-											</svg>
-										</Tippy>
-									</p>
-									{
-										calculatingShipping
-											? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-											: <PriceComponent price={paymentInformation.shipping} className="place-self-end" />
-									}
-								</motion.div>
-								{/* Tax */}
-								<motion.div className="flex flex-row mb-4" variants={displayVariants} initial="hidden" animate="visible" exit="hidden" key="tax">
-									<p className="flex flex-row items-center gap-x-2 flex-1">
-										Tax
-										<Tippy content={"Tax is calculated based on the Ontario rate of 13%"} delay={50}>
-											<svg className="h-5 w-5 focus:outline-none hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-											</svg>
-										</Tippy>
-									</p>
-									<PriceComponent price={paymentInformation.tax} className="place-self-end" />
-								</motion.div>
-								{/* Total */}
-								<motion.div className="flex flex-row mb-8" variants={displayVariants} initial="hidden" animate="visible" exit="hidden" key="paymentTotal">
-									<p className="flex-1">Total</p>
-									<PriceComponent price={paymentInformation.total} className="place-self-end" />
-								</motion.div>
-							</AnimatePresence>
+							</div>
+							{/* Shipping */}
+							<div className="flex flex-row mb-4 justify-between">
+								<div className="flex flex-row items-center gap-x-2">
+									<span> Shipping </span>
+									<Tippy content={"Shipping cost is calculated using the Canada Post rate."} delay={50}>
+										<svg className="h-5 w-5 focus:outline-none focus:stroke-blue-300 hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+											<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+										</svg>
+									</Tippy>
+								</div>
+								{
+									calculatingShipping
+										? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
+										: <PriceComponent price={priceInfo.shipping} />
+								}
+							</div>
+							{/* Tax */}
+							<div className="flex flex-row justify-between mb-4">
+								<div className="flex flex-row items-center gap-x-2">
+									<span> Tax </span>
+									<Tippy content={"Tax is calculated based on the Ontario rate of 13%"} delay={50}>
+										<svg className="h-5 w-5 focus:outline-none focus:stroke-blue-300 hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+											<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+										</svg>
+									</Tippy>
+								</div>
+								<PriceComponent price={priceInfo.tax} />
+							</div>
+							{/* Total */}
+							<div className="flex flex-row justify-between mb-8">
+								<p>Total</p>
+								<PriceComponent price={priceInfo.total} />
+							</div>
 						</div>
 					</div>
 				</div>
@@ -233,29 +217,40 @@ export default function Checkout({ paypalCustomerInformation, paypalPaymentInfor
 	);
 }
 
+import { updateOrderAddress } from './api/paypal/updateorder/address'
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
 	if (!token) return { redirect: { destination: "/cart", permanent: true } }
 
 	// coming back from paypal ordering
 	try {
-		const {
-			customerInformation: paypalCustomerInformation, paymentInformation: paypalPaymentInformation,
-			products: productIDs, redirect_link, status} = await getOrder(token)
-		
-		if(status == "COMPLETED") return { props: { paypal_error: "Order has already been completed" } }
+		let {
+			customerInfo: paypalCustomerInfo,
+			priceInfo: paypalPriceInfo,
+			products: productIDs, status
+		} = await getOrder(token)
 
-		const ret = { paypalCustomerInformation, paypalPaymentInformation, productIDs, orderID: token, } as CheckoutProps
-		if (redirect_link) ret.redirect_link = redirect_link
+		if (status == "COMPLETED") return { props: { paypal_error: "Order has already been completed" } }
 
+		// base address
+		if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" }
+
+		const p0Done = validateP0FormData(paypalCustomerInfo.fullName, paypalCustomerInfo.address)
+		const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)
+		// paymentInfo shipping update
+		if (p0Done && !paypalPriceInfo.shipping) {
+			const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!)
+			paypalPriceInfo = newPrice
+		}
 		// determining initial checkout stage
-		const addressFound = findAddressFound(paypalCustomerInformation)
-		const paymentMethodFound = findPaymentMethodFound(paypalCustomerInformation)
-		if (addressFound && !paymentMethodFound) ret.initialCheckoutStage = 1
-		else if (paymentMethodFound) ret.initialCheckoutStage = 2
-		else ret.initialCheckoutStage = 0
+		let initialStage: number;
+		if (p0Done && p1Done) initialStage = 2
+		else if (p0Done && !p1Done) initialStage = 1
+		else initialStage = 0
 
-		return { props: ret }
+		return { props: { paypalCustomerInfo, paypalPriceInfo, productIDs, orderID: token, initialStage } as CheckoutProps }
 	}
-	catch (e) { return { props: { paypal_error: e } as CheckoutProps } }
+	catch (e) {
+		return { props: { paypal_error: JSON.stringify(e, Object.getOwnPropertyNames(e)) } as CheckoutProps }
+	}
 }

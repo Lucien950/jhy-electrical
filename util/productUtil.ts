@@ -14,7 +14,7 @@ const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{
 
 const getProductByID = async (productID: string)=>{
 	const productDoc = await getDoc(doc(db, "products", productID))
-	if(!productDoc.exists) throw new Error(`Product ${productID} does not exist`)
+	if(!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
 	return fillProductDoc(productDoc)
 }
 

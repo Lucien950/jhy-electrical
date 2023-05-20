@@ -54,10 +54,10 @@ export const OrdersComponent = ({allOrders}: {allOrders: OrderInterface[]}) => {
 					transition={{ duration: 0.15 }}
 				>
 					{[incompleteOrders, completeOrders, allOrders][selectedIndex].map(order=>
-						<tr key={order.orderID} className="odd:bg-white even:bg-gray-100 border-b border-x group">
+						<tr key={order.firebaseOrderID} className="odd:bg-white even:bg-gray-100 border-b border-x group">
 							<td className="px-4 py-3">
-								<Link href={`/order/${order.orderID}`} target="_blank" className="underline text-blue-500 visited:text-purple-500">
-									{order.orderID}
+								<Link href={`/order/${order.firebaseOrderID}`} target="_blank" className="underline text-blue-500 visited:text-purple-500">
+									{order.firebaseOrderID}
 								</Link>
 							</td>
 							<td className="px-4 py-3">{order.date.toLocaleDateString()} {order.date.toLocaleTimeString()}</td>

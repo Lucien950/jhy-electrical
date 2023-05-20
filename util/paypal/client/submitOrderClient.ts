@@ -1,7 +1,10 @@
 import { submitOrderRes } from "pages/api/paypal/submitorder"
 import { submitOrderProps } from "pages/api/paypal/submitorder"
 import { apiResponse } from "util/api"
+import { clientErrorFactory } from "util/clientErrorFactory"
 
+
+const submitOrderError = clientErrorFactory("Submit Order Server Side Error: Check Console for more details")
 export const submitOrder = async (orderID: string) => {
 	const response = await fetch("/api/paypal/submitorder", {
 		method: "POST",
@@ -10,8 +13,5 @@ export const submitOrder = async (orderID: string) => {
 	})
 	const { res, err } = await response.json() as apiResponse<submitOrderRes, any>
 	if (response.ok) return res!
-	else{
-		console.error(`Submit Order Error: ${err}`)
-		throw new Error("Submit Order Server Side Error: Check Console for more details")
-	}
+	else return submitOrderError(err)
 }

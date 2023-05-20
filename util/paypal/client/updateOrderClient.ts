@@ -20,8 +20,6 @@ export const updateOrderAddress = async (orderID: string, address: Address, full
 		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderAddressProps)
 	})
 	const {res, err} = await response.json() as apiResponse<updateOrderAddressRes, any>
-	if (!response.ok) {
-		return updateOrderAddressError(err)
-	}
+	if (!response.ok) return updateOrderAddressError(err)
 	return res!
 }

@@ -4,6 +4,7 @@ import { apiRespond } from 'util/api';
 // util
 import { generateAccessToken } from 'util/paypal/server/auth';
 import { baseURL } from 'util/paypal/baseURL';
+import { DOMAIN } from "util/domain"
 // types
 import { OrderProduct, validateOrderProduct } from 'types/order';
 import { CreateOrderRequestBody, OrderResponseBody, OrderResponseBodyMinimal } from "@paypal/paypal-js"
@@ -14,7 +15,7 @@ import { fillOrderProducts } from 'util/orderUtil';
 import { PayPalError } from 'types/paypal';
 
 const createOrderAPICall = async (access_token: string, cancelPath: string, paymentInformation: PriceInterface, productIDS: OrderProduct[]) => {
-	const returnDomain = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://jhycanada.ca"
+	const returnDomain = DOMAIN
 	const orderInformation = {
 		intent: "AUTHORIZE",
 		purchase_units: [{
@@ -44,6 +45,7 @@ const createOrderAPICall = async (access_token: string, cancelPath: string, paym
 					},
 				}
 			}}],
+		//TODO reconsider if paypal express checkout is new function
 		application_context:{
 			return_url: `${returnDomain}/checkout`,
 			cancel_url: `${returnDomain}/${cancelPath}`,
@@ -74,15 +76,14 @@ export type createOrderAPIRes = {
 /**
  * Create Order API Endpoint
  */
-export default async (req: NextApiRequest, res: NextApiResponse) =>{
+export default async function (req: NextApiRequest, res: NextApiResponse){
 	// INPUTS
-	const { products: productIDs, postal_code, cancelPath = "/" }: createOrderAPIProps = req.body
-	if (!productIDs){
-		if (process.env.NODE_ENV === "development") return apiRespond(res, "error", "Product IDs not complete")
-		return apiRespond(res, "error", "Body not complete")
-	}
+	const { products: productIDs, postal_code, cancelPath = "" }: createOrderAPIProps = req.body
+	if (!productIDs) return apiRespond(res, "error", "Product IDs not complete")
+	if (productIDs.length == 0) return apiRespond(res, "error", "No products in cart")
 	if (!productIDs.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
 	if (postal_code && !validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code is not valid")
+	// cancel not worried about XSS as return domain in front is hardcoded
 
 	try{
 		// access token
@@ -92,7 +93,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) =>{
 		const paymentInformation = await makePrice(products, postal_code)
 		const order = await createOrderAPICall(accessToken, cancelPath, paymentInformation, productIDs)
 	
-		apiRespond<createOrderAPIRes>(res, "response", {
+		return apiRespond<createOrderAPIRes>(res, "response", {
 			orderStatus: order.status,
 			orderID: order.id,
 			// this must be present
@@ -100,7 +101,5 @@ export default async (req: NextApiRequest, res: NextApiResponse) =>{
 			paymentInformation
 		})
 	}
-	catch(e){
-		apiRespond(res, "error", e)
-	}
+	catch(e){ return apiRespond(res, "error", e) }
 }
