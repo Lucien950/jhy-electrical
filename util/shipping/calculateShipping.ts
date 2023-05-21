@@ -14,13 +14,15 @@ export interface productPackageInfo {
 export const calculateShipping = async (products: productPackageInfo[], destination: string) => {
 	const prices = {} as { [key: string]: number }
 	await Promise.all(products.map(async p => {
+		const dims = [p.width, p.height, p.length]
+		dims.sort()
 		const rates = await cpc.getRates({
 			parcelCharacteristics: {
 				weight: p.weight,
 				dimensions: {
-					length: p.length,
-					width: p.width,
-					height: p.height
+					length: dims[2],
+					width: dims[1],
+					height: dims[0]
 				}
 			},
 			originPostalCode: "K4M1B4",

@@ -178,7 +178,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 							<div className="flex flex-row mb-4 justify-between">
 								<span> Subtotal </span>
 								<div>
-									<PriceComponent price={priceInfo!.subtotal} />
+									<PriceComponent price={priceInfo.subtotal} />
 								</div>
 							</div>
 							{/* Shipping */}
@@ -194,7 +194,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 								{
 									calculatingShipping
 										? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-										: <PriceComponent price={priceInfo!.shipping} />
+										: <PriceComponent price={priceInfo.shipping} />
 								}
 							</div>
 							{/* Tax */}
@@ -207,12 +207,12 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 										</svg>
 									</Tippy>
 								</div>
-								<PriceComponent price={priceInfo!.tax} />
+								<PriceComponent price={priceInfo.tax} />
 							</div>
 							{/* Total */}
 							<div className="flex flex-row justify-between mb-8">
 								<p>Total</p>
-								<PriceComponent price={priceInfo!.total} />
+								<PriceComponent price={priceInfo.total} />
 							</div>
 						</div>
 					</div>
@@ -253,7 +253,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)
 		// paymentInfo shipping update
 		if (p0Done && !paypalPriceInfo.shipping) {
-			const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!)
+			const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
 			paypalPriceInfo = newPrice
 		}
 		// determining initial checkout stage
