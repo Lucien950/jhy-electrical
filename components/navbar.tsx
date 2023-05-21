@@ -104,7 +104,7 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 	const goToCheckout = async ()=>{
 		setCheckoutLoading(true)
 		try {
-			const { orderID } = await createPayPalOrderLink(cart, "checkout")
+			const { orderID } = await createPayPalOrderLink(cart, false)
 			router.push({
 				pathname: '/checkout',
 				query: { token: orderID },

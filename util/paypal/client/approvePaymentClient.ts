@@ -4,15 +4,14 @@ import { apiResponse } from "util/api"
 import { approveCardProps, approveCardRes } from "pages/api/paypal/approve/card"
 import { approvePayPalRes } from "pages/api/paypal/approve/paypal"
 // types
-import { CardInfoInterface, cardSchema } from "types/card"
-import { PayPalError } from "types/paypal"
+import { CardInfoInterface, validateCard, validateCardError } from "types/card"
 
 // https://youtu.be/fzwkkZp5WcE?t=1m30s
 // https://developer.paypal.com/docs/checkout/integrate/#6-verify-the-transaction
 const approveCardError = clientErrorFactory("Approve Card Server Side Error: Check Console for more details")
 export const approveCard = async (token: string, cardInfo: Partial<CardInfoInterface>)=>{
-	const validateCardErrors = cardSchema.validate(cardInfo).error
-	if (validateCardErrors) return approveCardError(validateCardErrors)
+	if (!validateCard(cardInfo as CardInfoInterface))
+		return approveCardError(validateCardError(cardInfo as CardInfoInterface))
 	const response = await fetch("/api/paypal/approve/card", {
 		method: "POST",
 		headers: { 'Content-Type': 'application/json' },

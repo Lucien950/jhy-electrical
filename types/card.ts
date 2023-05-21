@@ -13,4 +13,7 @@ export type Card = {
 	cardExpiry: string
 }
 
+export const validateCardError = (candidate: Card) => cardSchema.validate(candidate).error
+export const validateCard = (candidate: Card) => validateCardError(candidate) === undefined
+
 export type CardInfoInterface = { cardName: string, cardNumber: string, cardExpiry: string, cardCVV: string }

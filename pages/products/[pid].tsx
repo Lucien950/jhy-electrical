@@ -128,7 +128,7 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 	const buyNow: MouseEventHandler<HTMLButtonElement> = async () => {
 		setbuyNowButtonLoading(true)
 		try{
-			const {redirect_link} = await createPayPalOrderLink([{ PID: product.firestoreID, quantity, product }], `products/${product.firestoreID}`)
+			const {redirect_link} = await createPayPalOrderLink([{ PID: product.firestoreID, quantity, product }], true)
 			router.push(redirect_link)
 		}
 		catch(e){

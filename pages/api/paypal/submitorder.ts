@@ -4,7 +4,6 @@ import { generateAccessToken } from "util/paypal/server/auth"
 import { getOrder } from "util/paypal/server/getOrder"
 // types
 import { getProductByID } from "util/productUtil"
-import { ProductInterface } from "types/product"
 import { FirestoreOrderInterface } from "types/order"
 // firebase
 import { Timestamp, addDoc, collection } from "firebase/firestore"
@@ -25,16 +24,16 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 	if (!token) return apiRespond(res, "error", "Token is required to submit order")
 	if (typeof token != "string") return apiRespond(res, "error", "Token is not a string")
 
-	try{
+	try {
 		// make sure order is well formed before authorizing the payment
 		const { products: productIDs, priceInfo, customerInfo, status } = await getOrder(token)
 
 		// validation
 		// validates p1 completion
-		if (!validateCustomer(customerInfo)) {console.error("customer error"); return apiRespond(res, "error", validateCustomerError(customerInfo))}
+		if (!validateCustomer(customerInfo)) { console.error("customer error"); return apiRespond(res, "error", validateCustomerError(customerInfo)) }
 		// this validates that p0 has been completed
-		if (!validateFinalPrice(priceInfo)) { console.error("price error"); return apiRespond(res, "error", validateFinalPriceError(priceInfo))}
-		if(status !== "APPROVED") return apiRespond(res, "error", "Order is not approved")
+		if (!validateFinalPrice(priceInfo)) { console.error("price error"); return apiRespond(res, "error", validateFinalPriceError(priceInfo)) }
+		if (status !== "APPROVED") return apiRespond(res, "error", "Order is not approved")
 
 		// populate cart (fossilize the cart in case products change/are removed)
 		const cart = await Promise.all(productIDs.map(async p => {
@@ -48,14 +47,12 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 			orderPrice: priceInfo,
 			completed: false,
 			dateTS: Timestamp.now(),
-	
+
 			name: customerInfo.fullName,
 			payment_source: customerInfo.payment_source, //problem
 			address: customerInfo.address,
 			paypalOrderID: token,
 		} as FirestoreOrderInterface
-		
-		console.log(newOrder)
 		const doc = await addDoc(collection(db, "orders"), newOrder)
 
 		// authorize payment
@@ -66,7 +63,5 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 		// POINT OF NO RETURN
 		return apiRespond<submitOrderRes>(res, "response", { firebaseOrderID: doc.id })
 	}
-	catch(e){
-		return apiRespond(res, "error", e)
-	}
+	catch (e) { return apiRespond(res, "error", e) }
 }

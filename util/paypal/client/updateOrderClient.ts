@@ -5,7 +5,6 @@ import { clientErrorFactory } from "util/clientErrorFactory"
 
 
 const updateOrderAddressError = clientErrorFactory("Update Product Server Side Error: check console for more details")
-// TODO maybe also customer information (name)
 /**
  * Interface to update order address (consequently shipping price)
  * @param orderID ID of order in question

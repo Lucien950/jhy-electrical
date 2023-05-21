@@ -3,6 +3,7 @@ import { apiRespond } from "util/api";
 import { DOMAIN } from "util/domain";
 import { generateAccessToken } from "util/paypal/server/auth";
 import {OrderResponseBody} from "@paypal/paypal-js"
+import { PayPalError } from "types/paypal";
 
 export type approvePayPalProps = { token: string }
 export type approvePayPalRes = { redirect_link: string }
@@ -28,16 +29,15 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 						payment_method_selected: "PAYPAL",
 						brand_name: "JHY Electrical",
 						return_url: `${returnDomain}/checkout`,
-						cancel_url: `${returnDomain}/checkout`, //TODO make sure this is fine
+						cancel_url: `${returnDomain}/checkout`,
 					}
 				}
 			}
 		})
 	})
 
-	const data = await response.json()
-	if (!response.ok) { return apiRespond(res, "error", data) }
-	const redirectObj = (data as OrderResponseBody).links.find(l => l.rel === "payer-action")
+	if (!response.ok) { return apiRespond(res, "error", await response.json() as PayPalError) }
+	const redirectObj = (await response.json() as OrderResponseBody).links.find(l => l.rel === "payer-action")
 	if (!redirectObj) return apiRespond(res, "error", "No redirect link found")
 	return apiRespond(res, "response", { redirect_link: redirectObj.href } as approvePayPalRes)
 }

@@ -5,27 +5,25 @@ import { storage } from "util/firebase/storage";
 // type
 import { ProductInterface } from "types/product";
 
-const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{
+export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)=>{
 	const product = productDoc.data() as ProductInterface
 	product.firestoreID = productDoc.id
-	product.productImageURL = await getDownloadURL(ref(storage, `products/${product.productImage}`))
+	product.productImageURL = await getDownloadURL(ref(storage, `products/${product.firestoreID}`))
 	return product
 }
 
-const getProductByID = async (productID: string)=>{
+export const getProductByID = async (productID: string)=>{
 	const productDoc = await getDoc(doc(db, "products", productID))
 	if(!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
 	return fillProductDoc(productDoc)
 }
 
-const getProductsByIDs = async(productList: string[])=>{
+export const getProductsByIDs = async(productList: string[])=>{
 	return await Promise.all(productList.map(async pid => getProductByID(pid)))
 }
 
-const getAllProducts = async()=>{
+export const getAllProducts = async()=>{
 	const productsQS = await getDocs(collection(db, "products"));
-	let products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
+	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
 	return products
 }
-
-export { getProductByID, fillProductDoc, getProductsByIDs, getAllProducts }

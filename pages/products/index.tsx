@@ -72,8 +72,6 @@ const Products = () => {
 		setFilter({...filter, [property]: !filter[property]})
 	}
 
-
-	// TODO pagination and filtering?
 	useEffect(()=>{
 		getAllProducts().then(newProducts => {
 			setProducts(newProducts)

@@ -135,7 +135,7 @@ const Admin = () => {
 					</div>
 					<h1 className="text-2xl font-bold mb-4">{admin.name}</h1>
 					{/* TODO Implement this behaviour */}
-					<button className="rounded-full px-5 py-1 border-2 border-slate-800 outline-none focus:ring-2">Edit</button>
+					{/* <button className="rounded-full px-5 py-1 border-2 border-slate-800 outline-none focus:ring-2">Edit</button> */}
 				</div>
 				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1 py-2">
 					<SidebarButton name="Analytics" scrollRef={analytics}/>

@@ -1,4 +1,4 @@
-import { JSX, MouseEventHandler, RefObject, SVGProps, useEffect, useRef, useState } from "react";
+import { JSX, MouseEventHandler, SVGProps, useEffect, useRef, useState } from "react";
 import { Card } from "types/paypal";
 import seedRandom from "seedrandom";
 
@@ -66,21 +66,23 @@ export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInfo
 
 	const boxRef = useRef<HTMLDivElement>(null);
 	const handleMouseMove: MouseEventHandler<HTMLDivElement> = e => {
+		if (!boxRef.current) return
 		const [x, y] = [e.nativeEvent.offsetX, e.nativeEvent.offsetY]
 		const [mostX, mostY] = [3, 3];
-		const { width, height } = boxRef.current!.getBoundingClientRect();
+		const { width, height } = boxRef.current.getBoundingClientRect();
 		const halfWidth = width / 2;
 		const halfHeight = height / 2;
 		// calculate angle
 		const rotationX = ((x - halfWidth) / halfWidth) * mostX
 		const rotationY = (-(y - halfHeight) / halfHeight) * mostY
 
-		boxRef.current!.style.transform = `perspective(1000px) rotateX(${rotationY}deg) rotateY(${rotationX}deg) scale3d(1, 1, 1)`
-		boxRef.current!.style.transition = "none"
+		boxRef.current.style.transform = `perspective(1000px) rotateX(${rotationY}deg) rotateY(${rotationX}deg) scale3d(1, 1, 1)`
+		boxRef.current.style.transition = "none"
 	}
 	const clearRotation = () => {
-		boxRef.current!.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)"
-		boxRef.current!.style.transition = "transform 100ms ease"
+		if(!boxRef.current) return
+		boxRef.current.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)"
+		boxRef.current.style.transition = "transform 100ms ease"
 	}
 
 	const CardDead = ()=>(

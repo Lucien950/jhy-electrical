@@ -15,7 +15,8 @@ const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
 })
-export const validateOrderProduct = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error === undefined
+export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
+export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined
 
 export interface OrderInterface {
 	products: OrderProduct[],

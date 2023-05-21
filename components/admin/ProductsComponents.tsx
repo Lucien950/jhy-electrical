@@ -8,7 +8,7 @@ import { storage } from "util/firebase/storage"
 // utils
 import { fillProductDoc } from "util/productUtil";
 import { toSentenceCase } from "util/stringManipulation";
-import { ProductInterface, validateProduct } from 'types/product';
+import { ProductInterface, validateProduct, validateProductError } from 'types/product';
 // UIs
 import { AnimatePresence, motion } from "framer-motion";
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
@@ -43,7 +43,14 @@ const InputField = ( { label, defaultValue, numberValue = false, className, prod
 type ProductModalProp = { open: boolean, product: ProductInterface, mode: string, closeModal: () => void }
 export const ProductModal = ({ open, product, mode, closeModal }: ProductModalProp) => {
 	const [uploading, setUploading] = useState(false)
-	const [addProduct, setAddProduct] = useState({} as ProductInterface)
+	const [addProduct, setAddProduct] = useState({
+		productName: "",
+		description: "",
+
+		commercial: false,
+		residential: false,
+		industrial: false,
+	} as ProductInterface)
 
 	useEffect(()=>{
 		if(Object.keys(product).length > 0) {
@@ -113,25 +120,43 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 		e.stopPropagation()
 
 		// validation
-		
-		if(!addProduct){
-			return
-		}
-		const productValidation = validateProduct(addProduct)
-		if (productValidation.error){
-			console.error("Product Validation Error", productValidation.error)
-			toast.error(productValidation.error.message, {theme: "colored"})
+		if (!addProduct) return
+		if (!validateProduct(addProduct)) {
+			const error = validateProductError(addProduct)! //eslint-disable-line @typescript-eslint/no-non-null-assertion
+			console.error("Product Validation Error", error)
+			toast.error(error.message, {theme: "colored"})
 			return
 		}
 
 		// loading
 		setUploading(true)
-		
+
+		// FIRESTORE Update
+		const { residential, commercial, industrial, productName, quantity, price, width, height, length, description } = addProduct
+		const firestoreAddProduct = { residential, commercial, industrial, productName, quantity, price, width, height, length, description }
+		let newFirestoreID = addProduct.firestoreID
+		if (mode == "edit") {
+			await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct)
+				.catch(e => {
+					toast.error("Firestore write error", {theme: "colored"})
+					console.error("[Firestore Error] Firestore Write Error", e)
+					setUploading(false)
+				});
+		} else if (mode == "new") {
+			const addedDoc = await addDoc(collection(db, "products"), firestoreAddProduct)
+				.catch(e => {
+					toast.error("Firestore write error", {theme: "colored"})
+					console.error("[Firestore Error] Firestore Write Error", e)
+					setUploading(false)
+				})
+			if (!addedDoc) return
+			newFirestoreID = addedDoc.id
+		}
 
 		// if uploading first, or existing photo, there will be url (from blob and firebase storage url respectively)
 		// thus above check catches no file uploaded and no firebase storage
 		// here, we only check if there is an uploaded photo
-		const productImageRef = ref(storage, `products/${addProduct.productImage}`)
+		const productImageRef = ref(storage, `products/${newFirestoreID}`)
 		// upload image to storage
 		if (addProduct.productImageFile) {
 			const snapshotFile = await uploadBytes(productImageRef, addProduct.productImageFile).catch(e => {
@@ -139,36 +164,10 @@ export const ProductModal = ({ open, product, mode, closeModal }: ProductModalPr
 			})
 			if (!snapshotFile) {
 				console.error("[Firebase Storage Error] file upload error")
+				toast.error("Firebase Storage Error", {theme: "colored"})
 				setUploading(false)
 				return
 			}
-		}
-
-		// FIRESTORE Update
-		const { firestoreID, ...firestoreAddProduct } = addProduct
-		let error = false;
-		switch(mode){
-			case "edit":
-				await setDoc(doc(db, "products", firestoreID), firestoreAddProduct)
-					.catch(e => {
-						console.error("[Firestore Error] Firestore Write Error", e)
-						setUploading(false)
-						error = true
-					});
-				break
-			case "new":
-				await addDoc(collection(db, "products"), firestoreAddProduct).catch(e => {
-					console.error("[Firestore Error] Firestore Write Error", e)
-					setUploading(false)
-					error = true
-				});
-				break
-			default:
-				console.error("Invalid Mode")
-		}
-		if (error && mode == "new") {
-			await deleteObject(productImageRef).catch(e => { console.error("[Firebase File Upload Error] Storage Delete Failure", e) })
-			return
 		}
 
 		console.log(...firebaseConsoleBadge, "Firestore Update Success")

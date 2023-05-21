@@ -1,6 +1,6 @@
 // react/next
 import { GetServerSideProps } from 'next'
-import { useEffect, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 // ui
@@ -47,37 +47,26 @@ const validateP0FormError = (name: CustomerInterface["fullName"], address: Custo
 const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) =>
 	(paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
 const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
-	const [stage, setStage] 	= useState(initialStage)
+	const [stage, setStage] = useState(initialStage)
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-	useEffect(() => setP0CusUpdated(validateP0FormData(customerInfo.fullName, customerInfo.address)), 						[customerInfo.address, 				customerInfo.fullName])
-	useEffect(() => setP1CusUpdated(validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo.paymentMethod,	customerInfo.payment_source])
+	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 							[customerInfo?.address, 			customerInfo?.fullName])
+	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), 	[customerInfo?.paymentMethod,	customerInfo?.payment_source])
 
 	return {stage, setStage, p0CusUpdated, p1CusUpdated}
 }
 
 type CheckoutProps = {
-	paypalCustomerInfo: CustomerInterface,
 	paypal_error?: string,
-	productIDs: OrderProduct[],
+
+	paypalCustomerInfo: CustomerInterface,
 	paypalPriceInfo: PriceInterface,
+	productIDs: OrderProduct[],
 	orderID: string,
 	initialStage: number
 }
 export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, productIDs, paypal_error, orderID, initialStage }: CheckoutProps){
-	// rendering conditions
-	if (paypal_error) {
-		return (
-			<div className="w-full h-screen grid place-items-center">
-				<div>
-					<h1>Paypal Error</h1>
-					<p>{paypal_error}</p>
-					<Link href="/cart"> <button className="underline">Go Back</button> </Link>
-				</div>
-			</div>
-		)
-	}
 	// IMPORTANT GLOBAL STATE
 	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
 	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
@@ -89,11 +78,14 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 		logEvent(analytics(), "checkout_progress", { checkout_step: s })
 		setStage(s)
 	})
+
 	const CheckoutStageView = () => {
+		
+		if ( customerInfo === null || priceInfo === null || stage === null) return <></>
 		if (stage == 0)
 			return (
 				<CheckoutStageZero
-				{...{
+				{...{ 
 						setStage,
 						setCustomerInfo,
 						setPriceInfo,
@@ -132,6 +124,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 
 	useEffect(() => {
 		if (paypal_error) { logEvent(analytics(), "checkout_error_paypal_SSR"); return }
+		if (!productIDs) return //just for types
 		logEvent(analytics(), "begin_checkout");
 		logEvent(analytics(), "checkout_progress", { checkout_step: initialStage })
 		// update displayed cart
@@ -139,6 +132,18 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 			.then(newCart => setOrderCart(newCart))
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+	// rendering conditions
+	if (paypal_error) { //type checking 
+		return (
+			<div className="w-full h-screen grid place-items-center">
+				<div>
+					<h1>Paypal Error</h1>
+					<p>{paypal_error}</p>
+					<Link href="/cart"> <button className="underline">Go Back</button> </Link>
+				</div>
+			</div>
+		)
+	}
 	return (
 		<>
 			<Head>
@@ -173,7 +178,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 							<div className="flex flex-row mb-4 justify-between">
 								<span> Subtotal </span>
 								<div>
-									<PriceComponent price={priceInfo.subtotal} />
+									<PriceComponent price={priceInfo!.subtotal} />
 								</div>
 							</div>
 							{/* Shipping */}
@@ -189,7 +194,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 								{
 									calculatingShipping
 										? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-										: <PriceComponent price={priceInfo.shipping} />
+										: <PriceComponent price={priceInfo!.shipping} />
 								}
 							</div>
 							{/* Tax */}
@@ -202,12 +207,12 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 										</svg>
 									</Tippy>
 								</div>
-								<PriceComponent price={priceInfo.tax} />
+								<PriceComponent price={priceInfo!.tax} />
 							</div>
 							{/* Total */}
 							<div className="flex flex-row justify-between mb-8">
 								<p>Total</p>
-								<PriceComponent price={priceInfo.total} />
+								<PriceComponent price={priceInfo!.total} />
 							</div>
 						</div>
 					</div>
@@ -218,19 +223,28 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 }
 
 import { updateOrderAddress } from './api/paypal/updateorder/address'
+
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
 	if (!token) return { redirect: { destination: "/cart", permanent: true } }
+	const EMPTYRET = {
+		paypalCustomerInfo: {} as CustomerInterface,
+		paypalPriceInfo: {} as PriceInterface,
+		productIDs: [],
+		initialStage: 0,
+		orderID: token
+	}
 
 	// coming back from paypal ordering
 	try {
-		let {
+		const {
 			customerInfo: paypalCustomerInfo,
-			priceInfo: paypalPriceInfo,
+			priceInfo,
 			products: productIDs, status
 		} = await getOrder(token)
+		let paypalPriceInfo = priceInfo;
 
-		if (status == "COMPLETED") return { props: { paypal_error: "Order has already been completed" } }
+		if (status == "COMPLETED") return { props: { paypal_error: "Order has already been completed", ...EMPTYRET } as CheckoutProps }
 
 		// base address
 		if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" }
@@ -250,7 +264,5 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 		return { props: { paypalCustomerInfo, paypalPriceInfo, productIDs, orderID: token, initialStage } as CheckoutProps }
 	}
-	catch (e) {
-		return { props: { paypal_error: JSON.stringify(e, Object.getOwnPropertyNames(e)) } as CheckoutProps }
-	}
+	catch (e) { return { props: { paypal_error: JSON.stringify(e, Object.getOwnPropertyNames(e)), ...EMPTYRET } as CheckoutProps } }
 }

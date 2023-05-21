@@ -62,9 +62,9 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 
 type p0Input = {
 	setStage: Dispatch<SetStateAction<number>>,
-	customerInfo: CustomerInterface,
 	setCustomerInfo: Dispatch<SetStateAction<CustomerInterface>>,
 	setPriceInfo: Dispatch<SetStateAction<PriceInterface>>,
+	customerInfo: CustomerInterface,
 	validateP0Form: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => boolean,
 	validateP0FormError: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => ValidationError | null | undefined,
 	orderID: string,
@@ -78,7 +78,7 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 	const [fullName, setFullName] = useState<CustomerInterface["fullName"]>(customerInfo.fullName)
 	const [address, setAddress] = useState<CustomerInterface["address"]>(customerInfo.address)
 	const [p0Done, setP0Done] = useState(false)
-	useEffect(() => { setP0Done(validateP0Form(fullName, address)) }, [fullName, address])
+	useEffect(() => { setP0Done(validateP0Form(fullName, address)) }, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
 	const customerChange = (id: string, val: string) => setFullName(val)
 	const shippingChange = (id: string, val: string) => setAddress({ ...address, [id]: val } as Address)
 

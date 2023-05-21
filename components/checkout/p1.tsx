@@ -112,7 +112,6 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 
 	// UI State
 	const [paymentSubmitLoading, setPaymentApproveLoading] = useState(false)
-	const paymentInfoFound = !!customerInfo.payment_source
 	const [CardApproveRequired, PayPalApproveRequired] = [paymentMethod == "card" && !cardSource, paymentMethod == "paypal" && !paypalSource]
 
 	return (
@@ -185,7 +184,6 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 					className={`transition-colors duration-300 bg-black ${PayPalApproveRequired && "bg-blue-400"} text-white py-4 w-64 group`}
 					onClick={approveCardPayment} disabled={!p1Done || paymentSubmitLoading}
 				>
-					{/* TODO (after hosted fields are complete) */}
 					<motion.div layoutRoot className="h-6 flex flex-row items-center justify-center gap-x-4">
 						{
 							paymentSubmitLoading && 

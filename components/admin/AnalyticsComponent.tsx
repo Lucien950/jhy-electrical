@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { OrderInterface } from 'types/order';
 
 const AnalyticsComponent = ({ allOrders }: { allOrders: OrderInterface[] }) => {
-	// TODO collect and display these values
 	const [last48OrderCount, setLast48OrderCount] = useState(3)
 	const [lastWeekOrderCount, setLastWeekOrderCount] = useState(12)
 	

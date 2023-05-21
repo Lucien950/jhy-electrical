@@ -118,7 +118,7 @@ export default function Cart() {
 	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
 		try{
-			const { redirect_link } = await createPayPalOrderLink(cart, "cart")
+			const { redirect_link } = await createPayPalOrderLink(cart, true)
 			router.push(redirect_link)
 		}
 		catch (e){
@@ -131,7 +131,7 @@ export default function Cart() {
 	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
 		setCheckoutLoading(p=>!p)
 		try{
-			const { orderID } = await createPayPalOrderLink(cart, "checkout")
+			const { orderID } = await createPayPalOrderLink(cart, false)
 			router.push({
 				pathname: '/checkout',
 				query: { token: orderID },

@@ -22,13 +22,13 @@ const Order = ({ order }: { order: OrderInterface }) => {
 	}
 	order.date = new Date(order.date)
 
-	const backgroundID = Math.round(seedRandom(order.firebaseOrderID)() * BACKGROUNDCOUNT) + 1
+	const backgroundID = Math.floor(seedRandom(order.firebaseOrderID)() * BACKGROUNDCOUNT) + 1
 	const backgroundFilters = [
 		{ brightness: 0.7, contrast: 0.9, saturation: 1.4},
 		{ brightness: 0.6, contrast: 0.85, saturation: 1 },
 		{ brightness: 0.8, contrast: 0.85, saturation: 1 },
 	]
-
+	
 	return (
 		<>
 			<Head>

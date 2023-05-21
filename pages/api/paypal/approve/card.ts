@@ -3,8 +3,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { apiRespond } from "util/api";
 import { generateAccessToken } from "util/paypal/server/auth";
 import { OrderResponseBody } from "@paypal/paypal-js"
-import { PaymentSource } from "types/paypal";
-import { Card, cardSchema } from "types/card";
+import { PayPalError, PaymentSource } from "types/paypal";
+import { Card, validateCard, validateCardError } from "types/card";
 
 export type approveCardProps = { token: string } & Card
 export type approveCardRes = {newPaymentSource: PaymentSource}
@@ -15,8 +15,9 @@ export default async function (req: NextApiRequest, res: NextApiResponse){
 	if (typeof token != "string") return apiRespond(res, "error", "OrderID not a string")
 	if (!(cardName && cardNumber && cardCVV && cardExpiry)) return apiRespond(res, "error", "Missing card information")
 	// formatting
-	const validateCardError = cardSchema.validate({ cardName, cardNumber, cardCVV, cardExpiry }).error?.message
-	if (validateCardError) return apiRespond(res, "error", validateCardError)
+	if (!validateCard({ cardName, cardNumber, cardCVV, cardExpiry }))
+		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		return apiRespond(res, "error", validateCardError({ cardName, cardNumber, cardCVV, cardExpiry })!.message)
 
 	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/confirm-payment-source`, {
 		method: 'POST',
@@ -35,9 +36,10 @@ export default async function (req: NextApiRequest, res: NextApiResponse){
 			}
 		})
 	})
-	const data = await response.json()
-	if (!response.ok) { return apiRespond(res, "error", data) }
-	
-	const newPaymentSource = (data as OrderResponseBody).payment_source! as PaymentSource
+	if (!response.ok) { return apiRespond(res, "error", await response.json() as PayPalError) }
+
+	const order = await response.json() as OrderResponseBody
+	if(!order.payment_source) return apiRespond(res, "error", "No payment source found")
+	const newPaymentSource = order.payment_source as PaymentSource
 	return apiRespond(res, "response", {newPaymentSource} as approveCardRes)
 }

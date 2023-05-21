@@ -18,10 +18,8 @@ const generateAccessToken = async () => {
 			Authorization: `Basic ${auth}`,
 		},
 	})
-
-	const data = await response.json()
-	if (response.ok) return (data as PayPalAuth).access_token
-	else throw data as PayPalSimpleError
+	if (response.ok) return (await response.json() as PayPalAuth).access_token
+	else throw await response.json() as PayPalSimpleError
 }
 
 export { generateAccessToken }

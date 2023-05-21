@@ -7,7 +7,6 @@ export interface ProductInterface{
 	quantity: number,
 	price: number,
 	description: string,
-	productImage: string, // name of file inside firebase storage, not the URL
 	
 	commercial: boolean,
 	industrial: boolean,
@@ -33,9 +32,9 @@ const productSchema = Joi.object({
 	description: Joi.string().required(),
 	productImage: Joi.string().required(),
 
-	commercial: Joi.boolean().required(),
-	industrial: Joi.boolean().required(),
-	residential: Joi.boolean().required(),
+	commercial: Joi.boolean().optional(),
+	industrial: Joi.boolean().optional(),
+	residential: Joi.boolean().optional(),
 
 	length: Joi.number().required(),
 	width: Joi.number().required(),
@@ -44,7 +43,7 @@ const productSchema = Joi.object({
 
 	productImageURL: Joi.string(),
 	productImageFile: Joi.any(),
-
-	firestoreID: Joi.string().required(),
 })
-export const validateProduct = (candidate: ProductInterface) => productSchema.validate(candidate)
+
+export const validateProductError = (candidate: ProductInterface) => productSchema.validate(candidate).error
+export const validateProduct = (candidate: ProductInterface) => validateProductError(candidate) === undefined

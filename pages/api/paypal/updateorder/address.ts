@@ -3,7 +3,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { apiRespond } from "util/api";
 // types
 import { updateOrderAddressProps, updateOrderAddressRes } from ".";
-import { validateAddress } from "types/paypal";
+import { PayPalError, validateAddress } from "types/paypal";
 import { Address } from "@paypal/paypal-js"
 // util
 import { makePrice } from "util/priceUtil";
@@ -63,7 +63,7 @@ export const updateOrderAddress = async (token: string, newAddress: Address, ful
 	}
 
 	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}`, options)
-	if (!response.ok) throw await response.json()
+	if (!response.ok) throw await response.json() as PayPalError
 
 	return newPrice
 }
