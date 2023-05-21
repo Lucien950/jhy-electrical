@@ -1,11 +1,11 @@
 // react
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useState } from "react"
 import Link from "next/link"
 // firebase
 import { OrderInterface } from 'types/order'
 // UI
 import { AnimatePresence, motion } from "framer-motion"
-import { Tab, Transition } from "@headlessui/react"
+import { Tab } from "@headlessui/react"
 import { doc, setDoc } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 

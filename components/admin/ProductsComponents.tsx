@@ -2,7 +2,7 @@
 import { ChangeEvent, DragEventHandler, FormEvent, Fragment, useEffect, useState } from "react";
 // firebase
 import { addDoc, collection, deleteDoc, doc, onSnapshot, orderBy, query, setDoc } from "firebase/firestore";
-import { ref, uploadBytes, deleteObject } from "firebase/storage";
+import { ref, uploadBytes } from "firebase/storage";
 import { db } from 'util/firebase/firestore';
 import { storage } from "util/firebase/storage"
 // utils
