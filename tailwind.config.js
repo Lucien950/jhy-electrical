@@ -7,6 +7,11 @@ module.exports = {
 	],
 	theme: {
 		extend: {},
+		fontFamily: {
+			'sans': ['IBM Plex Sans', 'ui-sans-serif', 'system-ui'],
+			'serif': ['Bitter', 'ui-serif', 'Georgia'],
+			'paypal': ['Jost', 'ui-sans-serif', 'system-ui']
+		}
 	},
 	plugins: [],
 }

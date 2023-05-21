@@ -1,0 +1,1 @@
+export const firebaseConsoleBadge = ['%c Firebase ', 'color: #2C384A; background-color: #FFA000; border-radius: 0.25rem']

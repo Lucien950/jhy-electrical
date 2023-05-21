@@ -4,11 +4,11 @@ import { useRouter } from "next/router";
 
 // auth handling
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
-import auth from "../../util/firebase/auth"
+import { auth } from "util/firebase/auth"
 
 // loading
-import LoadingFullPage from "../../components/loadingFullPage";
-import { CircleLoader } from "react-spinners";
+import LoadingFullPage from "components/loadingFullPage";
+import { Oval } from 'react-loader-spinner';
 
 const AdminLogin = () => {
 	const router = useRouter()
@@ -16,10 +16,10 @@ const AdminLogin = () => {
 	const [logInLoading, setLogInLoading] = useState(false)
 	useEffect(() => {
 		onAuthStateChanged(auth, authUser => {
-			if (authUser) router.push('/admin')
+			if (authUser) router.push('/admin', undefined, { shallow: true })
 			else setLoading(false)
 		})
-	}, [])
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 	const submitLogin = async (e: FormEvent<HTMLFormElement>)=>{
 		e.preventDefault()
 		const email = ((e.target as HTMLFormElement).querySelector("#email")as HTMLInputElement).value
@@ -27,12 +27,6 @@ const AdminLogin = () => {
 
 		setLogInLoading(true)
 		const userCredential = await signInWithEmailAndPassword(auth, email, password)
-			.catch((error) => {
-				//TODO display error message
-				const errorCode = error.code;
-				const errorMessage = error.message;
-				console.error(errorCode, errorMessage)
-			})
 			
 		console.log("login side user credential: ", userCredential)
 		setLogInLoading(false)
@@ -52,7 +46,7 @@ const AdminLogin = () => {
 				<input type="password" className="border-2 p-2 w-64" id="password" name="password" required placeholder="Password"/>
 				<button type="submit" className="border-2 p-2 flex justify-center" disabled={logInLoading}>
 					{logInLoading
-						? <CircleLoader size={24} />
+						? <Oval height={18} strokeWidth={9} color="black" secondaryColor="black" />
 						: <p>login</p>
 					}
 				</button>

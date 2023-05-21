@@ -1,23 +1,23 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { productInfo } from '../../types/order';
-import productType from "../../types/product"
+import { OrderProduct } from 'types/order';
+import { ProductInterface } from "types/product"
 
 const cartSlice = createSlice({
 	name: 'cart',
-	initialState: [] as productInfo[],
+	initialState: [] as OrderProduct[],
 	reducers: {
 		addToCart: (state, action) => {
-			const { PID, product } = action.payload as productInfo
+			const { PID, product, quantity = 1 } = action.payload as OrderProduct
 
 			const itemExists = state.find((item) => item.PID === PID);
 			if (itemExists) {
-				itemExists.quantity++;
+				itemExists.quantity += quantity;
 				return
 			}
-			state.push({ PID, quantity: 1, product });
+			state.push({ PID, quantity, product });
 		},
 		setQuantity: (state, action) => {
-			const { PID, quantity } = action.payload as productInfo
+			const { PID, quantity } = action.payload as OrderProduct
 			const item = state.find((item) => item.PID === PID);
 			if (!item) return
 			
@@ -29,7 +29,7 @@ const cartSlice = createSlice({
 			item.quantity = quantity;
 		},
 		removeFromCart: (state, action) => {
-			const { PID } = action.payload as productInfo
+			const { PID } = action.payload as OrderProduct
 			const index = state.findIndex(item => item.PID === PID);
 			if(index >= 0) state.splice(index, 1);
 		},
@@ -38,10 +38,10 @@ const cartSlice = createSlice({
 		},
 		cartFillProducts: (state, action)=>{
 			// return action.payload
-			const products = action.payload as productType[]
+			const products = action.payload as ProductInterface[]
 			state.forEach(productInfo=>{
 				const newProduct = products.find(product => product.firestoreID == productInfo.PID)
-				productInfo.product = newProduct
+				productInfo.product = newProduct || productInfo.product
 			})
 		}
 	},

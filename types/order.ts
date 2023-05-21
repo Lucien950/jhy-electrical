@@ -1,34 +1,42 @@
 import { Timestamp } from "firebase/firestore";
-import productType from "./product";
+import { ProductInterface } from "./product";
+import { Address } from "@paypal/paypal-js"
+import { FinalPriceInterface } from "types/price";
+import Joi from "joi";
+import { PaymentSource } from "./paypal";
 
-interface productInfo{
+export interface OrderProduct{
 	PID: string,
 	quantity: number,
 	// fill later
-	product?: productType
+	product?: ProductInterface
 }
+const orderProductSchema = Joi.object({
+	PID: Joi.string().required(),
+	quantity: Joi.number().greater(0).required(),
+})
+export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
+export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined
 
-interface order {
-	products: productInfo[],
-	orderPrice: number,
-	status: string,
-	// byo
-	orderID: string,
+export interface OrderInterface {
+	products: OrderProduct[],
+	orderPrice: FinalPriceInterface,
+	completed: boolean,
 	// convert
 	date: Date,
-
-	//only present on failure orders
-	failureReason?: string,
-}
-interface firestoreOrder{
-	products: productInfo[],
-	orderPrice: number,
-	status: string,
-
-	dateTS: Timestamp,
+	// customer information
+	name:string,
+	address: Address,
+	paypalOrderID: string,
+	payment_source: PaymentSource,
 	
+	// byo
+	firebaseOrderID: string,
 	//only present on failure orders
 	failureReason?: string,
 }
-
-export type { order, firestoreOrder, productInfo }
+export interface FirestoreOrderInterface extends OrderInterface{
+	// because of serialization sadge
+	date: never,
+	dateTS: Timestamp,
+}

@@ -1,20 +1,18 @@
 import Head from "next/head"
-import { Parallax } from "react-scroll-parallax"
+import LinkBoxes from "components/linkBoxes"
+
 export default function Home() {
-return (
-	<>
-	<Head>
-		<title>Home | JHY Electrical</title>
-	</Head>
-	<div className="h-[127vh]">
-		<div className="h-[49rem] bg-slate-800 relative grid place-items-center -z-[-2]">
-			<Parallax speed={35} className="absolute top-[-2rem]">
-				<img src="/light.png" className="h-[43rem] pointer-events-none select-none" alt="Hanging Light" />
-			</Parallax>
-			<div className="absolute bottom-[8.5rem] -z-[1] text-[7rem] font-bold text-white">
-				JHY ELECTRICAL
-			</div>
+	return (
+		<>
+		<Head>
+			<title>Home | JHY Electrical</title>
+		</Head>
+		<div className="bg-slate-800 relative z-[2] py-8 pt-32">
+			<h1 className="whitespace-nowrap text-6xl lg:text-9xl font-semibold text-white text-center mb-12"> JHY ELECTRICAL </h1>
+			<img src="/home_splash.jpg" alt="" className="h-96 lg:h-[30rem] w-full object-cover"/>
 		</div>
-	</div>
-	</>
-)}
+
+		<LinkBoxes />
+		</>
+	)
+}

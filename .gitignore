@@ -42,3 +42,10 @@ next-env.d.ts
 .firebase/
 
 firebase-debug.log
+.prettierignore
+type.json
+./analyze
+
+.vscode/settings.json
+assets
+public/card_back.ai
