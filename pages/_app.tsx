@@ -17,11 +17,9 @@ import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 const persistor = persistStore(store);
 // firebase
-import { fillProductDoc } from "util/productUtil";
+import { getProductByID } from "util/productUtil";
 import { cartFillProducts } from "util/redux/cart.slice";
 import { OrderProduct } from "types/order"
-import { collection, onSnapshot } from "firebase/firestore"
-import { db } from "util/firebase/firestore"
 import { firebaseConsoleBadge } from 'util/firebase/console'
 
 // dispatch here in order to be inside the provider
@@ -29,15 +27,13 @@ const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	useEffect(() => {
-		const unsub = onSnapshot(collection(db, "products"), async (snapshot) => {
-			console.log(...firebaseConsoleBadge ,'Cart Snapshot Updated');
-			const cartIds = cart.map(p => p.PID)
-			const changedDocs = snapshot.docChanges().map(doc => doc.doc)
-			const requiredProducts = await Promise.all(changedDocs.filter	(doc => cartIds.includes(doc.id)).map(fillProductDoc))
-			dispatch(cartFillProducts(requiredProducts))
-		})
-		return unsub
-	}, []) // eslint-disable-line react-hooks/exhaustive-deps
+		console.log(...firebaseConsoleBadge, 'Cart Snapshot Updated');
+		Promise.all(cart.map(async p => {
+			if (p.product) return p
+			return { ...p, product: await getProductByID(p.PID) }
+		}))
+		.then(newCart => dispatch(cartFillProducts(newCart)))
+	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }
 
