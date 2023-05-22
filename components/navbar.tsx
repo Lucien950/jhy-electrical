@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SVGProps, useEffect, useRef, useState } from "react"
+import { SVGProps, useEffect, useState } from "react"
 import { useRouter } from "next/router";
 
 import { AnimatePresence, motion, useScroll } from "framer-motion"
@@ -224,7 +224,7 @@ const NavBar = () => {
 	// styling
 	const { scrollY } = useScroll();
 	const [scrolled, setScrolled] = useState(false)
-	useEffect(() => { return scrollY.on("change", (v) => setScrolled(v > 10)) }, [])
+	useEffect(() => { return scrollY.on("change", (v) => setScrolled(v > 10)) }, [scrollY])
 	const inWhiteNavs = ["/", "/order/[pid]", "/products", "/services"].includes(router.pathname)
 	const inNoNavbar = ["/checkout", "/admin"].includes(router.pathname)
 

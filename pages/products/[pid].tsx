@@ -212,7 +212,7 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	try{
-		const product = await getProductByID(ctx.params!.pid as string)
+		const product = await getProductByID(ctx.params!.pid as string) //eslint-disable-line @typescript-eslint/no-non-null-assertion
 		return { props: { product } }
 	}
 	catch(e){
