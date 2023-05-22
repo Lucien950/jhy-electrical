@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "firebase deploy"
+    "deploy": "firebase deploy",
+    "deploy-dev": "firebase hosting:channel:deploy DEV"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.14",
