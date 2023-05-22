@@ -5,6 +5,7 @@ import { generateAccessToken } from "util/paypal/server/auth";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { PayPalError, PaymentSource } from "types/paypal";
 import { Card, validateCard, validateCardError } from "types/card";
+import { PAYPALDOMAIN } from "util/domain";
 
 export type approveCardProps = { token: string } & Card
 export type approveCardRes = {newPaymentSource: PaymentSource}
@@ -19,7 +20,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse){
 		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return apiRespond(res, "error", validateCardError({ cardName, cardNumber, cardCVV, cardExpiry })!.message)
 
-	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/confirm-payment-source`, {
+	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}/confirm-payment-source`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

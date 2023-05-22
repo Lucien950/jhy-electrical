@@ -11,7 +11,7 @@ import { displayVariants } from "util/formVariants";
 import { CustomerInterface } from "types/customer";
 import { CardInfoInterface, cardSchema } from "types/card";
 // paypal hosted fields
-import { approveCard, approvePayPal } from "util/paypal/client/approvePaymentClient";
+import { approveCard, approvePayPal } from "util/paypal/client/approvePayment_client";
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
 import { isEqual } from "lodash";

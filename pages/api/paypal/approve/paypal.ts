@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { apiRespond } from "util/api";
-import { DOMAIN } from "util/domain";
+import { DOMAIN, PAYPALDOMAIN } from "util/domain";
 import { generateAccessToken } from "util/paypal/server/auth";
 import {OrderResponseBody} from "@paypal/paypal-js"
 import { PayPalError } from "types/paypal";
@@ -13,7 +13,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 	if (typeof token != "string") return apiRespond(res, "error", "OrderID not a string")
 
 	const returnDomain = DOMAIN
-	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}/confirm-payment-source`, {
+	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}/confirm-payment-source`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

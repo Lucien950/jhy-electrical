@@ -14,7 +14,7 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 // util
 import { getProductByID } from 'util/productUtil'
-import { createPayPalOrderLink } from 'util/paypal/client/createOrderClient';
+import { createPayPalOrderLink } from 'util/paypal/client/createOrder_client';
 // ui
 import Price from 'components/price'
 import { motion } from 'framer-motion';
@@ -141,7 +141,7 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 			<Head>
 				<title>{product.productName} | JHY Electrical</title>
 			</Head>
-			<div className="grid grid-cols-1 lg:grid-cols-2 mt-36 container mx-auto px-6 lg:px-36 gap-x-24">
+			<div className="grid grid-cols-1 gap-y-4 lg:grid-cols-2 gap-x-24 mt-36 px-8 container mx-auto">
 				<div>
 					<img src={product.productImageURL} alt={`Product Image for ${product.productName}`} className="w-full" />
 				</div>
@@ -211,10 +211,16 @@ const ProductID = ({product}: {product: ProductInterface}) => {
 }
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
-	if (!ctx.params?.pid) return {props:{}}
-	return {
-		props: {
-			product: await getProductByID(ctx.params.pid as string)
+	try{
+		const product = await getProductByID(ctx.params!.pid as string)
+		return { props: { product } }
+	}
+	catch(e){
+		return {
+			redirect: {
+				destination: "/products",
+				permanent: false
+			}
 		}
 	}
 }

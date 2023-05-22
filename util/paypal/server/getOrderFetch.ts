@@ -4,6 +4,7 @@ import { PriceInterface } from "types/price";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 import { PayPalError } from 'types/paypal';
+import { PAYPALDOMAIN } from 'util/domain';
 
 const provinceConvert = {
 	"AB": "Alberta",
@@ -28,7 +29,7 @@ const provinceConvert = {
  */
 export const getOrder = async (orderID: string) => {
 	const accessToken = await generateAccessToken()
-	const response = await fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${orderID}`, {
+	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${orderID}`, {
 		method: 'GET',
 		headers: {
 			Authorization: `Bearer ${accessToken}`

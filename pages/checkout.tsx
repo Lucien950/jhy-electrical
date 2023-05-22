@@ -9,7 +9,7 @@ import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // util
-import { getOrder } from 'util/paypal/server/getOrder'
+import { getOrder } from 'util/paypal/server/getOrderFetch'
 import { getProductByID } from 'util/productUtil'
 import { validateAddress, validateAddressError } from 'types/paypal'
 // types

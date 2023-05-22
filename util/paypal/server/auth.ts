@@ -1,5 +1,5 @@
 import { PayPalAuth, PayPalSimpleError } from "types/paypal"
-import { baseURL } from "util/paypal/baseURL";
+import { PAYPALDOMAIN } from "util/domain";
 import { toB64 } from "util/toB64";
 
 const generateAccessToken = async () => {
@@ -11,7 +11,7 @@ const generateAccessToken = async () => {
 										: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_SECRET
 	
 	const auth = toB64(`${clientid}:${secret}`)
-	const response = await fetch(`${baseURL}/v1/oauth2/token`, {
+	const response = await fetch(`${PAYPALDOMAIN}/v1/oauth2/token`, {
 		method: "post",
 		body: "grant_type=client_credentials",
 		headers: {

@@ -13,7 +13,7 @@ import { removeFromCart } from "util/redux/cart.slice";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 
-import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
+import { createPayPalOrderLink } from "util/paypal/client/createOrder_client";
 import { toast } from "react-toastify";
 import { Oval } from "react-loader-spinner";
 import { Transition } from "@headlessui/react";
@@ -192,8 +192,11 @@ const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: ()
 	)
 }
 
-const useMenu: (menuIds: string[]) => [boolean, (() => void)] = (menuIds) => {
+const useMenu = (menuIds: string[]): [boolean, (() => void), (() => void)] => {
 	const [menuOpen, setMenuOpen] = useState(false)
+
+	// add event listener because event can give information about where the mouse was
+	// grouping with toggle only fires when button is clicked (rather than random elements)
 	const suppressMenuClose = (e: MouseEvent) => {
 		const menuElements = menuIds.map(s => document.getElementById(s))
 		const clickingMenuElements = menuElements.some(el => el && el.contains(e.target as HTMLElement))
@@ -205,7 +208,7 @@ const useMenu: (menuIds: string[]) => [boolean, (() => void)] = (menuIds) => {
 	}, []) //eslint-disable-line react-hooks/exhaustive-deps
 
 	const toggleMenuOpen = () => setMenuOpen(e => !e)
-	return [menuOpen, toggleMenuOpen]
+	return [menuOpen, toggleMenuOpen, ()=>setMenuOpen(false)]
 }
 
 const NavBar = () => {
@@ -214,36 +217,23 @@ const NavBar = () => {
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 
 	// cart and mobile menus
-	const [isMobileMenuOpen, toggleMobileMenuOpen] = useMenu(["mobileMenu", "mobileMenuButton"]);
-	const [isCartOpen, toggleCartOpen] = useMenu(["cartDropDown", "cartButton"])
+	const [isMobileMenuOpen, toggleMobileMenuOpen, closeMobileMenu] = useMenu(["mobileMenu", "mobileMenuButton"]);
+	const [isCartOpen, toggleCartOpen, closeCart] = useMenu(["cartDropDown", "cartButton"])
 
 
 	// styling
 	const { scrollY } = useScroll();
-	const whiteBG = useRef<HTMLDivElement>(null)
-	useEffect(() => {
-		const unsub = scrollY.on("change", v => {
-			const bgElement = whiteBG.current
-			if(!bgElement) return
-			bgElement.style.backgroundColor = (v > 10) ? "white" : "transparent";
-			bgElement.style.color = (v > 10) ? "black" : "";
-
-			if (v > 10) bgElement.classList.add("shadow-md")
-			else bgElement.classList.remove("shadow-md")
-		})
-		return unsub
-	}, []) //eslint-disable-line react-hooks/exhaustive-deps
-	const whiteNavs = ["/", "/order/[pid]", "/products", "/services"]
-	const noNavbar = ["/checkout", "/admin"]
+	const [scrolled, setScrolled] = useState(false)
+	useEffect(() => { return scrollY.on("change", (v) => setScrolled(v > 10)) }, [])
+	const inWhiteNavs = ["/", "/order/[pid]", "/products", "/services"].includes(router.pathname)
+	const inNoNavbar = ["/checkout", "/admin"].includes(router.pathname)
 
 	return (
 		<nav
 			className={`fixed top-0 left-0 w-full z-20 select-none
-				will-change-transform transition-[background-color,color,transform,box-shadow] duration-200 delay-[0s,0s,0.7s,0s]
-				${whiteNavs.includes(router.pathname) && "text-white"}
-				${noNavbar.includes(router.pathname) && "translate-y-[-100%] !delay-[0s]"}
-			`}
-			ref={whiteBG}
+			transition-[background-color,color,translate,box-shadow] delay-[0s,0s,0.7s,0s] duration-200
+			${scrolled ? "bg-white shadow-md" : "bg-transparent"} ${!scrolled && inWhiteNavs ? "text-white" : "text-black"}`}
+			style={{ translate: `0 ${inNoNavbar ? "-100%" : "0%"}`, }}
 		>
 			<div className="flex flex-row items-center place-content-between p-2 md:px-6">
 				{/* HAM BUTTON + IMAGE */}
@@ -293,7 +283,7 @@ const NavBar = () => {
 					<AnimatePresence>
 						{
 							isCartOpen &&
-							<CartDropdown cart={cart} closeCart={toggleCartOpen} />
+							<CartDropdown cart={cart} closeCart={closeCart} />
 						}
 					</AnimatePresence>
 				</div>
@@ -307,7 +297,7 @@ const NavBar = () => {
 				variants={{ opened: { x: 0 }, closed: { x: "-100%" } }} transition={{ ease: "easeInOut", duration: 0.4 }}
 				id="mobileMenu"
 			>
-				<LinkBoxes onclick={toggleMobileMenuOpen} />
+				<LinkBoxes onClick={closeMobileMenu} />
 			</motion.div>
 		</nav>
 	)

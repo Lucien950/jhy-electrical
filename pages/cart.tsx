@@ -7,19 +7,19 @@ import { removeFromCart, setQuantity } from "util/redux/cart.slice";
 // products
 import { OrderProduct } from "types/order";
 // ui
-import Price from "components/price";
-import { PaypalSVG } from "components/paypalSVG";
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
 import { Oval } from "react-loader-spinner";
-import { createPayPalOrderLink } from "util/paypal/client/createOrderClient";
 import { logEvent } from "firebase/analytics";
-import { analytics } from "util/firebase/analytics";
 import { toast } from "react-toastify";
+import Price from "components/price";
+import { PaypalSVG } from "components/paypalSVG";
+import { createPayPalOrderLink } from "util/paypal/client/createOrder_client";
+import { analytics } from "util/firebase/analytics";
 // util price
+import { Transition } from "@headlessui/react";
 import { TAX_RATE } from "util/priceUtil";
 import { PriceInterface } from "types/price";
-import { Transition } from "@headlessui/react";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
 	const product = orderProduct.product

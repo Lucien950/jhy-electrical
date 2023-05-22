@@ -7,9 +7,10 @@ import { PayPalError, validateAddress } from "types/paypal";
 import { Address } from "@paypal/paypal-js"
 // util
 import { makePrice } from "util/priceUtil";
-import { getOrder } from "util/paypal/server/getOrder";
+import { getOrder } from "util/paypal/server/getOrderFetch";
 import { getProductByID } from "util/productUtil";
 import { generateAccessToken } from "util/paypal/server/auth";
+import { PAYPALDOMAIN } from "util/domain";
 
 export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getOrder(token)
@@ -62,7 +63,7 @@ export const updateOrderAddress = async (token: string, newAddress: Address, ful
 		body: JSON.stringify(body)
 	}
 
-	const response = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${token}`, options)
+	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}`, options)
 	if (!response.ok) throw await response.json() as PayPalError
 
 	return newPrice
