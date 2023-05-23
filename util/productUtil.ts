@@ -47,3 +47,13 @@ export const getAllProducts = async()=>{
 	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
 	return products
 }
+
+/**
+ * @param p List of products to sort
+ * @returns List of sorted products by name
+ */
+export const sortProductsByName = (p: ProductInterface[]) => p.sort((a, b) => {
+	if (a.productName.toUpperCase() < b.productName.toUpperCase()) return -1
+	else if (a.productName.toUpperCase() > b.productName.toUpperCase()) return 1
+	else return 0
+})

@@ -96,7 +96,7 @@ export const OrdersComponent = ({ allOrders }: { allOrders: OrderInterface[] }) 
 					<thead className="text-xs text-left text-gray-700 uppercase bg-gray-200">
 						<tr className="[&>th]:px-4 [&>th]:py-3">
 							<th className="w-64">Order ID</th>
-							<th className="w-52">Date/Time of Order</th>
+							<th className="w-56">Date/Time of Order</th>
 							<th className="min-w-[10rem]">Items</th>
 							<th className="w-24">Complete</th>
 						</tr>

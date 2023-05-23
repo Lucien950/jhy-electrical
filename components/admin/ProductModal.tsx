@@ -1,10 +1,10 @@
 import { Dialog, Transition } from "@headlessui/react";
 import { addDoc, collection, doc, setDoc } from "firebase/firestore";
-import { ref, uploadBytes } from "firebase/storage";
-import { ChangeEvent, DragEventHandler, FormEvent, Fragment, useState } from "react";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { DragEventHandler, FormEvent, useRef, useState } from "react";
 import { Oval } from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { ProductInterface, validateProduct, validateProductError } from "types/product";
+import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "types/product";
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
@@ -20,10 +20,10 @@ type InputFieldPropType = {
 	className?: string,
 	productKey: string,
 	unit?: string,
-	handleChange: (id: any, val: any) => void
+	handleChange: (id: string, val: any) => void //eslint-disable-line @typescript-eslint/no-explicit-any
 }
 const InputField = ({ label, defaultValue, numberValue = false, className, productKey, unit, handleChange }: InputFieldPropType) => {
-	// if (typeof defaultValue == "number" && defaultValue == -1) defaultValue = ""
+	if (typeof defaultValue == "number" && defaultValue == -1) defaultValue = ""
 	return (
 		<div>
 			<label className="block font-semibold text-sm" htmlFor={productKey}>{label}</label>
@@ -35,7 +35,9 @@ const InputField = ({ label, defaultValue, numberValue = false, className, produ
 		</div>
 	)
 }
-const Pill = ({ label, checked, handleChange }: { label: string, checked: boolean, handleChange: (id: any, val: any) => void})=>{
+
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Pill = ({ label, checked, handleChange }: { label: string, checked: boolean, handleChange: (id: string, val: any) => void})=>{
 	return(
 		<label
 			className={`block select-none text-sm transition-colors hover:cursor-pointer p-1 px-4 border-2 rounded-xl outline-none focus:ring-2
@@ -48,17 +50,22 @@ const Pill = ({ label, checked, handleChange }: { label: string, checked: boolea
 	)
 }
 
-type ProductModalType = { closeModal: () => void, defaultModalProduct: ProductInterface, mode: string }
-const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalType) => {
+type ProductModalType = {
+	closeModal: () => void,
+	defaultModalProduct: ProductInterface,
+	mode: string | null,
+	insertProduct: (p: ProductInterface)=>void
+}
+const ProductModal = ({ closeModal, defaultModalProduct, mode, insertProduct }: ProductModalType) => {
 	// data state
 	const [modalProduct, setModalProduct] = useState(defaultModalProduct)
 	const [productImageFile, setProductImageFile] = useState<File>()
-	const [productImageURL, setProductImageURL] = useState<string>(defaultModalProduct.productImageURL)
 	// ui state
 	const [uploading, setUploading] = useState(false)
+	const [displayImageURL, setDisplayImageURL] = useState(defaultModalProduct?.productImageURL || null)
 
-	// TODO text boxes some need to be numbers
-	const handleProductEdit = (id: any, val: any) => setModalProduct(mp => ({ ...mp, [id]: val }))
+	//eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const handleProductEdit = (id: string, val: any) => setModalProduct(mp => ({ ...mp, [id]: val }))
 	const handleProductFileEdit = (files: FileList | null)=>{
 		if(!files) return
 		const fr = new FileReader();
@@ -69,16 +76,17 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 				return
 			}
 			setProductImageFile(files[0])
-			setProductImageURL(fileReadResult)
+			setDisplayImageURL(fileReadResult)
 		}
 		fr.readAsDataURL(files[0]);
 	}
-	const addProductSubmit = async (e: FormEvent<HTMLFormElement>) => {
-		e.preventDefault()
-		e.stopPropagation()
+
+	const submitProduct = async (e: FormEvent<HTMLFormElement>) => {
+		e.preventDefault();e.stopPropagation()
 
 		// validation
-		if (!modalProduct) return
+		const hasImage = modalProduct.productImageURL || productImageFile
+		if (!hasImage) return toast.error("No image uploaded", { theme: "colored" })
 		if (!validateProduct(modalProduct)) {
 			const error = validateProductError(modalProduct)! //eslint-disable-line @typescript-eslint/no-non-null-assertion
 			console.error("Product Validation Error", error)
@@ -90,12 +98,12 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 		setUploading(true)
 
 		// FIRESTORE Update
-		const { productImageURL, firestoreID, ...firestoreAddProduct } = modalProduct //eslint-disable-line @typescript-eslint/no-unused-vars
-		let newFirestoreID = modalProduct.firestoreID
+		//eslint-disable-next-line @typescript-eslint/no-unused-vars, prefer-const
+		let { productImageURL: newProductImageURL, firestoreID: newFirestoreID, ...rest } = modalProduct
+		const firestoreAddProduct = rest as FirebaseProductInterface
 		try{
-			if (mode == "edit") {
-				await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct)
-			} else if (mode == "new") {
+			if (newFirestoreID) await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct)
+			else {
 				const addedDoc = await addDoc(collection(db, "products"), firestoreAddProduct)
 				newFirestoreID = addedDoc.id
 			}
@@ -112,7 +120,8 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 		if (productImageFile) {
 			try{
 				const productImageRef = ref(storage, `products/${newFirestoreID}`)
-				await uploadBytes(productImageRef, productImageFile)
+				const storedImage = await uploadBytes(productImageRef, productImageFile)
+				newProductImageURL = await getDownloadURL(storedImage.ref)
 			}
 			catch(e){
 				console.error(...firebaseConsoleBadge, "Firebase Storage Error", e)
@@ -123,12 +132,21 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 		}
 
 		console.log(...firebaseConsoleBadge, "Firestore Update Success")
+		insertProduct({
+			...firestoreAddProduct,
+			firestoreID: newFirestoreID,
+			productImageURL: newProductImageURL
+		} as ProductInterface)
 		closeModal()
 	}
 
 	const [fileActive, setFileActive] = useState(false)
-	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => { stopProp(e); setFileActive(true) }
-	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => { stopProp(e); setFileActive(false) }
+	const dragElement = useRef<HTMLDivElement>(null)
+	const dragEnter: DragEventHandler<HTMLDivElement> = (e) => {stopProp(e); setFileActive(true) }
+	const dragLeave: DragEventHandler<HTMLDivElement> = (e) => {
+		if(dragElement.current?.contains(e.relatedTarget as Node)) return
+		stopProp(e); setFileActive(false);console.log("leave")
+	}
 	const dropListener: DragEventHandler<HTMLDivElement> = (e) => {
 		stopProp(e)
 
@@ -138,8 +156,8 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 		const imageFile = dataFiles[0]
 		if (!IMAGE_TYPES.includes(imageFile.type)) return toast.error("Wrong file type", {theme: "colored"})
 		
-		const imageURL = URL.createObjectURL(imageFile)
-		setModalProduct(mp => ({ ...mp, productImageURL: imageURL, productImageFile: imageFile }))
+		setProductImageFile(imageFile)
+		setDisplayImageURL(URL.createObjectURL(imageFile))
 		setFileActive(false)
 	}
 
@@ -159,11 +177,11 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 					enter="ease-out duration-300" enterFrom="opacity-0 translate-y-6" enterTo="opacity-100 translate-y-0"
 					leave="ease-in duration-200" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-6"
 				>
-					<Dialog.Panel as="form" className="bg-white z-20 max-h-[90vh] overflow-scroll rounded-xl w-[37rem]" onSubmit={addProductSubmit}>
+					<Dialog.Panel as="form" className="bg-white z-20 max-h-[90vh] overflow-scroll rounded-xl w-[37rem]" onSubmit={submitProduct}>
 						{/* modal */}
 						<div className="sticky top-0 bg-white">
 							<div className="flex flex-row p-8 px-12 pb-2 justify-between">
-								<Dialog.Title className="text-3xl font-bold">{toSentenceCase(mode)} Product</Dialog.Title>
+								<Dialog.Title className="text-3xl font-bold">{mode ? toSentenceCase(mode) : "...."} Product</Dialog.Title>
 								{/* x button */}
 								<svg onClick={closeModal} tabIndex={0} className="w-8 h-8 hover:cursor-pointer focus:outline-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -176,13 +194,14 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 						<div className="grid grid-cols-2 gap-x-2 gap-y-4 p-8 px-12">
 							{/* images */}
 							<div
-								onDrop={dropListener} onDragEnter={dragEnter} onDragLeave={dragLeave} onDragOver={stopProp}
-								className={`border-2 border-zinc-400 ${fileActive ? "!border-blue-500" : ""} rounded-xl border-dashed flex flex-col justify-center items-center col-span-2 p-10 py-4`}
+								onDrop={dropListener} onDragEnter={dragEnter} onDragLeave={dragLeave} onDragOver={stopProp} onDrag={stopProp}
+								className={`border-2 border-zinc-400 ${fileActive ? "!border-blue-500" : ""} rounded-xl border-dashed flex flex-col justify-center items-center col-span-2 p-10 py-6`}
+								ref={dragElement}
 							>
 								{
-									productImageURL &&
+									displayImageURL &&
 									<div className="h-16 mb-4">
-										<img id="outImage" src={productImageURL} alt="Product Image" className="h-16" />
+										<img id="outImage" src={displayImageURL} alt="Product Image" className="h-16" />
 									</div>
 								}
 								<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
@@ -235,7 +254,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode }: ProductModalTyp
 										uploading
 											? <Oval height={22} strokeWidth={7} color="white" secondaryColor="white"
 												wrapperClass="absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]" />
-											: `${toSentenceCase(mode)} Item`
+											: `${mode ? toSentenceCase(mode) : "..."} Item`
 									}
 								</button>
 							</div>
