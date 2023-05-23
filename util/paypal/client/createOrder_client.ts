@@ -1,7 +1,7 @@
 import { createOrderAPIProps, createOrderAPIRes } from "pages/api/paypal/createorder"
-import { OrderProduct } from "types/order"
-import { apiResponse } from "util/api"
-import { clientErrorFactory } from "util/clientErrorFactory"
+import { OrderProduct, OrderProductFilled } from "types/order"
+import { apiResponse } from "util/paypal/server/api"
+import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
 
 const createOrderError = clientErrorFactory("Order Link Server Error: Check console for more information")
 /**

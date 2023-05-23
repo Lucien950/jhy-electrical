@@ -1,6 +1,6 @@
 // SERVERSIDE
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { apiRespond } from 'util/api';
+import { apiRespond } from 'util/paypal/server/api';
 // types
 import { OrderProduct, validateOrderProduct } from 'types/order';
 import { makePrice } from 'util/priceUtil';

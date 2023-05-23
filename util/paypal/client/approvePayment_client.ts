@@ -1,6 +1,6 @@
-import { clientErrorFactory } from "util/clientErrorFactory"
+import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
 // API types
-import { apiResponse } from "util/api"
+import { apiResponse } from "util/paypal/server/api"
 import { approveCardProps, approveCardRes } from "pages/api/paypal/approve/card"
 import { approvePayPalRes } from "pages/api/paypal/approve/paypal"
 // types

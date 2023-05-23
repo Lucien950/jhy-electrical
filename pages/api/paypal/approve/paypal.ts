@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { apiRespond } from "util/api";
-import { DOMAIN, PAYPALDOMAIN } from "util/domain";
+import { apiRespond } from "util/paypal/server/api";
+import { DOMAIN, PAYPALDOMAIN } from "util/paypal/server/domain";
 import { generateAccessToken } from "util/paypal/server/auth";
 import {OrderResponseBody} from "@paypal/paypal-js"
 import { PayPalError } from "types/paypal";

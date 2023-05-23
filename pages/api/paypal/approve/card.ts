@@ -1,11 +1,11 @@
 // api
 import { NextApiRequest, NextApiResponse } from "next";
-import { apiRespond } from "util/api";
+import { apiRespond } from "util/paypal/server/api";
 import { generateAccessToken } from "util/paypal/server/auth";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { PayPalError, PaymentSource } from "types/paypal";
 import { Card, validateCard, validateCardError } from "types/card";
-import { PAYPALDOMAIN } from "util/domain";
+import { PAYPALDOMAIN } from "util/paypal/server/domain";
 
 export type approveCardProps = { token: string } & Card
 export type approveCardRes = {newPaymentSource: PaymentSource}

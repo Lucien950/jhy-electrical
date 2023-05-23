@@ -4,7 +4,7 @@ import { PriceInterface } from "types/price";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 import { PayPalError } from 'types/paypal';
-import { PAYPALDOMAIN } from 'util/domain';
+import { PAYPALDOMAIN } from 'util/paypal/server/domain';
 
 const provinceConvert = {
 	"AB": "Alberta",

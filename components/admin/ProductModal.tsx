@@ -8,7 +8,7 @@ import { FirebaseProductInterface, ProductInterface, validateProduct, validatePr
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
-import { toSentenceCase } from "util/index";
+import { toSentenceCase } from "util/string";
 
 const stopProp: DragEventHandler<HTMLDivElement> = (e) => { e.preventDefault(); e.stopPropagation() }
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]

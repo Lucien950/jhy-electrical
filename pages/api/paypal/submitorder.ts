@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { validateCustomer, validateCustomerError } from "types/customer"
 import { validateFinalPrice, validateFinalPriceError } from "types/price"
-import { apiRespond } from "util/api"
+import { apiRespond } from "util/paypal/server/api"
 import { fillOrderProducts } from "util/orderUtil"
 import { getOrder } from "util/paypal/server/getOrderFetch"
 import { submitOrderFetch } from "util/paypal/server/submitOrderFetch"

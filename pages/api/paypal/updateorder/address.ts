@@ -1,6 +1,6 @@
 // api
 import { NextApiRequest, NextApiResponse } from "next";
-import { apiRespond } from "util/api";
+import { apiRespond } from "util/paypal/server/api";
 // types
 import { updateOrderAddressProps, updateOrderAddressRes } from ".";
 import { PayPalError, validateAddress } from "types/paypal";
@@ -9,7 +9,7 @@ import { Address } from "@paypal/paypal-js"
 import { makePrice } from "util/priceUtil";
 import { getOrder } from "util/paypal/server/getOrderFetch";
 import { generateAccessToken } from "util/paypal/server/auth";
-import { PAYPALDOMAIN } from "util/domain";
+import { PAYPALDOMAIN } from "util/paypal/server/domain";
 import { fillOrderProducts } from "util/orderUtil";
 
 export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
