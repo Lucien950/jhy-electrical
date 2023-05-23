@@ -221,7 +221,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 	);
 }
 
-import { updateOrderAddress } from './api/paypal/updateorder/address'
+import { updateOrderAddress } from 'util/paypal/server/updateOrderFetch'
 import { fillOrderProducts } from 'util/orderUtil'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
