@@ -5,22 +5,7 @@ import { FinalPriceInterface } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
 
-export interface OrderProduct{
-	PID: string,
-	quantity: number,
-	// fill later
-	product?: ProductInterface
-}
-export interface OrderProductFilled extends OrderProduct {
-	product: ProductInterface
-}
-const orderProductSchema = Joi.object({
-	PID: Joi.string().required(),
-	quantity: Joi.number().greater(0).required(),
-})
-export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
-export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined
-
+// ORDERS
 export interface FirestoreOrderInterface {
 	// order metadata
 	products: OrderProduct[],
@@ -40,3 +25,21 @@ export interface OrderInterface extends FirestoreOrderInterface {
 	date: Date,
 	firebaseOrderID: string,
 }
+
+// ORDER PRODUCTS
+export interface OrderProduct {
+	PID: string,
+	quantity: number,
+	// fill later
+	product?: ProductInterface
+}
+export interface OrderProductFilled extends OrderProduct {
+	product: ProductInterface
+}
+
+const orderProductSchema = Joi.object({
+	PID: Joi.string().required(),
+	quantity: Joi.number().greater(0).required(),
+})
+export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
+export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined

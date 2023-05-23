@@ -28,15 +28,6 @@ export interface PayPalAuth {
 }
 
 /**
- * Client Token
- * https://developer.paypal.com/docs/multiparty/checkout/advanced/integrate/#link-sampleclienttokenrequest
- */
-export interface PayPalClientToken {
-	client_token: string;
-	expires_in: number;
-}
-
-/**
  * Default Type for Errors (use mostly for Order API)
  */
 export interface PayPalError {
@@ -44,22 +35,24 @@ export interface PayPalError {
 	message: string;
 	debug_id: string;
 	details: Detail[];
-	links: Link[];
+	links: PayPalErrorLink[];
 }
-export interface Detail {
+interface Detail {
 	field: string;
 	value: string;
 	location: string;
 	issue: string;
 	description: string;
 }
-
-export interface Link {
+interface PayPalErrorLink {
 	href: string;
 	rel: string;
 	encType: string;
 }
 
+/**
+ * Simple Error
+ */
 export interface PayPalSimpleError {
 	error: string;
 	error_description: string;
@@ -84,16 +77,16 @@ export interface PaymentSource {
 	ideal?: INBank;
 	mybank?: INBank;
 }
-export interface INBank {
+interface INBank {
 	name: string;
 	country_code: string;
 	bic: string;
 	iban_last_chars?: string;
 }
-export interface INCard extends INBank {
+interface INCard extends INBank {
 	card_last_digits?: string;
 }
-export interface Blik {
+interface Blik {
 	name: string;
 	country_code: string;
 	email: string;
@@ -108,33 +101,32 @@ export interface Card {
 	attributes: { vault: Vault; };
 	expiry: string;
 }
-export interface Vault {
+interface Vault {
 	id: string;
 	status: string;
-	links: Link[];
+	links: VaultLink[];
 	customer: {
 		id: string;
 	};
 }
-
-export interface Link {
+interface VaultLink {
 	href: string;
 	rel: string;
 	method: string;
 }
-export interface AuthenticationResult {
+interface AuthenticationResult {
 	liability_shift: string;
 	three_d_secure: ThreeDSecure;
 }
-export interface ThreeDSecure {
+interface ThreeDSecure {
 	authentication_status: string;
 	enrollment_status: string;
 }
-export interface FromRequest {
+interface FromRequest {
 	last_digits: string;
 	expiry: string;
 }
-export interface P24 {
+interface P24 {
 	payment_descriptor: string;
 	method_id: string;
 	method_description: string;
@@ -142,7 +134,7 @@ export interface P24 {
 	email: string;
 	country_code: string;
 }
-export interface Paypal {
+interface Paypal {
 	phone_type: string;
 	attributes: { vault: Vault; };
 	email_address: string;
@@ -153,18 +145,18 @@ export interface Paypal {
 	tax_info: TaxInfo;
 	address: Address;
 }
-export interface Name {
+interface Name {
 	given_name: string;
 	surname: string;
 }
-export interface PhoneNumber {
+interface PhoneNumber {
 	national_number: string;
 }
-export interface TaxInfo {
+interface TaxInfo {
 	tax_id: string;
 	tax_id_type: string;
 }
-export interface Venmo {
+interface Venmo {
 	user_name: string;
 	attributes: { vault: Vault; };
 	email_address: string;

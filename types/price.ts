@@ -1,10 +1,13 @@
 import Joi from "joi";
 
-export interface FinalPriceInterface {
+export interface PriceInterface {
 	subtotal: number;
-	shipping: number;
+	shipping?: number;
 	tax: number;
 	total: number;
+}
+export interface FinalPriceInterface extends PriceInterface {
+	shipping: number;
 }
 const finalPriceSchema = Joi.object({
 	subtotal: Joi.number().required(),
@@ -14,10 +17,3 @@ const finalPriceSchema = Joi.object({
 })
 export const validateFinalPrice = (candidate: PriceInterface) => finalPriceSchema.validate(candidate).error === undefined
 export const validateFinalPriceError = (candidate: PriceInterface) => finalPriceSchema.validate(candidate).error
-
-export interface PriceInterface {
-	subtotal: number;
-	shipping?: number;
-	tax: number;
-	total: number;
-}
