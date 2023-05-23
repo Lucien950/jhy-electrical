@@ -6,7 +6,7 @@ import { PaypalSVG, PayPalWhiteSVG } from 'components/paypalSVG';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
 import { toast } from "react-toastify";
-import { displayVariants } from "util/formVariants";
+import { displayVariants } from "./checkoutFormVariants";
 // types
 import { CustomerInterface } from "types/customer";
 import { CardInfoInterface, cardSchema } from "types/card";

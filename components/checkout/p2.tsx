@@ -1,6 +1,6 @@
 // ui
 import { motion } from "framer-motion";
-import { displayVariants } from "util/formVariants";
+import { displayVariants } from "./checkoutFormVariants";
 import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types

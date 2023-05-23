@@ -6,7 +6,7 @@ import { Combobox, Transition } from '@headlessui/react'
 import { motion } from "framer-motion";
 import Tippy from "@tippyjs/react";
 import { toast } from "react-toastify";
-import { displayVariants } from "util/formVariants";
+import { displayVariants } from "./checkoutFormVariants";
 // types
 import { CustomerInterface } from 'types/customer';
 import { postalCodePattern } from "util/shipping/postalCode";
