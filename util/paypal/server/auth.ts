@@ -11,13 +11,16 @@ const generateAccessToken = async () => {
 										: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_SECRET
 	
 	const auth = toB64(`${clientid}:${secret}`)
-	const response = await fetch(`${PAYPALDOMAIN}/v1/oauth2/token`, {
-		method: "post",
-		body: "grant_type=client_credentials",
+	const options = {
+		method: 'POST',
 		headers: {
-			Authorization: `Basic ${auth}`,
+			'Content-Type': 'application/x-www-form-urlencoded',
+			Authorization: `Basic ${auth}`
 		},
-	})
+		body: new URLSearchParams({ grant_type: 'client_credentials' })
+	};
+	
+	const response = await fetch(`${PAYPALDOMAIN}/v1/oauth2/token`, options)
 	if (response.ok) return (await response.json() as PayPalAuth).access_token
 	else throw await response.json() as PayPalSimpleError
 }

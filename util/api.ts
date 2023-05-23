@@ -1,4 +1,5 @@
 // Arguably the most professional code I have written in my life
+import Joi from "joi"
 import { NextApiResponse } from "next"
 
 export interface apiResponse<ResType, ErrType> {
@@ -29,10 +30,9 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 		case "response": return res.status(200).send({ res: payload } as apiResponse<T, never>)
 		case "error":
 			res.status(500)
-			if (payload instanceof Error) {
+			if (payload instanceof Error && !(payload instanceof Joi.ValidationError)) {
 				if (process.env.NODE_ENV === "development") res.send({ err: `${payload.name}: ${payload.message}` } as apiResponse<never, string>)
 				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
-				throw payload
 			}
 			else res.send({ err: payload } as apiResponse<never, T>)
 			return
