@@ -2,12 +2,13 @@ import Joi from "joi"
 
 type cm = number
 type kg = number
-export interface ProductInterface{
+
+export interface FirebaseProductInterface{
 	productName: string,
 	quantity: number,
 	price: number,
 	description: string,
-	
+
 	commercial: boolean,
 	industrial: boolean,
 	residential: boolean,
@@ -16,13 +17,13 @@ export interface ProductInterface{
 	width: cm,
 	height: cm,
 	weight: kg,
-
-
-	// THESE MUST BE SUPPLEMENTED
-	productImageURL?: string, //for fetching from storage
-	productImageFile?: File, // for uploading
-
+}
+export interface ProductInterface extends FirebaseProductInterface {
+	productImageURL: string, //for fetching from storage
 	firestoreID: string,
+}
+export interface ProductInterfaceFile extends ProductInterface{
+	productImageFile: File | null, // for uploading
 }
 
 const productSchema = Joi.object({
@@ -47,3 +48,5 @@ const productSchema = Joi.object({
 
 export const validateProductError = (candidate: ProductInterface) => productSchema.validate(candidate).error
 export const validateProduct = (candidate: ProductInterface) => validateProductError(candidate) === undefined
+
+export const DEFAULT_PRODUCT = { productName: "", quantity: 0, price: 0, description: "", commercial: false, industrial: false, residential: false, length: 0, width: 0, height: 0, weight: 0, } as ProductInterface

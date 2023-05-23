@@ -1,4 +1,4 @@
-import { OrderProduct } from "types/order"
+import { OrderProductFilled } from "types/order"
 import { calculateShipping, productPackageInfo } from "./shipping/calculateShipping"
 import { PriceInterface } from "types/price"
 
@@ -14,7 +14,7 @@ export const roundPriceUp = (n: number)=>{
  * @param postal_code Postal Code of delievery
  * @returns Price of the order, subtotal, shipping, tax, total
  */
-export const makePrice = async (products: OrderProduct[], postal_code?: string) => {
+export const makePrice = async (products: OrderProductFilled[], postal_code?: string) => {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
 	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))
 

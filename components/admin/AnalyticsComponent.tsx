@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 import { OrderInterface } from 'types/order';
 
 const AnalyticsComponent = ({ allOrders }: { allOrders: OrderInterface[] }) => {
-	const [last48OrderCount, setLast48OrderCount] = useState(3)
-	const [lastWeekOrderCount, setLastWeekOrderCount] = useState(12)
+	const [last48OrderCount, setLast48OrderCount] = useState<number>()
+	const [lastWeekOrderCount, setLastWeekOrderCount] = useState<number>()
 
-	const [pendingOrderCount, setPendingOrderCount] = useState(4)
-	const hasPending = pendingOrderCount > 0
+	const [pendingOrderCount, setPendingOrderCount] = useState<number>()
+	const hasPending = (pendingOrderCount || 0) > 0
 
 	useEffect(() => {
 		const pastDate = new Date();
@@ -22,39 +22,48 @@ const AnalyticsComponent = ({ allOrders }: { allOrders: OrderInterface[] }) => {
 
 	const opacityVariants = { hide: { opacity: 0 }, show: { opacity: 1 } }
 	return (
-		<div className="flex flex-row h-52 gap-x-4">
+		<div className="flex items-start flex-col md:flex-row [&>*]:h-52 gap-x-4 gap-y-4">
 			{/* top black strip */}
 			<div className="bg-zinc-900 rounded-xl text-white p-5 shadow-sm flex flex-col aspect-[16/9]">
 				<h2 className="text-2xl font-semibold">At a glance</h2>
 				<div className="flex flex-row w-full mt-8 mb-4">
 					<div className="flex-1 flex flex-col items-center border-r-2 border-slate-600">
 						<AnimatePresence mode="wait">
-							<motion.p className="text-5xl font-bold mb-3" key={`48hours${last48OrderCount}`} variants={opacityVariants} initial="hide" animate="show" exit="hide">
-								{last48OrderCount}
-							</motion.p>
+							{
+								(last48OrderCount !== undefined) &&
+								<motion.p className="text-5xl font-bold mb-3" key={`48hours${last48OrderCount}`} variants={opacityVariants} initial="hide" animate="show" exit="hide">
+									{last48OrderCount}
+								</motion.p>
+							}
 						</AnimatePresence>
 						<p className="text-sm text-slate-500">New Orders in 48 hours</p>
 					</div>
 					<div className="flex-1 flex flex-col items-center">
 						<AnimatePresence mode="wait">
-							<motion.p className="text-5xl font-bold mb-3" key={`lastweek${lastWeekOrderCount}`} variants={opacityVariants} initial="hide" animate="show" exit="hide">
-								{lastWeekOrderCount}
-							</motion.p>
+							{
+								(lastWeekOrderCount !== undefined) &&
+								<motion.p className="text-5xl font-bold mb-3" key={`lastweek${lastWeekOrderCount}`} variants={opacityVariants} initial="hide" animate="show" exit="hide">
+									{lastWeekOrderCount}
+								</motion.p>
+							}
 						</AnimatePresence>
 						<p className="text-sm text-slate-500">Orders in Last Week</p>
 					</div>
 				</div>
 			</div>
 			{/* bottom right square */}
-			<div data-hp={hasPending} className={`bg-green-500 data-[hp=true]:bg-yellow-500 rounded-2xl p-5 pb-6 flex flex-col justify-between shadow-sm aspect-square`}>
+			<div data-hp={hasPending} className={`bg-green-500 data-[hp=true]:bg-yellow-500 transition-colors rounded-2xl p-5 pb-6 flex flex-col justify-between shadow-sm aspect-square`}>
 				<h2 className="text-xl font-semibold">Pending Orders</h2>
 				<div className="flex flex-row items-end">
 					<AnimatePresence mode="wait" initial={false}>
-						<motion.p className="text-8xl font-bold leading-none"
-							initial="hide" animate="show" exit="hide" variants={opacityVariants} key={`pendingOrderCount${pendingOrderCount}`}
-						>
-							{pendingOrderCount}
-						</motion.p>
+						{
+							(pendingOrderCount !== undefined) &&
+							<motion.p className="text-8xl font-bold leading-none"
+								initial="hide" animate="show" exit="hide" variants={opacityVariants} key={`pendingOrderCount${pendingOrderCount}`}
+							>
+								{pendingOrderCount}
+							</motion.p>
+						}
 					</AnimatePresence>
 					<svg
 						className="h-8 w-8 mb-[0.33rem] ml-2"

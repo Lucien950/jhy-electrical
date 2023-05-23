@@ -1,1 +1,0 @@
-export const toB64 = (s: string) => Buffer.from(s).toString("base64")

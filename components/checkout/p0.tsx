@@ -14,7 +14,7 @@ import { Address } from "@paypal/paypal-js"
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
 import { ValidationError } from "joi";
-import { OrderProduct } from "types/order";
+import { OrderProductFilled } from "types/order";
 import { updateOrderAddress } from "util/paypal/client/updateOrder_client";
 import { PriceInterface } from "types/price";
 import { isEqual } from "lodash";
@@ -70,7 +70,7 @@ type p0Input = {
 	orderID: string,
 	setCalculatingShipping: Dispatch<SetStateAction<boolean>>,
 	// display variables
-	orderCart: OrderProduct[] | null,
+	orderCart: OrderProductFilled[] | null,
 	calculatingShipping: boolean,
 }
 const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, validateP0Form, validateP0FormError, orderID, orderCart, calculatingShipping, setCalculatingShipping }: p0Input) => {
@@ -119,9 +119,9 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 							?
 							orderCart.map(productInfo =>
 								<div className="flex flex-row items-center gap-x-2 p-2" key={productInfo.PID}>
-									<img src={productInfo.product?.productImageURL} alt="" className="h-10" />
-									<p> {productInfo.product?.productName} </p>
-									<p> {productInfo.product?.price} x {productInfo.quantity} </p>
+									<img src={productInfo.product.productImageURL} alt="" className="h-10" />
+									<p> {productInfo.product.productName} </p>
+									<p> {productInfo.product.price} x {productInfo.quantity} </p>
 								</div>
 							)
 							:

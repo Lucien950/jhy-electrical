@@ -22,18 +22,18 @@ export type createOrderAPIRes = {
  */
 export default async function (req: NextApiRequest, res: NextApiResponse){
 	// INPUTS
-	const { products: productIDs, postal_code, express = false}: createOrderAPIProps = req.body
-	if (!productIDs) return apiRespond(res, "error", "Product IDs not complete")
-	if (productIDs.length == 0) return apiRespond(res, "error", "No products in cart")
-	if (!productIDs.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
+	const { products: emptyProducts, postal_code, express = false}: createOrderAPIProps = req.body
+	if (!emptyProducts) return apiRespond(res, "error", "Product IDs not complete")
+	if (emptyProducts.length == 0) return apiRespond(res, "error", "No products in cart")
+	if (!emptyProducts.every(p => validateOrderProduct(p))) return apiRespond(res, "error", "Products are not well formed")
 	if (postal_code && !validatePostalCode(postal_code)) return apiRespond(res, "error", "Postal Code is not valid")
 	if (express && typeof express != "boolean") return apiRespond(res, "error", "Express is not a boolean")
 
 	try{
 		// fill products
-		const products = await fillOrderProducts(productIDs)
+		const products = await fillOrderProducts(emptyProducts) //this validates that all products are valid
 		const paymentInformation = await makePrice(products, postal_code)
-		const order = await createOrderAPICall(paymentInformation, productIDs, express)
+		const order = await createOrderAPICall(paymentInformation, emptyProducts, express)
 	
 		return apiRespond<createOrderAPIRes>(res, "response", {
 			orderStatus: order.status,

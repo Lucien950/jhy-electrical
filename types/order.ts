@@ -11,6 +11,9 @@ export interface OrderProduct{
 	// fill later
 	product?: ProductInterface
 }
+export interface OrderProductFilled extends OrderProduct {
+	product: ProductInterface
+}
 const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
@@ -18,25 +21,22 @@ const orderProductSchema = Joi.object({
 export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
 export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined
 
-export interface OrderInterface {
+export interface FirestoreOrderInterface {
+	// order metadata
 	products: OrderProduct[],
-	orderPrice: FinalPriceInterface,
 	completed: boolean,
-	// convert
-	date: Date,
+	dateTS: Timestamp,
+	// price information
+	orderPrice: FinalPriceInterface,
 	// customer information
 	name:string,
 	address: Address,
 	paypalOrderID: string,
 	payment_source: PaymentSource,
-	
-	// byo
-	firebaseOrderID: string,
-	//only present on failure orders
-	failureReason?: string,
 }
-export interface FirestoreOrderInterface extends OrderInterface{
+export interface OrderInterface extends FirestoreOrderInterface {
 	// because of serialization sadge
-	date: never,
-	dateTS: Timestamp,
+	dateTS: never,
+	date: Date,
+	firebaseOrderID: string,
 }

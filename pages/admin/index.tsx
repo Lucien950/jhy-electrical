@@ -1,24 +1,26 @@
 // next
-import { useRouter } from 'next/router'
 import { RefObject, useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/router'
+import Link from 'next/link';
 import Head from 'next/head';
 // firebase
-import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, onSnapshot, orderBy, query, doc, getDoc } from "firebase/firestore";
 import { auth } from "util/firebase/auth"
 import { db } from 'util/firebase/firestore';
 import { fillOrder } from "util/orderUtil"
 // types
-import { ProductInterface } from 'types/product';
+import { DEFAULT_PRODUCT, ProductInterface } from 'types/product';
+import { AdminInterface } from 'types/admin';
+import { OrderInterface } from 'types/order';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
-import { ProductsComponent, ProductModal } from 'components/admin/ProductsComponents';
+import { ProductsComponent } from 'components/admin/ProductsComponents';
 import { OrdersComponent } from 'components/admin/OrdersComponent';
-import { AdminInterface } from 'types/admin';
 import AnalyticsComponent from 'components/admin/AnalyticsComponent';
-import Link from 'next/link';
-import { OrderInterface } from 'types/order';
 import { firebaseConsoleBadge } from 'util/firebase/console';
+import { Transition } from '@headlessui/react';
+import ProductModal from 'components/admin/ProductModal';
 
 interface SidebarButtonProps{
 	name: "Orders" | "Products" | "Analytics",
@@ -41,11 +43,12 @@ const SidebarButton = ({name, scrollRef}: SidebarButtonProps)=>{
 				transition-colors overflow-hidden
 				hover:cursor-pointer
 				outline-none focus:ring-4
+				lg:w-full
 			"
 		>
 			{/* <div className="h-full w-[5px] rounded-r-md bg-blue-500 absolute left-0 translate-x-[-5px] group-hover:translate-x-0 transition-transform"/> */}
-			<svg className="w-6 h-6 fill-black group-hover:fill-blue-500" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"> {icon[name]} </svg>
-			<p className="text-black text-xl group-hover:text-blue-500">{name}</p>
+			<svg className="w-8 h-8 fill-black group-hover:fill-blue-500" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"> {icon[name]} </svg>
+			<p className="hidden lg:block text-black text-xl group-hover:text-blue-500">{name}</p>
 		</div>
 	)
 }
@@ -63,36 +66,28 @@ const Admin = () => {
 	useEffect(()=>{
 		onAuthStateChanged(auth, (authUser) => {
 			if (!authUser) router.push('/admin/login')
-			else setUpPage(authUser)
+			else {
+				(async ()=>{
+					const adminUser = await getDoc(doc(db, "admins", authUser.uid)).catch(err => { console.error(err) })
+	
+					const adminUserData = adminUser?.data() as AdminInterface
+					if (!adminUserData) {
+						router.push('/admin/login')
+						return
+					}
+					setAdmin(adminUserData)
+					setLoading(false)
+				})()
+			}
 		})
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
-	const setUpPage = async (authUser: User) =>{
-		const adminUser = await getDoc(doc(db, "admins", authUser.uid)).catch(err => { console.error(err) })
-
-		const adminUserData = adminUser?.data() as AdminInterface
-		if (!adminUserData) {
-			router.push('/admin/login')
-			return
-		}
-		setAdmin(adminUserData)
-		setLoading(false)
-	}
 
 
 	// edit product modal
-	const [editProduct, setEditProduct] = useState<ProductInterface>({} as ProductInterface)
-	const [editModalOpen, setEditModalOpen] = useState(false)
-	const openEditModal = (p: ProductInterface) => setEditProduct(p)
-	const closeEditModal = () => setEditProduct({} as ProductInterface)
-	useEffect(()=> setEditModalOpen(Object.keys(editProduct).length != 0), [editProduct])
-
-	const [newProduct, setNewProduct] = useState<ProductInterface>({} as ProductInterface)
-	const [newModalOpen, setNewModalOpen] = useState(false)
-	const openNewModal = ()=>{
-		setNewProduct({} as ProductInterface)
-		setNewModalOpen(true)
-	}
-	const closeNewModal = ()=> setNewModalOpen(false)
+	const [modalProduct, setModalProduct] = useState<ProductInterface | null>(null)
+	const openEditModal = (defaultProduct: ProductInterface) => setModalProduct(defaultProduct)
+	const openNewModal = () => setModalProduct(DEFAULT_PRODUCT)
+	const closeModal = () => {setModalProduct(null);console.log("close modal")}
 
 	// Sidebar scrolling
 	const analytics = useRef<HTMLDivElement>(null)
@@ -117,35 +112,42 @@ const Admin = () => {
 		</Head>
 		
 		{/* edit modal */}
-		<ProductModal open={editModalOpen} product={editProduct} mode="edit" closeModal={closeEditModal}/>
+		{/* <ProductModal open={editModalOpen} product={editProduct} mode="edit" closeModal={closeEditModal}/> */}
 		{/* new product modal */}
-		<ProductModal open={newModalOpen} product={newProduct} mode="new" closeModal={closeNewModal}/>
+		{/* <ProductModal open={newModalOpen} product={newProduct} mode="new" closeModal={closeNewModal}/> */}
+		<Transition show={modalProduct !== null}>
+			<ProductModal closeModal={closeModal} defaultModalProduct={modalProduct!} mode="edit" />
+		</Transition>
+		{/* <Transition appear show={modalProduct !== null}>
+			<TestModal closeModal={closeModal}/>
+		</Transition> */}
+		{/* <WorkingProductModal closeModal={closeModal} modalProduct={modalProduct!}/> */}
 		<div className="flex flex-row gap-x-2">
 			{/* sidebar */}
-			<div className="flex-[1.7] overflow-hidden rounded-xl bg-zinc-100 flex flex-col sticky top-0 max-h-screen p-6">
+			<div className="lg:flex-[1.7] overflow-hidden rounded-xl bg-zinc-100 flex flex-col items-center lg:items-start sticky top-0 max-h-screen py-6 px-2 lg:px-6">
 				<div className="flex-[1]">
-					<div className="flex flex-row items-center justify-center">
-						<Link href="/"> <img src="./logo.svg" alt="" className="w-20 mr-2"/> </Link>
-						<Link href="/"> <p className="font-bold text-2xl hover:underline">JHY Electrical</p> </Link>
+					<div className="flex flex-col 2xl:flex-row items-center justify-center">
+						<Link href="/"> <img src="./logo.svg" alt="" className="w-16 lg:w-20 2xl:mr-2"/> </Link>
+						<Link href="/"> <p className="hidden lg:block font-bold text-2xl hover:underline text-center">JHY Electrical</p> </Link>
 					</div>
 				</div>
-				<div className="flex-[2] flex items-center flex-col">
+				<div className="flex-[2] flex items-center flex-col self-center">
 					<div className="rounded-full overflow-hidden p-4 bg-white inline-block">
-							<img className="h-16 w-16" src={admin.profileImageURL} alt="" />
+							<img className="h-10 w-10 lg:h-16 lg:w-16" src={admin.profileImageURL} alt="" />
 					</div>
-					<h1 className="text-2xl font-bold mb-4">{admin.name}</h1>
+					<h1 className="hidden lg:block text-2xl font-bold mb-4">{admin.name}</h1>
 					{/* TODO Implement this behaviour */}
 					{/* <button className="rounded-full px-5 py-1 border-2 border-slate-800 outline-none focus:ring-2">Edit</button> */}
 				</div>
-				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1 py-2">
+				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1 py-2 lg:self-stretch">
 					<SidebarButton name="Analytics" scrollRef={analytics}/>
 					<SidebarButton name="Orders" scrollRef={orders}/>
 					<SidebarButton name="Products" scrollRef={products}/>
 				</div>
-				<div>
+				<div className="lg:self-stretch">
 					<button onClick={signout} className="rounded-lg flex w-full items-center flex-row p-4 hover:bg-gray-200">
-						<svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
-						<p>Log Out</p>
+						<svg className="w-5 h-5 lg:mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
+						<p className="hidden lg:block">Log Out</p>
 					</button>
 				</div>
 			</div>

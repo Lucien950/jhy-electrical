@@ -1,6 +1,6 @@
 import { PayPalAuth, PayPalSimpleError } from "types/paypal"
 import { PAYPALDOMAIN } from "util/domain";
-import { toB64 } from "util/toB64";
+import { toB64 } from "util/index";
 
 const generateAccessToken = async () => {
 	const clientid = process.env.NODE_ENV === "development"

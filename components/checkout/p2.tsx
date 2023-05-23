@@ -5,7 +5,7 @@ import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
 import { CustomerInterface } from "types/customer";
-import { OrderProduct } from "types/order";
+import { OrderProductFilled } from "types/order";
 import { PriceInterface } from "types/price";
 // react
 import { Dispatch, MouseEventHandler, SetStateAction, useState } from "react";
@@ -21,7 +21,7 @@ import { toast } from "react-toastify";
 type ReviewViewProps = {
 	customerInfo: CustomerInterface,
 	priceInfo: PriceInterface,
-	orderCart: OrderProduct[] | null,
+	orderCart: OrderProductFilled[] | null,
 	setStage: Dispatch<SetStateAction<number>>,
 	orderID: string
 }
@@ -103,11 +103,11 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 					{orderCart
 						? orderCart.map(p =>
 							<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
-								<img src={p.product?.productImageURL} alt="Product Image" className="h-16" />
+								<img src={p.product.productImageURL} alt="Product Image" className="h-16" />
 								<div className="flex-1 text-sm">
-									<h1 className="font-bold text-base">{p.product?.productName}</h1>
-									<p>${p.product?.price.toFixed(2)}</p>
-									<p>{p.product?.description}</p>
+									<h1 className="font-bold text-base">{p.product.productName}</h1>
+									<p>${p.product.price.toFixed(2)}</p>
+									<p>{p.product.description}</p>
 								</div>
 							</div>
 						)

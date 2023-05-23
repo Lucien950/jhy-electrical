@@ -10,10 +10,9 @@ import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // util
 import { getOrder } from 'util/paypal/server/getOrderFetch'
-import { getProductByID } from 'util/productUtil'
 import { validateAddress, validateAddressError } from 'types/paypal'
 // types
-import { OrderProduct } from 'types/order'
+import { OrderProduct, OrderProductFilled } from 'types/order'
 import { validateName, CustomerInterface, validateNameError } from 'types/customer'
 import { PriceInterface } from 'types/price'
 // analytics
@@ -62,15 +61,15 @@ type CheckoutProps = {
 
 	paypalCustomerInfo: CustomerInterface,
 	paypalPriceInfo: PriceInterface,
-	productIDs: OrderProduct[],
+	emptyOrderProducts: OrderProduct[],
 	orderID: string,
 	initialStage: number
 }
-export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, productIDs, paypal_error, orderID, initialStage }: CheckoutProps){
+export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps){
 	// IMPORTANT GLOBAL STATE
 	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
 	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
-	const [orderCart, setOrderCart] = useState<OrderProduct[] | null>(null)
+	const [orderCart, setOrderCart] = useState<OrderProductFilled[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
 	const {stage, setStage, p0CusUpdated, p1CusUpdated} = useStage(initialStage, customerInfo)
@@ -124,12 +123,12 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 
 	useEffect(() => {
 		if (paypal_error) { logEvent(analytics(), "checkout_error_paypal_SSR"); return }
-		if (!productIDs) return //just for types
+		if (!emptyOrderProducts) return //just for types
 		logEvent(analytics(), "begin_checkout");
 		logEvent(analytics(), "checkout_progress", { checkout_step: initialStage })
 		// update displayed cart
-		Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) } as OrderProduct)))
-			.then(newCart => setOrderCart(newCart))
+
+		fillOrderProducts(emptyOrderProducts).then(newCart => setOrderCart(newCart))
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// rendering conditions
@@ -223,6 +222,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 }
 
 import { updateOrderAddress } from './api/paypal/updateorder/address'
+import { fillOrderProducts } from 'util/orderUtil'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
@@ -230,7 +230,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const EMPTYRET = {
 		paypalCustomerInfo: {} as CustomerInterface,
 		paypalPriceInfo: {} as PriceInterface,
-		productIDs: [],
+		emptyOrderProducts: [],
 		initialStage: 0,
 		orderID: token
 	}
@@ -240,7 +240,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		const {
 			customerInfo: paypalCustomerInfo,
 			priceInfo,
-			products: productIDs, status
+			products: emptyOrderProducts, status
 		} = await getOrder(token)
 		let paypalPriceInfo = priceInfo;
 
@@ -262,7 +262,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		else if (p0Done && !p1Done) initialStage = 1
 		else initialStage = 0
 
-		return { props: { paypalCustomerInfo, paypalPriceInfo, productIDs, orderID: token, initialStage } as CheckoutProps }
+		return { props: { paypalCustomerInfo, paypalPriceInfo, emptyOrderProducts, orderID: token, initialStage } as CheckoutProps }
 	}
 	catch (e) { return { props: { paypal_error: JSON.stringify(e, Object.getOwnPropertyNames(e)), ...EMPTYRET } as CheckoutProps } }
 }

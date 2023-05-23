@@ -2,9 +2,9 @@ import { NextApiRequest, NextApiResponse } from "next"
 import { validateCustomer, validateCustomerError } from "types/customer"
 import { validateFinalPrice, validateFinalPriceError } from "types/price"
 import { apiRespond } from "util/api"
+import { fillOrderProducts } from "util/orderUtil"
 import { getOrder } from "util/paypal/server/getOrderFetch"
 import { submitOrderFetch } from "util/paypal/server/submitOrderFetch"
-import { getProductByID } from "util/productUtil"
 
 export type submitOrderProps = { token: string }
 export type submitOrderRes = { firebaseOrderID: string }
@@ -20,7 +20,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 
 	try {
 		// make sure order is well formed before authorizing the payment
-		const { products: productIDs, priceInfo, customerInfo, status } = await getOrder(token)
+		const { products: emptyProducts, priceInfo, customerInfo, status } = await getOrder(token)
 
 		// validation, slightly optional, but just more hurdles
 		// validates p1 completion
@@ -30,10 +30,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 		if (status !== "APPROVED") throw "Error is not Approved"
 
 		// populate cart (fossilize the cart in case products change/are removed)
-		const cart = await Promise.all(productIDs.map(async p => {
-			const product = await getProductByID(p.PID)
-			return { ...p, product }
-		}))
+		const cart = await fillOrderProducts(emptyProducts)
 		
 		const {firebaseOrderID} = await submitOrderFetch(token, cart, customerInfo, priceInfo)
 		return apiRespond<submitOrderRes>(res, "response", { firebaseOrderID })

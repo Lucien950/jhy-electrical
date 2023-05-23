@@ -8,14 +8,14 @@ import { Address } from "@paypal/paypal-js"
 // util
 import { makePrice } from "util/priceUtil";
 import { getOrder } from "util/paypal/server/getOrderFetch";
-import { getProductByID } from "util/productUtil";
 import { generateAccessToken } from "util/paypal/server/auth";
 import { PAYPALDOMAIN } from "util/domain";
+import { fillOrderProducts } from "util/orderUtil";
 
 export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getOrder(token)
-	const { products: productIDS } = orders
-	const products = await Promise.all(productIDS.map(async p => ({ ...p, product: await getProductByID(p.PID) })))
+	const { products: emptyProducts } = orders
+	const products = await fillOrderProducts(emptyProducts)
 	const newPrice = await makePrice(products, newAddress.postal_code)
 	const body = [
 		{
