@@ -1,22 +1,23 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { validateCustomer, validateCustomerError } from "types/customer"
+import { validateFinalCustomer, validateFinalCustomerError } from "types/customer"
 import { validateFinalPrice, validateFinalPriceError } from "types/price"
 import { apiRespond } from "util/paypal/server/api"
 import { fillOrderProducts } from "util/orderUtil"
 import { getOrder } from "util/paypal/server/getOrderFetch"
 import { submitOrderFetch } from "util/paypal/server/submitOrderFetch"
+import Joi from "joi"
+import { validateSchemaGenerator } from "util/typeValidate"
 
 export type submitOrderProps = { token: string }
 export type submitOrderRes = { firebaseOrderID: string }
-
+const [validateSubmitOrderProps, validateSubmitOrderError] = validateSchemaGenerator<submitOrderProps>(Joi.object({ token: Joi.string().required() }))
 /**
  * Submitting Order API Endpoint
  */
 export default async function (req: NextApiRequest, res: NextApiResponse) {
 	// INPUT VALIDATION
-	const { token }: submitOrderProps = req.body
-	if (!token) return apiRespond(res, "error", "Token is required to submit order")
-	if (typeof token != "string") return apiRespond(res, "error", "Token is not a string")
+	if (!validateSubmitOrderProps(req.body)) return apiRespond(res, "error", validateSubmitOrderError(req.body))
+	const { token } = req.body
 
 	try {
 		// make sure order is well formed before authorizing the payment
@@ -24,7 +25,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse) {
 
 		// validation, slightly optional, but just more hurdles
 		// validates p1 completion
-		if (!validateCustomer(customerInfo)) { console.error("customer error"); throw validateCustomerError(customerInfo) }
+		if (!validateFinalCustomer(customerInfo)) { console.error("customer error"); throw validateFinalCustomerError(customerInfo) }
 		// this validates that p0 has been completed
 		if (!validateFinalPrice(priceInfo)) { console.error("price error"); throw validateFinalPriceError(priceInfo) }
 		if (status !== "APPROVED") throw "Error is not Approved"

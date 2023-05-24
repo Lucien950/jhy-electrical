@@ -1,4 +1,5 @@
 import Joi from "joi"
+import { validateSchemaGenerator } from "util/typeValidate"
 
 type cm = number
 type kg = number
@@ -23,15 +24,15 @@ export interface ProductInterface extends FirebaseProductInterface {
 	firestoreID: string,
 }
 
-const productSchema = Joi.object({
+export const productSchema = Joi.object({
 	productName: Joi.string().required(),
 	quantity: Joi.number().required().greater(0),
 	price: Joi.number().required().greater(0),
 	description: Joi.string().required(),
 
-	commercial: Joi.boolean().optional(),
-	industrial: Joi.boolean().optional(),
-	residential: Joi.boolean().optional(),
+	commercial: Joi.boolean(),
+	industrial: Joi.boolean(),
+	residential: Joi.boolean(),
 
 	length: Joi.number().required().greater(0),
 	width: Joi.number().required().greater(0),
@@ -42,13 +43,4 @@ const productSchema = Joi.object({
 	firestoreID: Joi.string(),
 })
 
-export const validateProductError = (candidate: ProductInterface) => productSchema.validate(candidate).error
-export const validateProduct = (candidate: ProductInterface) => validateProductError(candidate) === undefined
-
-export const DEFAULT_PRODUCT = {
-	productName: "", 
-	quantity: -1, price: -1, 
-	description: "", 
-	commercial: false, industrial: false, residential: false, 
-	length: -1, width: -1, height: -1, weight: -1
-} as ProductInterface
+export const [validateProduct, validateProductError] = validateSchemaGenerator<ProductInterface>(productSchema)

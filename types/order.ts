@@ -1,9 +1,10 @@
 import { Timestamp } from "firebase/firestore";
-import { ProductInterface } from "./product";
+import { ProductInterface, productSchema } from "./product";
 import { Address } from "@paypal/paypal-js"
 import { FinalPriceInterface } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
+import { validateSchemaGenerator } from "util/typeValidate";
 
 // ORDERS
 export interface FirestoreOrderInterface {
@@ -41,5 +42,11 @@ const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
 })
-export const validateOrderProductError = (candidate: OrderProduct) => orderProductSchema.validate(candidate).error
-export const validateOrderProduct = (candidate: OrderProduct) => validateOrderProductError(candidate) === undefined
+const orderProductFilledSchema = Joi.object({
+	PID: Joi.string().required(),
+	quantity: Joi.number().greater(0).required(),
+	product: productSchema.required(),
+})
+
+export const [validateOrderProduct, validateOrderProductError] = validateSchemaGenerator<OrderProduct>(orderProductSchema)
+export const [validateOrderProductFilled, validateOrderProductFilledError] = validateSchemaGenerator<OrderProductFilled>(orderProductFilledSchema)

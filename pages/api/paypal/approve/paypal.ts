@@ -4,13 +4,17 @@ import { DOMAIN, PAYPALDOMAIN } from "util/paypal/server/domain";
 import { generateAccessToken } from "util/paypal/server/auth";
 import {OrderResponseBody} from "@paypal/paypal-js"
 import { PayPalError } from "types/paypal";
+import Joi from "joi";
+import { validateSchemaGenerator } from "util/typeValidate";
 
 export type approvePayPalProps = { token: string }
+const approvePayPalPropsSchema = Joi.object({ token: Joi.string().required() })
+const [vApprovePayPalProps, vApprovePayPalError] = validateSchemaGenerator<approvePayPalProps>(approvePayPalPropsSchema)
 export type approvePayPalRes = { redirect_link: string }
+
 export default async function (req: NextApiRequest, res: NextApiResponse) {
-	const { token } = req.body as approvePayPalProps
-	if (!token) return apiRespond(res, "error", "No token provided")
-	if (typeof token != "string") return apiRespond(res, "error", "OrderID not a string")
+	if (!vApprovePayPalProps(req.body)) return apiRespond(res, "error", vApprovePayPalError(req.body))
+	const { token } = req.body
 
 	const returnDomain = DOMAIN
 	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}/confirm-payment-source`, {

@@ -1,4 +1,4 @@
-import { createOrderAPIProps, createOrderAPIRes } from "pages/api/paypal/createorder"
+import { createOrderProps, createOrderRes } from "pages/api/paypal/createorder"
 import { OrderProduct, OrderProductFilled } from "types/order"
 import { apiResponse } from "util/paypal/server/api"
 import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
@@ -14,10 +14,10 @@ export const createPayPalOrderLink = async (products: OrderProduct[], express = 
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({
-			products: products.map(p => ({ ...p, product: undefined })), express } as createOrderAPIProps)
+			products: products.map(p => ({ ...p, product: undefined })), express } as createOrderProps)
 	})
 
-	const { res, err } = await response.json() as apiResponse<createOrderAPIRes, any>
+	const { res, err } = await response.json() as apiResponse<createOrderRes, any>
 	if(response.ok){
 		if(!res) return createOrderError("This code should not be reachable, since response.ok is true")
 		if (res.orderStatus == "COMPLETED") return createOrderError("REQUEST ID HAS BEEN USED")
