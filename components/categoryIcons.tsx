@@ -130,21 +130,21 @@ const ResidentialIcon = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement
 const Commercial = ()=>(
 	<Tippy content="Commercial" delay={200}>
 		<span>
-			<CommercialIcon className="w-8 h-8"/>
+			<CommercialIcon className="w-8 h-8 fill-slate-600"/>
 		</span>
 	</Tippy>
 )
 const Industrial = ()=>(
 	<Tippy content="Industrial" delay={200}>
 		<span>
-			<IndustrialIcon className="w-8 h-8"/>
+			<IndustrialIcon className="w-8 h-8 fill-slate-600"/>
 		</span>
 	</Tippy>
 )
 const Residential = ()=>(
 	<Tippy content="Residential" delay={200}>
 		<span>
-			<ResidentialIcon className="w-8 h-8"/>
+			<ResidentialIcon className="w-8 h-8 fill-slate-600"/>
 		</span>
 	</Tippy>
 )
