@@ -1,6 +1,6 @@
 // next
 import { GetServerSideProps } from 'next'
-import { Dispatch, MouseEventHandler, SetStateAction, useEffect, useState } from 'react';
+import { MouseEventHandler, useEffect, useState } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 // redux
@@ -22,6 +22,7 @@ import { toast } from 'react-toastify';
 import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/categoryIcons'
 import { PayPalWhiteSVG } from 'components/paypalSVG';
 import { Oval } from 'react-loader-spinner';
+import { QuantitySelector } from 'components/quantitySelector';
 
 type AddCartButtonProps = { available: boolean, onClick: () => void }
 const AddCartButton = ({ available, onClick }: AddCartButtonProps) => {
@@ -114,37 +115,6 @@ const AddCartButton = ({ available, onClick }: AddCartButtonProps) => {
 	)
 }
 
-type QuantityAdjusterProps = { selectedQuantity: number, setSelectedQuantity: Dispatch<SetStateAction<number>>, quantityAvailable: number }
-const QuantityAdjuster = ({ selectedQuantity, setSelectedQuantity, quantityAvailable }: QuantityAdjusterProps) => {
-	const canAddCart = selectedQuantity + 1 <= quantityAvailable
-	const canSubtractCart = selectedQuantity - 1 > 0
-	const subHandler = () => setSelectedQuantity(q => Math.max(q - 1, 1))
-	const addHandler = () => setSelectedQuantity(q => Math.min(q + 1, quantityAvailable))
-	return (
-		<div className="flex flex-row items-center gap-x-4 my-4">
-			Qty
-			<div className="flex flex-row border-2">
-				{/* - icon */}
-				<button className="w-10 h-10 grid place-items-center disabled:text-gray-300"
-					disabled={!canSubtractCart} onClick={subHandler}>
-					<svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-						<path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-					</svg>
-				</button>
-				{/* Quantity */}
-				<span className="w-10 h-10 grid place-items-center">{selectedQuantity}</span>
-				{/* + icon */}
-				<button className="w-10 h-10 grid place-items-center disabled:text-gray-300"
-					disabled={!canAddCart} onClick={addHandler}>
-					<svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-					</svg>
-				</button>
-			</div>
-		</div>
-	)
-}
-
 const ProductID = ({ product }: { product: ProductInterface }) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
@@ -155,8 +125,8 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 	const availableToAdd = product.quantity - quantityInCart
 	const [selectedQuantity, setSelectedQuantity] = useState(Math.min(availableToAdd, 1)) //either 0 or 1
 	useEffect(() => {
-		setSelectedQuantity(Math.min(selectedQuantity, availableToAdd)) //clamp to below availableToAdd
-	}, [cart])
+		setSelectedQuantity(s => Math.min(s, availableToAdd)) //clamp to below availableToAdd
+	}, [cart]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// Add to Cart Button
 	const addCartHandler = () => {
@@ -205,7 +175,10 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 						</div>
 
 						{/* Quantity Adjuster */}
-						<QuantityAdjuster selectedQuantity={selectedQuantity} setSelectedQuantity={setSelectedQuantity} quantityAvailable={availableToAdd} />
+						<div className="flex flex-row items-center gap-x-4 my-4">
+							Qty
+							<QuantitySelector quantity={selectedQuantity} setQuantity={setSelectedQuantity} maxValue={availableToAdd} />
+						</div>
 
 						{/* Add Cart */}
 						<AddCartButton available={availableToAdd > 0} onClick={addCartHandler} />
