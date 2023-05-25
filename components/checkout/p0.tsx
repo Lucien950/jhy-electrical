@@ -1,5 +1,5 @@
 // react
-import { Dispatch, FormEventHandler, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, Fragment, SetStateAction, useEffect, useRef, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox, Transition } from '@headlessui/react'
@@ -23,17 +23,14 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 	const [query, setQuery] = useState('')
 	const provinces = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"]
 	const filteredProvinces = query === '' ? [] : provinces.filter((province) => province.toLowerCase().includes(query.toLowerCase()))
-	const input = useRef<HTMLInputElement>(null)
 
 	return (
 		<Combobox value={province || ""} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
 			<Combobox.Input
 				required
 				onChange={(event) => setQuery(event.target.value)}
-				className="w-full h-full border-2"
+				className="w-full h-full border-2 px-3 py-4 rounded-lg text-base focus:outline-none focus:ring-2"
 				placeholder='Province'
-				data-field_id="admin_area_1"
-				ref={input}
 			/>
 			<Combobox.Options className="absolute mt-1 bg-white z-10 w-full rounded-md shadow-md overflow-hidden">
 				{filteredProvinces.map((province) => (
@@ -131,12 +128,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 				{/* shipping */}
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4 font-bold">Shipping</h1>
-					<div
-						className="
-						grid grid-cols-2 grid-rows-5 gap-x-2 gap-y-2 text-sm
-						[&_input]:px-3 [&_input]:py-4 [&_input]:rounded-lg [&_input]:text-base
-						[&_input:focus]:outline-none [&_input:focus]:ring-2" 
-					>
+					<div className=" grid grid-cols-2 grid-rows-5 gap-x-2 gap-y-2 text-sm " >
 						<InputField required setField={customerChange} field_id="fullName" placeholder="Full Name" defaultValue={fullName || ""} className="col-span-2" />
 						<InputField required setField={shippingChange} field_id="address_line_1" placeholder="Address" defaultValue={address?.address_line_1} className="col-span-2" />
 						<InputField setField={shippingChange} field_id="address_line_2" placeholder="Apt/Suite (Optional)" defaultValue={address?.address_line_2} className="col-span-2" />
@@ -144,7 +136,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 						<ProvinceDropdown setProvince={shippingChange} province={address?.admin_area_1} />
 						<InputField required setField={shippingChange} field_id="postal_code" placeholder="Postal Code" defaultValue={address?.postal_code} pattern={postalCodePattern} />
 						<div className="relative">
-							<input type="text" name="" id="" className="border-2 w-full disabled:bg-zinc-300" disabled />
+							<InputField field_id="country" setField={() => { }} disabled />
 							<div className="absolute inset-0 pl-4 flex flex-row items-center gap-x-1">
 								<p className="text-gray-400">Canada</p>
 								<Tippy content="JHY Canada only ships to Canadian Addresses">
@@ -163,20 +155,20 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 					<Link href="/cart" className="underline">
 						Back to Cart
 					</Link>
-					<button
-						className="bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color] grid place-items-center relative"
-						type="submit" disabled={calculatingShipping}>
-							<Transition
-								show={calculatingShipping}
-								className="transition-[opacity] duration-200"
-								enterFrom="opacity-0" enterTo="opacity-100" leaveFrom="opacity-100" leaveTo="opacity-0"
-							>
-								<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]"
-									strokeWidthSecondary={10} color="white" secondaryColor="white"/>
-							</Transition>
-							<div className={`transition-transform ${calculatingShipping ? "translate-x-[1rem]" : ""}`}>
-								Proceed to Payment
-							</div>
+					<button type="submit" disabled={calculatingShipping}
+						className="grid place-items-center relative
+						bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color]">
+						<Transition
+							show={calculatingShipping}
+							className="transition-[opacity] duration-200"
+							enterFrom="opacity-0" enterTo="opacity-100" leaveFrom="opacity-100" leaveTo="opacity-0"
+						>
+							<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]"
+								strokeWidthSecondary={10} color="white" secondaryColor="white"/>
+						</Transition>
+						<div className={`transition-transform ${calculatingShipping ? "translate-x-[1rem]" : ""}`}>
+							Proceed to Payment
+						</div>
 					</button>
 				</div>
 			</form>
