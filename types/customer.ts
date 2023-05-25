@@ -1,7 +1,7 @@
 import { Address } from "@paypal/paypal-js"
 import { PaymentSource, addressSchema } from "./paypal"
 import Joi from "joi"
-import { validateSchemaGenerator } from "util/typeValidate"
+import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
 export interface FinalCustomerInterface{
 	fullName: string,
@@ -23,5 +23,5 @@ export const finalCustomerSchema = Joi.object({
 	address: addressSchema.required(),
 })
 
-export const [validateName, validateNameError] = validateSchemaGenerator<string>(nameSchema)
-export const [validateFinalCustomer, validateFinalCustomerError] = validateSchemaGenerator<FinalCustomerInterface>(finalCustomerSchema)
+export const [validateName, validateNameError] = validateSchemaFunctionsGenerator<string>(nameSchema)
+export const [validateFinalCustomer, validateFinalCustomerError] = validateSchemaFunctionsGenerator<FinalCustomerInterface>(finalCustomerSchema)

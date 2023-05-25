@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { validateSchemaGenerator } from "util/typeValidate";
+import { validateSchemaFunctionsGenerator } from "util/typeValidate";
 
 export interface PriceInterface {
 	subtotal: number;
@@ -17,4 +17,4 @@ export const finalPriceSchema = Joi.object({
 	total: Joi.number().required(),
 })
 
-export const [validateFinalPrice, validateFinalPriceError] = validateSchemaGenerator<FinalPriceInterface>(finalPriceSchema)
+export const [validateFinalPrice, validateFinalPriceError] = validateSchemaFunctionsGenerator<FinalPriceInterface>(finalPriceSchema)

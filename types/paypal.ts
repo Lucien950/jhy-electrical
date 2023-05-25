@@ -1,7 +1,7 @@
 import { Address } from "@paypal/paypal-js"
 import Joi from "joi"
 import { postalCodeSchema } from "util/shipping/postalCode"
-import { validateSchemaGenerator } from "util/typeValidate"
+import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"
 export const addressSchema = Joi.object({
@@ -12,7 +12,7 @@ export const addressSchema = Joi.object({
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().length(2).required(),
 })
-export const [validateAddress, validateAddressError] = validateSchemaGenerator<Address>(addressSchema)
+export const [validateAddress, validateAddressError] = validateSchemaFunctionsGenerator<Address>(addressSchema)
 
 /**
  * Token Type

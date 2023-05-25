@@ -4,7 +4,7 @@ import { Address } from "@paypal/paypal-js"
 import { FinalPriceInterface } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
-import { validateSchemaGenerator } from "util/typeValidate";
+import { validateSchemaFunctionsGenerator } from "util/typeValidate";
 
 // ORDERS
 export interface FirestoreOrderInterface {
@@ -48,6 +48,6 @@ export const orderProductFilledSchema = Joi.object({
 	product: productSchema.required(),
 })
 
-export const [validateOrderProduct, validateOrderProductError] = validateSchemaGenerator<OrderProduct>(orderProductSchema)
-export const [validateOrderProductFilled, validateOrderProductFilledError] = validateSchemaGenerator<OrderProductFilled>(orderProductFilledSchema)
-export const [validateOrderProductFilledList, validateOrderProductFilledListError] = validateSchemaGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))
+export const [validateOrderProduct, validateOrderProductError] = validateSchemaFunctionsGenerator<OrderProduct>(orderProductSchema)
+export const [validateOrderProductFilled, validateOrderProductFilledError] = validateSchemaFunctionsGenerator<OrderProductFilled>(orderProductFilledSchema)
+export const [validateOrderProductFilledList, validateOrderProductFilledListError] = validateSchemaFunctionsGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))

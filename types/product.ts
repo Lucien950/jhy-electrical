@@ -1,5 +1,5 @@
 import Joi from "joi"
-import { validateSchemaGenerator } from "util/typeValidate"
+import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
 type cm = number
 type kg = number
@@ -43,4 +43,4 @@ export const productSchema = Joi.object({
 	firestoreID: Joi.string(),
 })
 
-export const [validateProduct, validateProductError] = validateSchemaGenerator<ProductInterface>(productSchema)
+export const [validateProduct, validateProductError] = validateSchemaFunctionsGenerator<ProductInterface>(productSchema)

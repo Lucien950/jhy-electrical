@@ -13,7 +13,7 @@ export const approveCard = async (token: string, cardInfo: Partial<CardInfoInter
 	if (!validateCard(cardInfo as CardInfoInterface))
 		return approveCardError(validateCardError(cardInfo as CardInfoInterface))
 	const response = await fetch("/api/paypal/approve/card", {
-		method: "POST",
+		method: "PATCH",
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ token, card: cardInfo } as approveCardProps)
 	})
@@ -26,7 +26,7 @@ export const approveCard = async (token: string, cardInfo: Partial<CardInfoInter
 
 export const approvePayPal = async (token: string) => {
 	const response = await fetch("/api/paypal/approve/paypal", {
-		method: "POST",
+		method: "PATCH",
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ token } as approveCardProps)
 	})
