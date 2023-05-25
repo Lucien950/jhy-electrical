@@ -71,7 +71,7 @@ export const getOrder = async (orderID: string) => {
 
 	// products
 	const products = purchaseUnit0.items!.map(i => ({
-		PID: i.name,
+		PID: i.sku,
 		quantity: Number(i.quantity)
 	} as OrderProduct))
 

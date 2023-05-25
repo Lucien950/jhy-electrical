@@ -15,7 +15,7 @@ export const approveCard = async (token: string, cardInfo: Partial<CardInfoInter
 	const response = await fetch("/api/paypal/approve/card", {
 		method: "POST",
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ token, ...cardInfo } as approveCardProps)
+		body: JSON.stringify({ token, card: cardInfo } as approveCardProps)
 	})
 	const {res, err} = await response.json() as apiResponse<approveCardRes, any>
 	if(response.ok){

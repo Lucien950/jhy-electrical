@@ -2,22 +2,23 @@
 import { DOMAIN, PAYPALDOMAIN } from "util/paypal/server/domain"
 // types
 import { PayPalError } from 'types/paypal';
-import { OrderProduct } from "types/order";
+import { OrderProduct, OrderProductFilled } from "types/order";
 import { PriceInterface } from "types/price";
 // paypal
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
 import { generateAccessToken } from "./auth";
 
-export const createOrderAPICall = async(paymentInformation: PriceInterface, productIDS: OrderProduct[], express: boolean) => {
+export const createOrderAPICall = async(paymentInformation: PriceInterface, productIDS: OrderProductFilled[], express: boolean) => {
 	const orderInformation = {
 		intent: "AUTHORIZE",
 		purchase_units: [{
 			items: productIDS.map(p => ({
-				name: p.PID,
+				name: p.product.productName,
 				quantity: p.quantity.toString(),
+				sku: p.PID,
 				unit_amount: {
 					currency_code: "CAD",
-					value: "0"
+					value: p.product.price.toFixed(2)
 				}
 			})),
 			amount: {
