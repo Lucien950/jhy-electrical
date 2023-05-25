@@ -94,7 +94,7 @@ const Products = () => {
 			{/* banner */}
 			<div className="relative h-[28rem] select-none pointer-events-none -z-10">
 				<div className="h-[106%] overflow-hidden relative">
-					<Image src="/product_2.jpg" alt="" className="object-cover brightness-50" fill
+					<Image src="/product_2.webp" alt="" className="object-cover brightness-50" fill
 						style={{
 							objectPosition: "center 25%"
 						}}/>
