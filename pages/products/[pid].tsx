@@ -23,9 +23,10 @@ import { ResidentialIcon, CommercialIcon, IndustrialIcon } from 'components/cate
 import { PayPalWhiteSVG } from 'components/paypalSVG';
 import { Oval } from 'react-loader-spinner';
 import { QuantitySelector } from 'components/quantitySelector';
+import { clamp } from 'lodash';
 
-type AddCartButtonProps = { available: boolean, onClick: () => void }
-const AddCartButton = ({ available, onClick }: AddCartButtonProps) => {
+type AddCartButtonProps = { available: boolean, selectedQuantZero: boolean, onClick: () => void }
+const AddCartButton = ({ available, selectedQuantZero, onClick }: AddCartButtonProps) => {
 	// ANIMATIONS
 	const [animating, setAnimating] = useState(false)
 	const animationDuration = 1.8 // time in seconds
@@ -50,7 +51,7 @@ const AddCartButton = ({ available, onClick }: AddCartButtonProps) => {
 				bg-white text-blue-600 border-blue-600
 				transition-transform hover:scale-[102%] active:scale-90
 				disabled:scale-100 ${animating ? "" : "disabled:text-blue-300 disabled:border-blue-300"}`}
-			disabled={animating || !available}
+			disabled={animating || !available || selectedQuantZero}
 		>
 			{
 				available || animating
@@ -115,18 +116,28 @@ const AddCartButton = ({ available, onClick }: AddCartButtonProps) => {
 	)
 }
 
+const useProductQuantity = (product: ProductInterface) => {
+	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
+	const [quantityInCart, setQuantity] = useState(0)
+	const [availableToAdd, setAvailableToAdd] = useState(0)
+	const [selectedQuantity, setSelectedQuantity] = useState(0)
+	useEffect(() => setQuantity(cart.find(p => p.PID == product.firestoreID)?.quantity || 0), [cart])
+	useEffect(() => setAvailableToAdd(product.quantity - quantityInCart), [quantityInCart])
+	useEffect(() => setSelectedQuantity(s => {
+		if (availableToAdd == 0) return 0
+		return clamp(s, 1, availableToAdd)
+	}), [availableToAdd])//clamp to below availableToAdd
+	return { availableToAdd, selectedQuantity, setSelectedQuantity }
+}
+
 const ProductID = ({ product }: { product: ProductInterface }) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
-	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
+
 
 	// Quantity Adjuster
-	const quantityInCart = cart.find(p => p.PID == product.firestoreID)?.quantity || 0
-	const availableToAdd = product.quantity - quantityInCart
-	const [selectedQuantity, setSelectedQuantity] = useState(Math.min(availableToAdd, 1)) //either 0 or 1
-	useEffect(() => {
-		setSelectedQuantity(s => Math.min(s, availableToAdd)) //clamp to below availableToAdd
-	}, [cart]) // eslint-disable-line react-hooks/exhaustive-deps
+	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product)
+
 
 	// Add to Cart Button
 	const addCartHandler = () => {
@@ -134,6 +145,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 		dispatch(addToCart({ PID: product.firestoreID, product, quantity: selectedQuantity }))
 		logEvent(analytics(), "add_to_cart", { PID: product.firestoreID })
 	}
+
 
 	// Buy Now Button
 	const [buyNowButtonLoading, setbuyNowButtonLoading] = useState(false)
@@ -148,6 +160,8 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 			setbuyNowButtonLoading(false)
 		}
 	}
+
+
 	return (
 		<>
 			<Head>
@@ -181,7 +195,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 						</div>
 
 						{/* Add Cart */}
-						<AddCartButton available={availableToAdd > 0} onClick={addCartHandler} />
+						<AddCartButton available={availableToAdd > 0} onClick={addCartHandler} selectedQuantZero={selectedQuantity === 0} />
 						<button
 							onClick={buyNow} disabled={(selectedQuantity <= 0) || buyNowButtonLoading}
 							className={
