@@ -23,9 +23,11 @@ export const makePrice = async (products: OrderProductFilled[], postal_code?: st
 		return { weight, length, height, width, id: p.PID } as productPackageInfo
 	})
 	const shippingInfo = postal_code ? await calculateShipping(productPackage, postal_code) : undefined
-	const shipping = shippingInfo ? roundPriceUp(products.reduce((acc, p) => acc + (p.quantity * (shippingInfo[p.PID] || 0)), 0)) : 0
-	const tax = roundPriceUp((subtotal + shipping) * TAX_RATE)
-	const total = subtotal + shipping + tax
+	const shipping = shippingInfo
+		? roundPriceUp(products.reduce((acc, p) => acc + (p.quantity * (shippingInfo[p.PID] || 0)), 0))
+		: undefined
+	const tax = roundPriceUp((subtotal + (shipping || 0)) * TAX_RATE)
+	const total = subtotal + (shipping || 0) + tax
 
 	return { subtotal, shipping, tax, total } as PriceInterface
 }

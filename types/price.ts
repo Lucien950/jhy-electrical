@@ -10,7 +10,7 @@ export interface PriceInterface {
 export interface FinalPriceInterface extends PriceInterface {
 	shipping: number;
 }
-const finalPriceSchema = Joi.object({
+export const finalPriceSchema = Joi.object({
 	subtotal: Joi.number().required(),
 	shipping: Joi.number().required().greater(0),
 	tax: Joi.number().required(),

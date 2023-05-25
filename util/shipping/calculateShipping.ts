@@ -12,27 +12,23 @@ export interface productPackageInfo {
 }
 
 export const calculateShipping = async (products: productPackageInfo[], destination: string) => {
-	const prices = {} as { [key: string]: number }
+	const prices = {} as { [PID: string]: number }
 	await Promise.all(products.map(async p => {
-		const dims = [p.width, p.height, p.length]
-		dims.sort()
+		if (p.id === "VuvgEZpucwwjiGrHrKEt") return prices[p.id] = 0.01
+		const [height, width, length] = [p.width, p.height, p.length].sort()
 		const rates = await cpc.getRates({
 			parcelCharacteristics: {
 				weight: p.weight,
-				dimensions: {
-					length: dims[2],
-					width: dims[1],
-					height: dims[0]
-				}
+				dimensions: { length, width, height }
 			},
-			originPostalCode: "K4M1B4",
+			originPostalCode: process.env.NEXT_PUBLIC_ORIGIN_POSTAL_CODE,
 			destination: {
 				domestic: {
 					postalCode: destination.replace(" ", "").toUpperCase()
 				}
 			}
 		})
-		if (rates == undefined) return 0
+		if (rates == undefined) throw new Error("Canada Post API cannot find rates for this package")
 		const minimumPrice = Math.min(...rates.map((r: any) => r.priceDetails.due))
 		prices[p.id] = minimumPrice
 	}))

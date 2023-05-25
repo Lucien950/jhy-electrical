@@ -2,19 +2,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { apiRespond } from 'util/paypal/server/api';
 // types
-import { OrderProduct } from 'types/order';
+import { OrderProduct, orderProductSchema } from 'types/order';
 import { makePrice } from 'util/priceUtil';
 import { OrderResponseBodyMinimal } from "@paypal/paypal-js"
 import { PriceInterface } from "types/price";
 import { fillOrderProducts } from 'util/orderUtil';
 import { createOrderAPICall } from 'util/paypal/server/createOrderFetch';
 import Joi from 'joi';
-import { productSchema } from 'types/product';
 import { validateSchemaGenerator } from 'util/typeValidate';
 
 export type createOrderProps = { products: OrderProduct[], postal_code?: string, express?: boolean, }
 const createOrderPropsSchema = Joi.object({
-	products: Joi.array().items(productSchema).required().min(1),
+	products: Joi.array().items(orderProductSchema).required().min(1),
 	postal_code: Joi.string().optional(),
 	express: Joi.boolean().optional()
 })

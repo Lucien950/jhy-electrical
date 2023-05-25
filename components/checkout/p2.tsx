@@ -32,16 +32,9 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
 	
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
-
 		// for extra security
-		if (Object.values(priceInfo).some(p=>p == 0)){
-			console.error("Payment Information is not Complete")
-			return
-		}
-		if (!customerInfo.payment_source) {
-			console.error("Payment Method Paypal does not have paypal information object")
-			return
-		}
+		if (Object.values(priceInfo).some(p => p == 0)) return toast.error("Payment Information is not Complete")
+		if (!customerInfo.payment_source) return toast.error("Payment Method Paypal does not have paypal information object")
 
 		setSubmitOrderLoading(true)
 		let firebaseOrderID;
@@ -106,7 +99,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 								<img src={p.product.productImageURL} alt="Product Image" className="h-16" />
 								<div className="flex-1 text-sm">
 									<h1 className="font-bold text-base">{p.product.productName}</h1>
-									<p>${p.product.price.toFixed(2)}</p>
+									<p>${p.product.price.toFixed(2)} x {p.quantity}</p>
 									<p>{p.product.description}</p>
 								</div>
 							</div>

@@ -41,7 +41,7 @@ const cartSlice = createSlice({
 			const products = action.payload as ProductInterface[]
 			state.forEach(productInfo=>{
 				const newProduct = products.find(product => product.firestoreID == productInfo.PID)
-				productInfo.product = newProduct || productInfo.product
+				productInfo.product = newProduct ?? productInfo.product
 			})
 		}
 	},

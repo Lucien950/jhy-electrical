@@ -10,7 +10,7 @@ import { auth } from "util/firebase/auth"
 import { db } from 'util/firebase/firestore';
 import { fillOrder } from "util/orderUtil"
 // types
-import { DEFAULT_PRODUCT, ProductInterface } from 'types/product';
+import { ProductInterface } from 'types/product';
 import { AdminInterface } from 'types/admin';
 import { OrderInterface } from 'types/order';
 // UI
@@ -22,6 +22,7 @@ import { firebaseConsoleBadge } from 'util/firebase/console';
 import { Transition } from '@headlessui/react';
 import ProductModal from 'components/admin/ProductModal';
 import { getAllProducts, sortProductsByName } from 'util/productUtil';
+import { toast } from 'react-toastify';
 
 interface SidebarButtonProps {
 	name: "Orders" | "Products" | "Analytics",
@@ -57,9 +58,9 @@ const SidebarButton = ({ name, scrollRef }: SidebarButtonProps) => {
 // HOOKS
 const useGoogleAuth = () => {
 	const router = useRouter()
-	const [loading, setLoading] = useState(true)
+	const [authLoading, setAuthLoading] = useState(true)
 	const [admin, setAdmin] = useState<AdminInterface>({} as AdminInterface);
-	const signout = () => { signOut(auth).catch((error) => { console.error("Sign out error: ", error); }); }
+	const signout = () => { signOut(auth).catch((error) => { toast.error("Sign out error: ", error); }); }
 	// push back to login page, or start admin login
 	useEffect(() => {
 		onAuthStateChanged(auth, (authUser) => {
@@ -70,13 +71,13 @@ const useGoogleAuth = () => {
 					const adminUserData = adminUser?.data() as AdminInterface
 					if (!adminUserData) return router.push('/admin/login')
 					setAdmin(adminUserData)
-					setLoading(false)
+					setAuthLoading(false)
 				})()
 			}
 		})
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-	return { loading, admin, signout }
+	return { authLoading, admin, signout }
 }
 const useOrders = () => {
 	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
@@ -92,12 +93,12 @@ const useOrders = () => {
 }
 const useProducts = () => {
 	const [products, setProducts] = useState<ProductInterface[]>([])
-	const [loaded, setLoaded] = useState(false)
+	const [productsLoaded, setProductsLoaded] = useState(false)
 	useEffect(() => {
 		getAllProducts()
 			.then(allProducts => {
 				setProducts(sortProductsByName(allProducts))
-				setLoaded(true)
+				setProductsLoaded(true)
 			})
 	}, [])
 	const insertProduct = (newP: ProductInterface) => {
@@ -107,32 +108,31 @@ const useProducts = () => {
 			return sortedProducts
 		})
 	}
-	const deleteProduct = (id: string) => setProducts(p => p.filter(p => p.firestoreID !== id))
-	return { products, loaded, insertProduct, deleteProduct }
+	const deleteDisplayProduct = (id: string) => setProducts(p => p.filter(p => p.firestoreID !== id))
+	return { products, productsLoaded, insertProduct, deleteDisplayProduct }
 }
-
-
-export default function Admin() {
-	const { loading, admin, signout } = useGoogleAuth()
-
+const useModal = () => {
 	// edit product modal
-	const [modalProduct, setModalProduct] = useState<ProductInterface | null>(null)
+	const [modalProduct, setModalProduct] = useState<Partial<ProductInterface> | null>(null)
 	const [modalMode, setModalMode] = useState<string | null>(null)
 	const openEditModal = (defaultProduct: ProductInterface) => { setModalMode("edit"); setModalProduct(defaultProduct) }
-	const openNewModal = () => { setModalMode("new"); setModalProduct(DEFAULT_PRODUCT) }
+	const openNewModal = () => { setModalMode("new"); setModalProduct({}) }
 	const closeModal = () => { setModalMode(null); setModalProduct(null) }
+	return { modalProduct, modalMode, openEditModal, openNewModal, closeModal }
+}
 
+export default function Admin() {
+	const { authLoading, admin, signout } = useGoogleAuth()
+	const { modalProduct, modalMode, openEditModal, openNewModal, closeModal } = useModal()
+	const { allOrders } = useOrders()
+	const { products, productsLoaded, insertProduct, deleteDisplayProduct } = useProducts()
+	
 	// Sidebar scrolling
 	const analyticSection = useRef<HTMLDivElement>(null)
 	const orderSection = useRef<HTMLDivElement>(null)
 	const productSection = useRef<HTMLDivElement>(null)
 
-	// Orders
-	const { allOrders } = useOrders()
-	// Products
-	const { products, loaded, insertProduct, deleteProduct } = useProducts()
-
-	if (loading) return <LoadingFullPage />
+	if (authLoading) return <LoadingFullPage />
 	return (
 		<>
 			<Head>
@@ -140,8 +140,9 @@ export default function Admin() {
 			</Head>
 			{/* Modal */}
 			<Transition show={modalProduct !== null}>
+				{/* this is allowed because transition certifies that modalProuct isn't null */}
 				{/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-				<ProductModal closeModal={closeModal} defaultModalProduct={modalProduct!} mode={modalMode} insertProduct={insertProduct} />
+				<ProductModal closeModal={closeModal} defaultModalProduct={modalProduct!} defaultMode={modalMode} insertProduct={insertProduct} />
 			</Transition>
 			<div className="flex flex-row gap-x-2">
 				{/* sidebar */}
@@ -187,7 +188,7 @@ export default function Admin() {
 					<h1 className="text-4xl font-bold mb-4 mt-7" id="products" ref={productSection}>Products</h1>
 					<ProductsComponent
 						newProductModal={openNewModal} openEditModal={openEditModal}
-						products={products} deleteProduct={deleteProduct} loaded={loaded} />
+						products={products} deleteDisplayProduct={deleteDisplayProduct} loaded={productsLoaded} />
 				</div>
 			</div>
 		</>

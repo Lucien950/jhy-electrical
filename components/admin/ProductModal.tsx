@@ -15,7 +15,7 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "imag
 
 type InputFieldPropType = {
 	label: string,
-	defaultValue: string | number,
+	defaultValue?: string | number,
 	numberValue?: boolean,
 	className?: string,
 	productKey: string,
@@ -23,7 +23,6 @@ type InputFieldPropType = {
 	handleChange: (id: string, val: any) => void //eslint-disable-line @typescript-eslint/no-explicit-any
 }
 const InputField = ({ label, defaultValue, numberValue = false, className, productKey, unit, handleChange }: InputFieldPropType) => {
-	if (typeof defaultValue == "number" && defaultValue == -1) defaultValue = ""
 	return (
 		<div>
 			<label className="block font-semibold text-sm" htmlFor={productKey}>{label}</label>
@@ -37,7 +36,8 @@ const InputField = ({ label, defaultValue, numberValue = false, className, produ
 }
 
 //eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Pill = ({ label, checked, handleChange }: { label: string, checked: boolean, handleChange: (id: string, val: any) => void})=>{
+const Pill = ({ label, checked, handleChange }: { label: string, checked?: boolean, handleChange: (id: string, val: any) => void})=>{
+	if(checked === undefined) handleChange(label, false)
 	return(
 		<label
 			className={`block select-none text-sm transition-colors hover:cursor-pointer p-1 px-4 border-2 rounded-xl outline-none focus:ring-2
@@ -52,12 +52,13 @@ const Pill = ({ label, checked, handleChange }: { label: string, checked: boolea
 
 type ProductModalType = {
 	closeModal: () => void,
-	defaultModalProduct: ProductInterface,
-	mode: string | null,
+	defaultModalProduct: Partial<ProductInterface>,
+	defaultMode: string | null,
 	insertProduct: (p: ProductInterface)=>void
 }
-const ProductModal = ({ closeModal, defaultModalProduct, mode, insertProduct }: ProductModalType) => {
+const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProduct }: ProductModalType) => {
 	// data state
+	const [modalMode, ] = useState(defaultMode)
 	const [modalProduct, setModalProduct] = useState(defaultModalProduct)
 	const [productImageFile, setProductImageFile] = useState<File>()
 	// ui state
@@ -181,7 +182,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode, insertProduct }: 
 						{/* modal */}
 						<div className="sticky top-0 bg-white">
 							<div className="flex flex-row p-8 px-12 pb-2 justify-between">
-								<Dialog.Title className="text-3xl font-bold">{mode ? toSentenceCase(mode) : "...."} Product</Dialog.Title>
+								<Dialog.Title className="text-3xl font-bold">{modalMode ? toSentenceCase(modalMode) : "...."} Product</Dialog.Title>
 								{/* x button */}
 								<svg onClick={closeModal} tabIndex={0} className="w-8 h-8 hover:cursor-pointer focus:outline-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
@@ -254,7 +255,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, mode, insertProduct }: 
 										uploading
 											? <Oval height={22} strokeWidth={7} color="white" secondaryColor="white"
 												wrapperClass="absolute left-[50%] translate-x-[-50%] top-[50%] translate-y-[-50%]" />
-											: `${mode ? toSentenceCase(mode) : "..."} Item`
+											: `${modalMode ? toSentenceCase(modalMode) : "..."} Item`
 									}
 								</button>
 							</div>

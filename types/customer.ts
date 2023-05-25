@@ -14,8 +14,8 @@ export interface FinalCustomerInterface{
 // TODO make sure this doesn't break anything
 export type CustomerInterface = Partial<FinalCustomerInterface>
 
-const nameSchema = Joi.string().required().min(1).max(300)
-const finalCustomerSchema = Joi.object({
+export const nameSchema = Joi.string().required().min(1).max(300)
+export const finalCustomerSchema = Joi.object({
 	fullName: nameSchema,
 	paymentMethod: Joi.string().valid("card", "paypal").required(),
 	// don't need to validate payment source because that is auto handled by the paypal api

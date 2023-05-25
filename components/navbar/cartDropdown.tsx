@@ -46,7 +46,6 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 		}
 		catch (e) {
 			toast.error(`Checkout Order Generation Error, see console for more details`, { theme: "colored" })
-			console.error(e)
 		}
 		finally {
 			setCheckoutLoading(false)

@@ -89,12 +89,10 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 			// this is fine because `!p0Done` already implies there is an error
 			//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			const errorMessage = validateP0FormError(fullName, address)!.message
-			toast.error(errorMessage, { theme: "colored" })
-			return
+			return toast.error(errorMessage, { theme: "colored" })
 		}
 		if (!address || !fullName) return //just for type narrowing
-
-		if (fullName == customerInfo.fullName && isEqual(address, customerInfo.address)) { setStage(1); return }
+		if (fullName == customerInfo.fullName && isEqual(address, customerInfo.address)) return setStage(1)
 
 		setCalculatingShipping(true)
 		try {

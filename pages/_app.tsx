@@ -1,6 +1,6 @@
 // react
 import type { AppProps } from 'next/app'
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from 'next/router'
 // ui
 import "styles/tailwind.css"
@@ -9,7 +9,6 @@ import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
 import 'react-toastify/dist/ReactToastify.min.css'
 import { ToastContainer, Slide } from 'react-toastify'
-
 // redux
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from 'util/redux/store'
@@ -26,13 +25,14 @@ import { firebaseConsoleBadge } from 'util/firebase/console'
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
+	const [initialFilled, setInitialFilled] = useState(false)
 	useEffect(() => {
-		console.log(...firebaseConsoleBadge, 'Cart Snapshot Updated');
-		Promise.all(cart.map(async p => {
-			if (p.product) return p
-			return { ...p, product: await getProductByID(p.PID) }
-		}))
-		.then(newCart => dispatch(cartFillProducts(newCart)))
+		console.log(...firebaseConsoleBadge, 'Cart Snapshot Update');
+		Promise.all(cart.map(async p => (initialFilled && p.product) ? p.product : await getProductByID(p.PID).catch(() => null)))
+		.then(newProducts => {
+			dispatch(cartFillProducts(newProducts.filter(p=>p!==null)))
+			setInitialFilled(true)
+		})
 	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }

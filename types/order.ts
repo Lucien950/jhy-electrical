@@ -38,11 +38,11 @@ export interface OrderProductFilled extends OrderProduct {
 	product: ProductInterface
 }
 
-const orderProductSchema = Joi.object({
+export const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
 })
-const orderProductFilledSchema = Joi.object({
+export const orderProductFilledSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
 	product: productSchema.required(),
@@ -50,3 +50,4 @@ const orderProductFilledSchema = Joi.object({
 
 export const [validateOrderProduct, validateOrderProductError] = validateSchemaGenerator<OrderProduct>(orderProductSchema)
 export const [validateOrderProductFilled, validateOrderProductFilledError] = validateSchemaGenerator<OrderProductFilled>(orderProductFilledSchema)
+export const [validateOrderProductFilledList, validateOrderProductFilledListError] = validateSchemaGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))

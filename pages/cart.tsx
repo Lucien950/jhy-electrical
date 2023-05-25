@@ -20,8 +20,6 @@ import { analytics } from "util/firebase/analytics";
 import { Transition } from "@headlessui/react";
 import { TAX_RATE } from "util/priceUtil";
 import { PriceInterface } from "types/price";
-import { validateOrderProductFilled } from "types/order";
-import { validateOrderProductFilledError } from "types/order";
 import { QuantitySelector } from "components/quantitySelector";
 import { clamp } from "lodash";
 
@@ -128,11 +126,6 @@ export default function Cart() {
 	const [checkoutLoading, setCheckoutLoading] = useState(false)
 	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
 		setCheckoutLoading(true)
-		if(!cart.every(validateOrderProductFilled)) {
-			setCheckoutLoading(false)
-			console.error(cart.map(validateOrderProductFilledError).find(e=>e !== undefined))
-			return toast.error("Cart Error: Please reload the page and try again", { theme: "colored" })
-		}
 		try{
 			const { orderID } = await createPayPalOrderLink(cart, false)
 			router.push({
@@ -142,8 +135,7 @@ export default function Cart() {
 		}
 		catch(e){
 			setCheckoutLoading(false)
-			toast.error(`Checkout Order Generation Error, see console for more details`, { theme: "colored" })
-			console.error(e)
+			toast.error("Checkout Order Generation Error, see console for more details", { theme: "colored" })
 		}
 	}
 

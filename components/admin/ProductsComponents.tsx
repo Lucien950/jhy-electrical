@@ -11,15 +11,14 @@ import { storage } from "util/firebase/storage"
 
 type ProductElement = {
 	product: ProductInterface,
-	deleteProduct: (id: string) => void,
+	deleteDisplayProduct: (id: string) => void,
 	openEditModal: (p: ProductInterface) => void,
 	itemVariants: Variants
 }
-const ProductElement = ({ product, deleteProduct, openEditModal, itemVariants }: ProductElement) => {
-	const deleteThisProduct = (id: string) => {
-		deleteDoc(doc(db, "products", id))
-		deleteObject(ref(storage, `products/${id}`))
-		deleteProduct(id)
+const ProductElement = ({ product, deleteDisplayProduct, openEditModal, itemVariants }: ProductElement) => {
+	const deleteThisProduct = async (id: string) => {
+		await Promise.all([deleteDoc(doc(db, "products", id)), deleteObject(ref(storage, `products/${id}`))])
+		deleteDisplayProduct(id)
 	}
 	return (
 		<motion.div
@@ -68,9 +67,9 @@ type ProductComponentProps = {
 	newProductModal: () => void,
 	openEditModal: (defaultProduct: ProductInterface) => void,
 	products: ProductInterface[],
-	deleteProduct: (id: string) => void,
+	deleteDisplayProduct: (id: string) => void,
 	loaded: boolean }
-export const ProductsComponent = ({ newProductModal, openEditModal, products, deleteProduct, loaded }: ProductComponentProps) => {
+export const ProductsComponent = ({ newProductModal, openEditModal, products, deleteDisplayProduct, loaded }: ProductComponentProps) => {
 	const opacityVariants = {hide: {opacity: 0}, show: {opacity: 1}}
 	const parentVariants = {
 		hide: { opacity: 0, transition: { staggerChildren: 0.1 } },
@@ -91,7 +90,7 @@ export const ProductsComponent = ({ newProductModal, openEditModal, products, de
 					>
 						<AnimatePresence>
 							{products.map(product =>
-								<ProductElement key={product.firestoreID} itemVariants={itemVariants} product={product} deleteProduct={deleteProduct} openEditModal={openEditModal} />
+								<ProductElement key={product.firestoreID} itemVariants={itemVariants} product={product} deleteDisplayProduct={deleteDisplayProduct} openEditModal={openEditModal} />
 							)}
 							{/* ADD PRODUCT BUTTON */}
 							<motion.button

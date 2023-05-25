@@ -13,6 +13,6 @@ export type Card = {
 	cardCVV: string,
 	cardExpiry: string
 }
-export const [validateCard, validateCardError] = validateSchemaGenerator<Card>(cardSchema)
 
+export const [validateCard, validateCardError] = validateSchemaGenerator<Card>(cardSchema)
 export type CardInfoInterface = { cardName: string, cardNumber: string, cardExpiry: string, cardCVV: string }
