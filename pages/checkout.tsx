@@ -13,7 +13,7 @@ import { getOrder } from 'util/paypal/server/getOrderFetch'
 import { validateAddress, validateAddressError } from 'types/paypal'
 // types
 import { OrderProduct, OrderProductFilled } from 'types/order'
-import { validateName, CustomerInterface, validateNameError } from 'types/customer'
+import { validateName, CustomerInterface, validateNameError, FinalCustomerInterface } from 'types/customer'
 import { PriceInterface } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
@@ -43,8 +43,9 @@ const validateP0FormError = (name: CustomerInterface["fullName"], address: Custo
  * @returns Stage 2.1 If payment has been approved
  * @param ci customer object
  */
-const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) =>
-	(paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+
+// STAGE TECHNOLOGY
 const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
 	const [stage, setStage] = useState(initialStage)
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
@@ -56,37 +57,36 @@ const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
 	return {stage, setStage, p0CusUpdated, p1CusUpdated}
 }
 
-type CheckoutProps = {
+type ErrorCheckoutProps = {
 	paypal_error?: string,
-
+}
+type CheckoutProps = {
 	paypalCustomerInfo: CustomerInterface,
 	paypalPriceInfo: PriceInterface,
 	emptyOrderProducts: OrderProduct[],
 	orderID: string,
 	initialStage: number
 }
-export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps){
+export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps & ErrorCheckoutProps){
 	// IMPORTANT GLOBAL STATE
 	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
+	const addP0CustomerInfo = (fullName: string, address: Address) => setCustomerInfo(ci => ({ ...ci, fullName, address }))
+	const addP1CustomerInfo =  (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => setCustomerInfo(ci => ({ ...ci, paymentMethod, payment_source }))
 	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
 	const [orderCart, setOrderCart] = useState<OrderProductFilled[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
 	const {stage, setStage, p0CusUpdated, p1CusUpdated} = useStage(initialStage, customerInfo)
-	const goToStage = (s: number) => (() => {
-		logEvent(analytics(), "checkout_progress", { checkout_step: s })
-		setStage(s)
-	})
+	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
 
 	const CheckoutStageView = () => {
-		
 		if ( customerInfo === null || priceInfo === null || stage === null) return <></>
 		if (stage == 0)
 			return (
 				<CheckoutStageZero
 				{...{ 
 						setStage,
-						setCustomerInfo,
+						addP0CustomerInfo,
 						setPriceInfo,
 						customerInfo,
 						validateP0Form: validateP0FormData,
@@ -101,7 +101,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 		else if (stage == 1)
 			return <CheckoutStageOne {...{
 				customerInfo,
-				setCustomerInfo,
+				addP1CustomerInfo,
 				setStage,
 				orderID
 			}}/>
@@ -223,6 +223,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 
 import { updateOrderAddress } from 'util/paypal/server/updateOrderFetch'
 import { fillOrderProducts } from 'util/orderUtil'
+import { Address } from '@paypal/paypal-js'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string

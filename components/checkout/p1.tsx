@@ -8,13 +8,14 @@ import { Oval } from 'react-loader-spinner';
 import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
 // types
-import { CustomerInterface } from "types/customer";
-import { CardInfoInterface, cardSchema } from "types/card";
+import { CustomerInterface, FinalCustomerInterface } from "types/customer";
+import { CardInfoInterface, validateCardError } from "types/card";
 // paypal hosted fields
 import { approveCard, approvePayPal } from "util/paypal/client/approvePayment_client";
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
 import { isEqual } from "lodash";
+import Link from "next/link";
 
 
 
@@ -58,15 +59,15 @@ type PaymentFormProps = {
 	// prevCheckoutStage: () => Promise<void>, nextCheckoutStage: () => Promise<void>,
 	// setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
 	customerInfo: CustomerInterface,
-	setCustomerInfo: Dispatch<SetStateAction<CustomerInterface>>,
+	addP1CustomerInfo: (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => void,
 	setStage: Dispatch<SetStateAction<number>>,
 
 	orderID: string
 }
-const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: PaymentFormProps) => {
+const PaymentForm = ({ customerInfo, addP1CustomerInfo, setStage, orderID }: PaymentFormProps) => {
 	const router = useRouter()
 
-	const [paymentMethod, setPaymentMethod] = useState<CustomerInterface["paymentMethod"]>(customerInfo.paymentMethod)
+	const [paymentMethod, setPaymentMethod] = useState<FinalCustomerInterface["paymentMethod"] | null>(customerInfo.paymentMethod || null)
 	// PayPal handling
 	const [paypalSource, removePayPal] = useOnlyRemove(customerInfo.payment_source?.paypal)
 	// Credit Card Handling
@@ -74,20 +75,25 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 	const { cardInfo, setCardInfo } = useCardInfo() //form info
 	const changeCardInfo = (id: string, val: string) => setCardInfo(oci => ({ ...oci, [id]: val }))
 
+	// Fun variables
+	const customerCompleteByPaypal = (customerInfo.paymentMethod == "paypal" && !!customerInfo.payment_source?.paypal)
+	const completeByPayPal = (paymentMethod == "paypal" && !!paypalSource)
+	const completeByCard = (paymentMethod == "card" && !!cardSource)
+
+	// P1 Form Validation
 	const validateP1FormError = () => {
 		if (!paymentMethod) return "Select a Payment Method"
-		if (paymentMethod == "paypal" && paypalSource) return null
-		if (paymentMethod == "card" && cardSource) return null
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		if (paymentMethod == "card") return cardSchema.validate(cardInfo).error?.message || null
+		if (completeByPayPal) return null
+		if (completeByCard) return null
+		if (paymentMethod == "card") return validateCardError(cardInfo)?.message || null
 		return null
 	}
 	const p1Done = validateP1FormError() === null
 
 
 
-	const approveCardPayment = async () => {
-		if ((paymentMethod == "paypal" && paypalSource) || (paymentMethod == "card" && cardSource)) return setStage(2) // no need to approve payment
+	const approvePayment = async () => {
+		if (completeByPayPal || completeByCard) return setStage(2) // no need to approve payment
 		if (!p1Done) return toast.error(validateP1FormError(), { theme: "colored" })
 		// p1 is now done
 		if ((paymentMethod == customerInfo.paymentMethod) && isEqual(cardInfo, customerInfo.payment_source?.card)) return setStage(2)
@@ -100,7 +106,7 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 		else if (paymentMethod == "card") {
 			try {
 				const {newPaymentSource: cardPaymentSource} = await approveCard(orderID, cardInfo)
-				setCustomerInfo(ci => ({ ...ci, paymentMethod: "card", payment_source: cardPaymentSource }))
+				addP1CustomerInfo("card", cardPaymentSource)
 				setStage(2)
 			}
 			catch (e) { toast.error((e as Error).message, { theme: "colored" }) }
@@ -119,7 +125,7 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 			{/* Payment Method Select */}
 			<div className="bg-gray-200 p-6 mb-4">
 				<h1 className="text-xl mb-4"> Payment Method </h1>
-				<RadioGroup value={paymentMethod} onChange={setPaymentMethod} className="w-4/5">
+				<RadioGroup value={paymentMethod} onChange={setPaymentMethod} className="w-4/5" disabled={customerCompleteByPaypal}>
 					<RadioOption value="paypal">
 						{(disabled) => <PaypalSVG className={`h-5 ${disabled ? "opacity-50" : ""}`} />}
 					</RadioOption>
@@ -134,6 +140,9 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 						}
 					</RadioOption>
 				</RadioGroup>
+				{
+					customerCompleteByPaypal && <p className="mt-4 text-sm"> PayPal Account Selected. If you would like to complete a guest checkout, please go back to <Link href="/cart" className="link">cart</Link> and start another order </p>
+				}
 			</div>
 			{/* hosted fields and paypal information */}
 			<motion.div className="bg-gray-200 p-6 mb-4" transition={{ duration: 0.1 }}>
@@ -161,7 +170,9 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 								cardSource
 									?
 									<div>
-										<CardElement cardInformation={cardSource} />
+										<div>
+											<CardElement cardInformation={cardSource} />
+										</div>
 										<button onClick={removeCard}>Use different card</button>
 									</div>
 									// Credit Card Form
@@ -182,7 +193,7 @@ const PaymentForm = ({ customerInfo, setCustomerInfo, setStage, orderID }: Payme
 				<button className="underline" onClick={() => setStage(1)}> Back to Shipping </button>
 				<button
 					className={`transition-colors duration-300 bg-black ${PayPalApproveRequired && "bg-blue-400"} text-white py-4 w-64 group`}
-					onClick={approveCardPayment} disabled={!p1Done || paymentSubmitLoading}
+					onClick={approvePayment} disabled={!p1Done || paymentSubmitLoading}
 				>
 					<motion.div layoutRoot className="h-6 flex flex-row items-center justify-center gap-x-4">
 						{

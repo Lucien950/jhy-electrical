@@ -20,7 +20,7 @@ export const InputField = ({ field_id, setField, label, className: moreClassName
 			}
 
 			<InputMask mask={mask} type="text" name={field_id} id={field_id} onChange={(e) => setField(field_id, e.target.value)}
-				className="px-2 py-3 border-2 rounded-lg focus:outline-none focus:ring-2 w-full text-base" placeholder={placeholder}
+				className="border-2 w-full" placeholder={placeholder}
 				{...rest} />
 
 			{/* <input type="text" name={field_id} id={field_id} onChange={(e) => setField(field_id, e.target.value)}
