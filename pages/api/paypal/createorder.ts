@@ -35,6 +35,7 @@ export default async function (req: NextApiRequest, res: NextApiResponse){
 	try{
 		// fill products
 		const products = await fillOrderProducts(emptyProducts) //this validates that all products are valid
+		if(!products.every(p=>p.quantity <= p.product.quantity)) return apiRespond(res, "error", "Not enough stock for one of the products")
 		const paymentInformation = await makePrice(products, postal_code)
 		const order = await createOrderAPICall(paymentInformation, emptyProducts, express)
 	
