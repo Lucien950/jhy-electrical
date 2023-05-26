@@ -85,10 +85,10 @@ const CostLoader = ()=><Oval height={18} width={18} strokeWidth={6} strokeWidthS
 
 
 const usePrice = (cart: OrderProduct[])=>{
-	const [subtotal, setSubtotal] = useState(0)
-	const [tax, setTax] = useState(0)
-	const [shipping, setShipping] = useState(0)
-	const [total, setTotal] = useState(0)
+	const [subtotal, setSubtotal] = useState<number>()
+	const [tax, setTax] = useState<number>()
+	const [shipping, setShipping] = useState<number>()
+	const [total, setTotal] = useState<number>()
 
 	useEffect(()=>{
 		(async () =>{
@@ -106,9 +106,9 @@ const usePrice = (cart: OrderProduct[])=>{
 			else{
 				const cartSubtotal = cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)
 				setSubtotal(cartSubtotal)
-				setTax(subtotal * 0.13)
+				setTax(cartSubtotal * 0.13)
 				setShipping(0)
-				setTotal(subtotal + tax)
+				setTotal(cartSubtotal * 1.13)
 			}
 		})()
 	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
@@ -202,7 +202,7 @@ export default function Cart() {
 						</div>
 						<div className="flex flex-row mb-4">
 							<p className="flex-1"> Shipping </p>
-							{shipping ? <Price price={shipping} className="place-self-end" /> : <CostLoader />}
+							{shipping !== undefined ? <Price price={shipping} className="place-self-end" /> : <CostLoader />}
 						</div>
 						{/* Tax */}
 						<div className="flex flex-row mb-4">
@@ -214,12 +214,12 @@ export default function Cart() {
 									</svg>
 								</Tippy>
 							</p>
-							{ tax ? <Price price={tax} className="place-self-end" /> : <CostLoader /> }
+							{ tax !== undefined ? <Price price={tax} className="place-self-end" /> : <CostLoader /> }
 						</div>
 						{/* Total */}
 						<div className="flex flex-row mb-4">
 							<p className="flex-1">Total</p>
-							{ total ? <Price price={total} className="place-self-end" /> : <CostLoader /> }
+							{ total !== undefined ? <Price price={total} className="place-self-end" /> : <CostLoader /> }
 						</div>
 						<p className="text-sm mb-6">*Note that this calculation is an estimation of the final cost based on your <em>approximate location</em></p>
 

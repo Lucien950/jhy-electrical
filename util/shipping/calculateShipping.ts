@@ -37,5 +37,5 @@ export const calculateShippingProduct = async (product: productPackageInfo, dest
 
 export const calculateShippingProducts = async (products: productPackageInfo[], destination: string) => {
 	const prices = await Promise.all(products.map(async p => await calculateShippingProduct(p, destination)))
-	return prices.reduce((acc, p) => acc.add(p), new Decimal(0))
+	return prices.reduce((acc, p) => acc.add(p), new Decimal(0)).toDecimalPlaces(2)
 }
