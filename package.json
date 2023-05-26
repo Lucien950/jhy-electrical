@@ -7,10 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "firebase deploy",
-    "deploy-dev": "firebase hosting:channel:deploy DEV",
-    "test": "jest --verbose",
-    "start-emulator": "firebase emulators:start --only \"firestore,storage\" --import=./firebaseExport --export-on-exit --debug"
+    "test": "jest",
+    "start-emulator": "firebase emulators:start --import=./firebaseExport --export-on-exit"
   },
   "dependencies": {
     "@firebase/rules-unit-testing": "^2.0.7",
