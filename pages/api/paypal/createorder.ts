@@ -5,7 +5,6 @@ import { apiHandler, apiRespond } from 'util/paypal/server/api';
 import { OrderProduct, orderProductSchema } from 'types/order';
 import { makePrice } from 'util/priceUtil';
 import { OrderResponseBodyMinimal } from "@paypal/paypal-js"
-import { PriceInterface } from "types/price";
 import { fillOrderProducts } from 'util/orderUtil';
 import { createOrderAPICall } from 'util/paypal/server/createOrderFetch';
 import Joi from 'joi';
