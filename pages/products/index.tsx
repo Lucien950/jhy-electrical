@@ -79,12 +79,9 @@ const Products = () => {
 		})
 	}, [])
 	useEffect(()=>{
-		setDisplayProducts(products)
-	}, [products])
-	useEffect(()=>{
 		if(!Object.values(filter).some(p=>p)) setDisplayProducts(products)
 		else setDisplayProducts(products.filter(p => p.residential && filter.residential || p.commercial && filter.commercial || p.industrial && filter.industrial))
-	}, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [products, filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<>
