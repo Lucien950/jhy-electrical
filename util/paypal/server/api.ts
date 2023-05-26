@@ -1,6 +1,6 @@
 // Arguably the most professional code I have written in my life
 import Joi from "joi"
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextApiHandler, NextApiRequest, NextApiResponse } from "next"
 
 export interface apiResponse<ResType, ErrType> { res?: ResType, err?: ErrType, }
 
@@ -43,7 +43,7 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 
 export { apiRespond }
 
-export function apiHandler(handler: {[method: string]: Function}) {
+export function apiHandler(handler: {[method: string]: NextApiHandler}) {
 	return async (req: NextApiRequest, res: NextApiResponse) => {
 		const method = req.method?.toUpperCase();
 		// check handler supports HTTP method

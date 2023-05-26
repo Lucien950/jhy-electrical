@@ -24,17 +24,20 @@ import { firebaseConsoleBadge } from 'util/firebase/console'
 import "util/firebase/emulator"
 
 // dispatch here in order to be inside the provider
-const CartUpdater = ()=>{
+const CartInitialFiller = ()=>{
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const [initialFilled, setInitialFilled] = useState(false)
 	useEffect(() => {
-		console.log(...firebaseConsoleBadge, 'Cart Snapshot Update');
-		Promise.all(cart.map(async p => (initialFilled && p.product) ? p.product : await getProductByID(p.PID).catch(() => null)))
-		.then(newProducts => {
-			dispatch(cartFillProducts(newProducts.filter(p=>p!==null)))
-			setInitialFilled(true)
-		})
+		if (initialFilled) return
+		console.log(...firebaseConsoleBadge, 'Cart Snapshot Update', cart);
+		setInitialFilled(true)
+		const newProductsPromise = cart.map(async p => ({
+			PID: p.PID,
+			product: await getProductByID(p.PID).catch(() => null)
+		}))
+		Promise.all(newProductsPromise)
+			.then(newProducts =>{ dispatch(cartFillProducts(newProducts)) })
 	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }
@@ -48,7 +51,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	return (
 	<Provider store={store}>
 	<PersistGate persistor={persistor}>
-	<CartUpdater />
+	<CartInitialFiller />
 	<NavBar />
 	<ToastContainer autoClose={process.env.NODE_ENV === "development" ? 2000 : 4000} transition={Slide}/>
 	<AnimatePresence

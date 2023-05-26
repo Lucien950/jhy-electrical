@@ -8,11 +8,12 @@ import { ProductInterface } from "types/product";
 // UI
 import { Residential, Industrial, Commercial, ResidentialIcon, IndustrialIcon, CommercialIcon } from "components/categoryIcons";
 import seedRandom from "seedrandom";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import Price from "components/price";
 
 // get products
 import { getAllProducts } from "util/productUtil";
+import { Oval } from "react-loader-spinner";
 
 const ProductItem = ({ product }: {product: ProductInterface})=>{
 	// const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
@@ -83,6 +84,10 @@ const Products = () => {
 		else setDisplayProducts(products.filter(p => p.residential && filter.residential || p.commercial && filter.commercial || p.industrial && filter.industrial))
 	}, [products, filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
+	const opacityVariants = {
+		hide: { opacity: 0 },
+		show: { opacity: 1 }
+	}
 	return (
 		<>
 			<Head>
@@ -125,20 +130,30 @@ const Products = () => {
 						{<CommercialIcon className="w-7 h-7" />} Commercial
 					</FilterButton>
 				</div>
-
-				<motion.div
-					className="
-						grid
-						grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
-						gap-x-2 2xl:gap-x-4 gap-y-6
-						px-2 lg:px-4
-					"
-					layout
-				>
-					{displayProducts.map((product)=>
-						<ProductItem product={product} key={product.firestoreID}/>
-					)}
-				</motion.div>
+				
+				<AnimatePresence mode="wait">
+					{
+						products.length === 0
+						?
+						<motion.div className="grid place-items-center py-10" initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloading"}>
+							<Oval height={100} strokeWidth={8} />
+						</motion.div>
+						: 
+						<motion.div
+							className="
+								grid
+								grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
+								gap-x-2 2xl:gap-x-4 gap-y-6
+								px-2 lg:px-4
+							"
+							layout initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloaded"}
+						>
+							{displayProducts.map((product)=>
+								<ProductItem product={product} key={product.firestoreID}/>
+							)}
+						</motion.div>
+					}
+				</AnimatePresence>
 			</div>
 		</>
 	);

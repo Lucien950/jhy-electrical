@@ -10,12 +10,10 @@ import { fillOrderProducts } from 'util/orderUtil';
 import { createOrderAPICall } from 'util/paypal/server/createOrderFetch';
 import Joi from 'joi';
 import { validateSchema } from 'util/typeValidate';
-import { postalCodeSchema } from 'util/shipping/postalCode';
 
-export type createOrderProps = { products: OrderProduct[], postal_code?: string, express?: boolean, }
+export type createOrderProps = { products: OrderProduct[], express?: boolean, }
 const createOrderPropsSchema = Joi.object({
 	products: Joi.array().items(orderProductSchema).required().min(1),
-	postal_code: postalCodeSchema.optional(),
 	express: Joi.boolean().optional()
 })
 export type createOrderRes = {
@@ -28,12 +26,12 @@ export type createOrderRes = {
  */
 async function createOrderAPI (req: NextApiRequest, res: NextApiResponse){
 	// INPUTS
-	const { products: emptyProducts, postal_code, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
+	const { products: emptyProducts, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
 	// if (!vCreateOrderProps(req.body)) return apiRespond(res, "error", vCreateOrderPropsErr(req.body))
 	// fill products
 	const products = await fillOrderProducts(emptyProducts) //this validates that all products are valid
 	if (!products.every(p => p.quantity <= p.product.quantity)) return apiRespond(res, "error", "Not enough stock for one of the products")
-	const paymentInformation = await makePrice(products, postal_code)
+	const paymentInformation = await makePrice(products)
 	const order = await createOrderAPICall(paymentInformation, products, express)
 
 	return apiRespond<createOrderRes>(res, "response", {

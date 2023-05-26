@@ -6,7 +6,11 @@ import { firebaseConsoleBadge } from "./console";
 
 const EMULATORS_STARTED = 'EMULATORS_STARTED';
 function startEmulators() {
-	if (!(process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_FIREBASE_EMULATE) || (global as any)[EMULATORS_STARTED] ) {return}
+	const isDev = process.env.NODE_ENV === "development"
+	const isEmulate = process.env.NEXT_PUBLIC_FIREBASE_EMULATE === "true"
+	if (!(isDev && isEmulate) || (global as any)[EMULATORS_STARTED] ) {
+		return
+	}
 
 	console.log(...firebaseConsoleBadge, "Starting Emulator");
 	(global as any)[EMULATORS_STARTED] = true;

@@ -18,6 +18,7 @@ const updateOrderAddressPropsSchema = Joi.object({
 async function UpdateOrderAddressAPI (req: NextApiRequest, res: NextApiResponse) {
 	const { token, address: newAddress, fullName } = validateSchema<updateOrderAddressProps>(req.body, updateOrderAddressPropsSchema)
 
+	// TODO check address is valid?
 	const newPrice = await updateOrderAddress(token, newAddress, fullName)
 	return apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
 }

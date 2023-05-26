@@ -6,7 +6,7 @@ import { Oval } from "react-loader-spinner";
 // types
 import { CustomerInterface } from "types/customer";
 import { OrderProductFilled } from "types/order";
-import { PriceInterface } from "types/price";
+import { PriceInterface, validateFinalPrice, validateFinalPriceError } from "types/price";
 // react
 import { Dispatch, MouseEventHandler, SetStateAction, useState } from "react";
 import { useRouter } from "next/router"
@@ -33,7 +33,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 	
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
 		// for extra security
-		if (Object.values(priceInfo).some(p => p == 0)) return toast.error("Payment Information is not Complete")
+		if (!validateFinalPrice(priceInfo)) return toast.error(validateFinalPriceError(priceInfo)?.message)
 		if (!customerInfo.payment_source) return toast.error("Payment Method Paypal does not have paypal information object")
 
 		setSubmitOrderLoading(true)
