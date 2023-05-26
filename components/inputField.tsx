@@ -1,4 +1,4 @@
-import { ChangeEventHandler, FormEventHandler, JSX, forwardRef, useState } from "react"
+import { ChangeEventHandler, FormEventHandler, JSX, useState } from "react"
 import InputMask, { Props } from "react-input-mask";
 
 interface InputFieldProps {
@@ -11,7 +11,7 @@ interface InputFieldProps {
 type InputMaskProps = JSX.IntrinsicAttributes & JSX.IntrinsicClassAttributes<InputMask> & Omit<Readonly<Props>, "mask">
 export const InputField = ({ field_id, setField, label, className: moreClassNames, mask="", placeholder, ref, ...rest }: Partial<InputMaskProps> & InputFieldProps) => {
 	const [selfInvalid, setSelfInvalid] = useState(false)
-	const onInvalidEvent: FormEventHandler<HTMLInputElement> = (e)=>{
+	const onInvalidEvent: FormEventHandler<HTMLInputElement> = ()=>{
 		setSelfInvalid(true)
 	}
 	const onChangeEvent: ChangeEventHandler<HTMLInputElement> = (e) => {

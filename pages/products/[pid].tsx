@@ -121,8 +121,8 @@ const useProductQuantity = (product: ProductInterface) => {
 	const [quantityInCart, setQuantity] = useState(0)
 	const [availableToAdd, setAvailableToAdd] = useState(0)
 	const [selectedQuantity, setSelectedQuantity] = useState(0)
-	useEffect(() => setQuantity(cart.find(p => p.PID == product.firestoreID)?.quantity || 0), [cart])
-	useEffect(() => setAvailableToAdd(product.quantity - quantityInCart), [quantityInCart])
+	useEffect(() => setQuantity(cart.find(p => p.PID == product.firestoreID)?.quantity || 0), [cart]) //eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setAvailableToAdd(product.quantity - quantityInCart), [quantityInCart]) //eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => setSelectedQuantity(s => {
 		if (availableToAdd == 0) return 0
 		return clamp(s, 1, availableToAdd)

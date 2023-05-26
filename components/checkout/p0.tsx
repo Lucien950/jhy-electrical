@@ -1,5 +1,5 @@
 // react
-import { Dispatch, FormEventHandler, Fragment, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, SetStateAction, useEffect, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox, Transition } from '@headlessui/react'
@@ -136,7 +136,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 						<ProvinceDropdown setProvince={shippingChange} province={address?.admin_area_1} />
 						<InputField required setField={shippingChange} field_id="postal_code" placeholder="Postal Code" defaultValue={address?.postal_code} pattern={postalCodePattern} />
 						<div className="relative">
-							<InputField field_id="country" setField={() => { }} disabled />
+							<InputField field_id="country" disabled />
 							<div className="absolute inset-0 pl-4 flex flex-row items-center gap-x-1">
 								<p className="text-gray-400">Canada</p>
 								<Tippy content="JHY Canada only ships to Canadian Addresses">

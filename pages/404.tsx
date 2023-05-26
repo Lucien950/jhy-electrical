@@ -64,7 +64,7 @@ export default function ErrorPage() {
 					<div className="text-center mb-14">
 						<p className="mb-4 font-semibold text-blue-400">404</p>
 						<h1 className="text-5xl font-bold mb-6">This page does not exist</h1>
-						<h2 className="text-lg text-zinc-500">Sorry, we couldn't find the page you're looking for.</h2>
+						<h2 className="text-lg text-zinc-500">Sorry, we couldn&apos;t find the page you&apos;re looking for.</h2>
 					</div>
 					<div>
 						<LinkComponent href="/" title="Home" desc="Navigate to the home page" Icon={HomeIcon} />

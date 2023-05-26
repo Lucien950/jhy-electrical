@@ -135,15 +135,15 @@ interface P24 {
 	country_code: string;
 }
 interface Paypal {
-	phone_type: string;
-	attributes: { vault: Vault; };
 	email_address: string;
 	account_id: string;
 	name: Name;
-	phone_number: PhoneNumber;
-	birth_date: string;
-	tax_info: TaxInfo;
 	address: Address;
+	phone_type?: string;
+	attributes?: { vault: Vault; };
+	phone_number?: PhoneNumber;
+	birth_date?: string;
+	tax_info?: TaxInfo;
 }
 interface Name {
 	given_name: string;

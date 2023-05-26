@@ -1,5 +1,5 @@
 import { OrderProductFilled } from "types/order"
-import { calculateShipping, productPackageInfo } from "./shipping/calculateShipping"
+import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
 import { PriceInterface } from "types/price"
 
 export const TAX_RATE = 0.13
@@ -18,13 +18,11 @@ export const makePrice = async (products: OrderProductFilled[], postal_code?: st
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
 	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))
 
-	const productPackage = products.map(p => {
-		const { weight, length, height, width } = p.product!
-		return { weight, length, height, width, id: p.PID } as productPackageInfo
-	})
-	const shippingInfo = postal_code ? await calculateShipping(productPackage, postal_code) : undefined
-	const shipping = shippingInfo
-		? roundPriceUp(products.reduce((acc, p) => acc + (p.quantity * (shippingInfo[p.PID] || 0)), 0))
+	const shipping = postal_code
+		? await calculateShippingProducts(products.map(p => {
+				const { weight, length, height, width, quantity } = p.product!
+				return { weight, length, height, width, quantity, id: p.PID } as productPackageInfo
+			}), postal_code)
 		: undefined
 	const tax = roundPriceUp((subtotal + (shipping || 0)) * TAX_RATE)
 	const total = subtotal + (shipping || 0) + tax
