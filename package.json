@@ -7,10 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "deploy": "firebase deploy",
-    "deploy-dev": "firebase hosting:channel:deploy DEV",
-    "test": "jest --verbose",
-    "start-emulator": "firebase emulators:start --only \"firestore,storage\" --import=./firebaseExport --export-on-exit --debug"
+    "test": "jest",
+    "start-emulator": "firebase emulators:start --import=./firebaseExport --export-on-exit"
   },
   "dependencies": {
     "@firebase/rules-unit-testing": "^2.0.7",
@@ -24,6 +22,7 @@
     "@types/react": "18.2.6",
     "@types/react-dom": "18.2.4",
     "canadapost-api": "^1.2.0",
+    "decimal.js": "^10.4.3",
     "eslint-config-next": "13.4.2",
     "firebase": "^9.22.0",
     "framer-motion": "^10.12.10",
