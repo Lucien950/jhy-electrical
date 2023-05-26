@@ -93,6 +93,8 @@ const usePrice = (cart: OrderProduct[])=>{
 	useEffect(()=>{
 		(async () =>{
 			if(cart.length === 0) return
+
+			console.log("Update Price Estimation")
 			const newPrice = await estimatePrice(cart.map(p=>({...p, product: undefined}))).catch(err => {
 				toast.error("Error calculating Price")
 				console.error(err)
@@ -123,9 +125,10 @@ export default function Cart() {
 
 	useEffect(() => logEvent(analytics(), "view_cart"), [])
 	useEffect(()=>{
-		// paypal cancel
-		router.push("/cart", undefined, { shallow: true })
-		logEvent(analytics(), "cancel_paypal_checkout")
+		if(router.pathname === "/cart"){
+			router.push("/cart", undefined, { shallow: true })
+			logEvent(analytics(), "cancel_paypal_checkout")
+		}
 	}, [router.query.token]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// PayPal Express Checkout
@@ -143,7 +146,9 @@ export default function Cart() {
 	}
 	// Form Checkout
 	const [checkoutLoading, setCheckoutLoading] = useState(false)
-	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
+	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async (e) =>{
+		e.stopPropagation()
+		e.preventDefault()
 		setCheckoutLoading(true)
 		try{
 			const { orderID } = await createPayPalOrder(cart, false)
@@ -153,8 +158,10 @@ export default function Cart() {
 			})
 		}
 		catch(e){
-			setCheckoutLoading(false)
 			toast.error("Checkout Order Generation Error, see console for more details", { theme: "colored" })
+		}
+		finally{
+			setCheckoutLoading(false)
 		}
 	}
 
