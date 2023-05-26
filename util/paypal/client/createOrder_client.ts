@@ -20,7 +20,6 @@ export const createPayPalOrder = async (products: OrderProduct[], express = fals
 
 
 	const { res, err } = await response.json() as apiResponse<createOrderRes, any>
-	console.log("ERROR", err)
 	if(response.ok){
 		if(!res) return createOrderError("This code should not be reachable, since response.ok is true")
 		if (res.orderStatus == "COMPLETED") return createOrderError("REQUEST ID HAS BEEN USED")
