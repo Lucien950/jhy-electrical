@@ -17,9 +17,9 @@ const createOrderPropsSchema = Joi.object({
 	express: Joi.boolean().optional()
 })
 export type createOrderRes = {
-	orderStatus: OrderResponseBodyMinimal["status"], orderID: string,
+	orderStatus: OrderResponseBodyMinimal["status"],
+	orderID: string,
 	redirect_link: string | null,
-	paymentInformation: PriceInterface
 }
 /**
  * Create Order API Endpoint
@@ -39,7 +39,6 @@ async function createOrderAPI (req: NextApiRequest, res: NextApiResponse){
 		orderID: order.id,
 		// this must be present
 		redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
-		paymentInformation
 	})
 }
 
