@@ -1,4 +1,5 @@
 import CanadaPostClient from "canadapost-api"
+import { sum } from "lodash";
 
 const userID = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_USERID_DEV : process.env.NEXT_PUBLIC_CANADAPOST_USERID
 const password = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD_DEV : process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD
@@ -9,30 +10,32 @@ export interface productPackageInfo {
 	length: number,
 	weight: number,
 	id: string,
+	quantity: number,
 }
 
-export const calculateShipping = async (products: productPackageInfo[], destination: string) => {
-	const prices = {} as { [key: string]: number }
-	await Promise.all(products.map(async p => {
-		const rates = await cpc.getRates({
-			parcelCharacteristics: {
-				weight: p.weight,
-				dimensions: {
-					length: p.length,
-					width: p.width,
-					height: p.height
-				}
-			},
-			originPostalCode: "K4M1B4",
-			destination: {
-				domestic: {
-					postalCode: destination.replace(" ", "").toUpperCase()
-				}
+export const calculateShippingProduct = async (product: productPackageInfo, destination: string) => {
+	// TODO remove for $0 product
+	if (product.id === "VuvgEZpucwwjiGrHrKEt") return 0.01
+	
+	const [height, width, length] = [product.width, product.height, product.length].sort()
+	const rates = await cpc.getRates({
+		parcelCharacteristics: {
+			weight: product.weight,
+			dimensions: { length, width, height }
+		},
+		originPostalCode: process.env.NEXT_PUBLIC_ORIGIN_POSTAL_CODE,
+		destination: {
+			domestic: {
+				postalCode: destination.replace(" ", "").toUpperCase()
 			}
-		})
-		if (rates == undefined) return 0
-		const minimumPrice = Math.min(...rates.map((r: any) => r.priceDetails.due))
-		prices[p.id] = minimumPrice
-	}))
-	return prices
+		}
+	})
+	if (rates == undefined) throw new Error("Canada Post API cannot find rates for this package")
+	const minimumPrice = Math.min(...rates.map((r: any) => r.priceDetails.due))
+	return minimumPrice * product.quantity
+}
+
+export const calculateShippingProducts = async (products: productPackageInfo[], destination: string) => {
+	const prices = await Promise.all(products.map(async p => await calculateShippingProduct(p, destination)))
+	return sum(prices)
 }

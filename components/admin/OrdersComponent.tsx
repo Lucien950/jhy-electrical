@@ -1,11 +1,11 @@
 // react
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useState } from "react"
 import Link from "next/link"
 // firebase
 import { OrderInterface } from 'types/order'
 // UI
 import { AnimatePresence, motion } from "framer-motion"
-import { Tab, Transition } from "@headlessui/react"
+import { Tab } from "@headlessui/react"
 import { doc, setDoc } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 
@@ -34,7 +34,7 @@ const TableRow = ({ order }: { order: OrderInterface }) => {
 			</td>
 			<td className="px-4 py-3">
 				<button onClick={toggleComplete} className="w-full h-full flex items-center">
-					<svg fill="none" stroke="currentColor" className="h-6 w-6 group/svg"  strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+					<svg fill="none" stroke="currentColor" className="h-6 w-6 group/svg" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 						<path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 						<path strokeLinecap="round"
 							className="stroke-transparent group-hover/svg:stroke-gray-300 data-[completed=true]:stroke-black data-[completed=true]:group-hover/svg:stroke-zinc-500 transition-colors"
@@ -91,31 +91,33 @@ export const OrdersComponent = ({ allOrders }: { allOrders: OrderInterface[] }) 
 			</Tab.List>
 
 			{/* TABLE */}
-			<table className="w-full overflow-hidden rounded-t-md table-fixed	">
-				<thead className="text-xs text-left text-gray-700 uppercase bg-gray-200">
-					<tr>
-						<th className="px-4 py-3 w-64">Order ID</th>
-						<th className="px-4 py-3 w-64">Date/Time of Order</th>
-						<th className="px-4 py-3">Items</th>
-						<th className="px-4 py-3 w-48">Mark as Complete</th>
-					</tr>
-				</thead>
-				<Tab.Panels as={Fragment}>
+			<div className="w-full overflow-x-auto">
+				<table className="w-full overflow-hidden rounded-t-md table-fixed">
+					<thead className="text-xs text-left text-gray-700 uppercase bg-gray-200">
+						<tr className="[&>th]:px-4 [&>th]:py-3">
+							<th className="w-64">Order ID</th>
+							<th className="w-56">Date/Time of Order</th>
+							<th className="min-w-[10rem]">Items</th>
+							<th className="w-24">Complete</th>
+						</tr>
+					</thead>
+					<Tab.Panels as={Fragment}>
 					<AnimatePresence mode="wait">
-						<Tab.Panel
-							key={`panel${selectedIndex}`}
-							as={motion.tbody}
-							initial="hide"
-							animate="show"
-							exit="hide"
-							variants={tabVariants}
-							static
-						>
-							{[incompleteOrders, completeOrders, allOrders].map(orders => orders.map(order => <TableRow order={order} key={order.firebaseOrderID}/>))[selectedIndex]}
-						</Tab.Panel>
+					<Tab.Panel as={motion.tbody}
+						key={`panel${selectedIndex}`} initial="hide" animate="show" exit="hide" variants={tabVariants} static
+					>
+						{
+							[incompleteOrders, completeOrders, allOrders].map(orders =>
+								orders.map(order =>
+									<TableRow order={order} key={order.firebaseOrderID} />
+									)
+								)[selectedIndex]
+						}
+					</Tab.Panel>
 					</AnimatePresence>
-				</Tab.Panels>
-			</table>
+					</Tab.Panels>
+				</table>
+			</div>
 		</Tab.Group>
 	)
 }

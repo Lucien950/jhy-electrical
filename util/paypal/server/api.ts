@@ -1,10 +1,8 @@
 // Arguably the most professional code I have written in my life
-import { NextApiResponse } from "next"
+import Joi from "joi"
+import { NextApiHandler, NextApiRequest, NextApiResponse } from "next"
 
-export interface apiResponse<ResType, ErrType> {
-	res?: ResType,
-	err?: ErrType,
-}
+export interface apiResponse<ResType, ErrType> { res?: ResType, err?: ErrType, }
 
 /**
  * Gives a API response handler for data
@@ -29,10 +27,12 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 		case "response": return res.status(200).send({ res: payload } as apiResponse<T, never>)
 		case "error":
 			res.status(500)
+			if (payload instanceof Joi.ValidationError){
+				return res.send({ err: payload.details.map((detail) => detail.message).join(", ") } as apiResponse<never, string>)
+			}
 			if (payload instanceof Error) {
 				if (process.env.NODE_ENV === "development") res.send({ err: `${payload.name}: ${payload.message}` } as apiResponse<never, string>)
 				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
-				throw payload
 			}
 			else res.send({ err: payload } as apiResponse<never, T>)
 			return
@@ -42,3 +42,17 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 }
 
 export { apiRespond }
+
+export function apiHandler(handler: {[method: string]: NextApiHandler}) {
+	return async (req: NextApiRequest, res: NextApiResponse) => {
+		const method = req.method?.toUpperCase();
+		// check handler supports HTTP method
+		if (!method) return res.status(405).end(`Method undefined`);
+		if (!handler[method]) return res.status(405).end(`Method ${req.method} Not Allowed`);
+		try {
+			await handler[method](req, res);
+		} catch (err) {
+			apiRespond(res, "error", err)
+		}
+	}
+}

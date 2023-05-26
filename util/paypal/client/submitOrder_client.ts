@@ -1,7 +1,7 @@
 import { submitOrderRes } from "pages/api/paypal/submitorder"
 import { submitOrderProps } from "pages/api/paypal/submitorder"
-import { apiResponse } from "util/api"
-import { clientErrorFactory } from "util/clientErrorFactory"
+import { apiResponse } from "util/paypal/server/api"
+import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
 
 
 const submitOrderError = clientErrorFactory("Submit Order Server Side Error: Check Console for more details")

@@ -7,5 +7,5 @@ html {
 }
 
 .link {
-	@apply underline text-blue-500 hover:text-blue-700 transition-colors duration-75 visited:text-purple-600 hover:visited:text-purple-800
+	@apply underline text-blue-500 hover:text-blue-700 transition-colors duration-75 visited:text-purple-600 hover:visited:text-purple-800 hover:cursor-pointer
 }

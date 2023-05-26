@@ -1,6 +1,6 @@
 // react/next
 import { GetServerSideProps } from 'next'
-import { Dispatch, SetStateAction, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 // ui
@@ -9,12 +9,11 @@ import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // util
-import { getOrder } from 'util/paypal/server/getOrder'
-import { getProductByID } from 'util/productUtil'
+import { getOrder } from 'util/paypal/server/getOrderFetch'
 import { validateAddress, validateAddressError } from 'types/paypal'
 // types
-import { OrderProduct } from 'types/order'
-import { validateName, CustomerInterface, validateNameError } from 'types/customer'
+import { OrderProduct, OrderProductFilled } from 'types/order'
+import { validateName, CustomerInterface, validateNameError, FinalCustomerInterface } from 'types/customer'
 import { PriceInterface } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
@@ -44,50 +43,50 @@ const validateP0FormError = (name: CustomerInterface["fullName"], address: Custo
  * @returns Stage 2.1 If payment has been approved
  * @param ci customer object
  */
-const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) =>
-	(paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+
+// STAGE TECHNOLOGY
 const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
 	const [stage, setStage] = useState(initialStage)
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 							[customerInfo?.address, 			customerInfo?.fullName])
-	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), 	[customerInfo?.paymentMethod,	customerInfo?.payment_source])
+	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 							[customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
 
 	return {stage, setStage, p0CusUpdated, p1CusUpdated}
 }
 
-type CheckoutProps = {
+type ErrorCheckoutProps = {
 	paypal_error?: string,
-
+}
+type CheckoutProps = {
 	paypalCustomerInfo: CustomerInterface,
 	paypalPriceInfo: PriceInterface,
-	productIDs: OrderProduct[],
+	emptyOrderProducts: OrderProduct[],
 	orderID: string,
 	initialStage: number
 }
-export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, productIDs, paypal_error, orderID, initialStage }: CheckoutProps){
+export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps & ErrorCheckoutProps){
 	// IMPORTANT GLOBAL STATE
 	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
+	const addP0CustomerInfo = (fullName: string, address: Address) => setCustomerInfo(ci => ({ ...ci, fullName, address }))
+	const addP1CustomerInfo =  (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => setCustomerInfo(ci => ({ ...ci, paymentMethod, payment_source }))
 	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
-	const [orderCart, setOrderCart] = useState<OrderProduct[] | null>(null)
+	const [orderCart, setOrderCart] = useState<OrderProductFilled[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
 	const {stage, setStage, p0CusUpdated, p1CusUpdated} = useStage(initialStage, customerInfo)
-	const goToStage = (s: number) => (() => {
-		logEvent(analytics(), "checkout_progress", { checkout_step: s })
-		setStage(s)
-	})
+	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
 
 	const CheckoutStageView = () => {
-		
 		if ( customerInfo === null || priceInfo === null || stage === null) return <></>
 		if (stage == 0)
 			return (
 				<CheckoutStageZero
 				{...{ 
 						setStage,
-						setCustomerInfo,
+						addP0CustomerInfo,
 						setPriceInfo,
 						customerInfo,
 						validateP0Form: validateP0FormData,
@@ -102,7 +101,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 		else if (stage == 1)
 			return <CheckoutStageOne {...{
 				customerInfo,
-				setCustomerInfo,
+				addP1CustomerInfo,
 				setStage,
 				orderID
 			}}/>
@@ -124,12 +123,12 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 
 	useEffect(() => {
 		if (paypal_error) { logEvent(analytics(), "checkout_error_paypal_SSR"); return }
-		if (!productIDs) return //just for types
+		if (!emptyOrderProducts) return //just for types
 		logEvent(analytics(), "begin_checkout");
 		logEvent(analytics(), "checkout_progress", { checkout_step: initialStage })
 		// update displayed cart
-		Promise.all(productIDs.map(async p => ({ ...p, product: await getProductByID(p.PID) } as OrderProduct)))
-			.then(newCart => setOrderCart(newCart))
+
+		fillOrderProducts(emptyOrderProducts).then(newCart => setOrderCart(newCart))
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// rendering conditions
@@ -178,7 +177,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 							<div className="flex flex-row mb-4 justify-between">
 								<span> Subtotal </span>
 								<div>
-									<PriceComponent price={priceInfo!.subtotal} />
+									<PriceComponent price={priceInfo.subtotal} />
 								</div>
 							</div>
 							{/* Shipping */}
@@ -194,7 +193,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 								{
 									calculatingShipping
 										? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-										: <PriceComponent price={priceInfo!.shipping} />
+										: <PriceComponent price={priceInfo.shipping} />
 								}
 							</div>
 							{/* Tax */}
@@ -207,12 +206,12 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 										</svg>
 									</Tippy>
 								</div>
-								<PriceComponent price={priceInfo!.tax} />
+								<PriceComponent price={priceInfo.tax} />
 							</div>
 							{/* Total */}
 							<div className="flex flex-row justify-between mb-8">
 								<p>Total</p>
-								<PriceComponent price={priceInfo!.total} />
+								<PriceComponent price={priceInfo.total} />
 							</div>
 						</div>
 					</div>
@@ -222,7 +221,9 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 	);
 }
 
-import { updateOrderAddress } from './api/paypal/updateorder/address'
+import { updateOrderAddress } from 'util/paypal/server/updateOrderFetch'
+import { fillOrderProducts } from 'util/orderUtil'
+import { Address } from '@paypal/paypal-js'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
@@ -230,7 +231,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const EMPTYRET = {
 		paypalCustomerInfo: {} as CustomerInterface,
 		paypalPriceInfo: {} as PriceInterface,
-		productIDs: [],
+		emptyOrderProducts: [],
 		initialStage: 0,
 		orderID: token
 	}
@@ -240,7 +241,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		const {
 			customerInfo: paypalCustomerInfo,
 			priceInfo,
-			products: productIDs, status
+			products: emptyOrderProducts, status
 		} = await getOrder(token)
 		let paypalPriceInfo = priceInfo;
 
@@ -253,7 +254,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)
 		// paymentInfo shipping update
 		if (p0Done && !paypalPriceInfo.shipping) {
-			const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!)
+			const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
 			paypalPriceInfo = newPrice
 		}
 		// determining initial checkout stage
@@ -262,7 +263,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		else if (p0Done && !p1Done) initialStage = 1
 		else initialStage = 0
 
-		return { props: { paypalCustomerInfo, paypalPriceInfo, productIDs, orderID: token, initialStage } as CheckoutProps }
+		return { props: { paypalCustomerInfo, paypalPriceInfo, emptyOrderProducts, orderID: token, initialStage } as CheckoutProps }
 	}
 	catch (e) { return { props: { paypal_error: JSON.stringify(e, Object.getOwnPropertyNames(e)), ...EMPTYRET } as CheckoutProps } }
 }

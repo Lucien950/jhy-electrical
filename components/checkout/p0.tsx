@@ -1,12 +1,12 @@
 // react
-import { Dispatch, FormEventHandler, Fragment, SetStateAction, useEffect, useRef, useState } from "react";
+import { Dispatch, FormEventHandler, SetStateAction, useEffect, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox, Transition } from '@headlessui/react'
 import { motion } from "framer-motion";
 import Tippy from "@tippyjs/react";
 import { toast } from "react-toastify";
-import { displayVariants } from "util/formVariants";
+import { displayVariants } from "./checkoutFormVariants";
 // types
 import { CustomerInterface } from 'types/customer';
 import { postalCodePattern } from "util/shipping/postalCode";
@@ -14,8 +14,8 @@ import { Address } from "@paypal/paypal-js"
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
 import { ValidationError } from "joi";
-import { OrderProduct } from "types/order";
-import { updateOrderAddress } from "util/paypal/client/updateOrderClient";
+import { OrderProductFilled } from "types/order";
+import { updateOrderAddress } from "util/paypal/client/updateOrder_client";
 import { PriceInterface } from "types/price";
 import { isEqual } from "lodash";
 
@@ -23,17 +23,14 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 	const [query, setQuery] = useState('')
 	const provinces = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"]
 	const filteredProvinces = query === '' ? [] : provinces.filter((province) => province.toLowerCase().includes(query.toLowerCase()))
-	const input = useRef<HTMLInputElement>(null)
 
 	return (
 		<Combobox value={province || ""} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
 			<Combobox.Input
 				required
 				onChange={(event) => setQuery(event.target.value)}
-				className="w-full h-full p-2 rounded-lg border-2 focus:outline-none focus:ring-2"
+				className="w-full h-full border-2 px-3 py-4 rounded-lg text-base focus:outline-none focus:ring-2"
 				placeholder='Province'
-				data-field_id="admin_area_1"
-				ref={input}
 			/>
 			<Combobox.Options className="absolute mt-1 bg-white z-10 w-full rounded-md shadow-md overflow-hidden">
 				{filteredProvinces.map((province) => (
@@ -62,18 +59,19 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 
 type p0Input = {
 	setStage: Dispatch<SetStateAction<number>>,
-	setCustomerInfo: Dispatch<SetStateAction<CustomerInterface>>,
 	setPriceInfo: Dispatch<SetStateAction<PriceInterface>>,
 	customerInfo: CustomerInterface,
+	addP0CustomerInfo: (name: string, address: Address) => void,
+	
 	validateP0Form: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => boolean,
 	validateP0FormError: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => ValidationError | null | undefined,
 	orderID: string,
 	setCalculatingShipping: Dispatch<SetStateAction<boolean>>,
 	// display variables
-	orderCart: OrderProduct[] | null,
+	orderCart: OrderProductFilled[] | null,
 	calculatingShipping: boolean,
 }
-const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, validateP0Form, validateP0FormError, orderID, orderCart, calculatingShipping, setCalculatingShipping }: p0Input) => {
+const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo, validateP0Form, validateP0FormError, orderID, orderCart, calculatingShipping, setCalculatingShipping }: p0Input) => {
 	// INPUT HANDLERS
 	const [fullName, setFullName] = useState<CustomerInterface["fullName"]>(customerInfo.fullName)
 	const [address, setAddress] = useState<CustomerInterface["address"]>(customerInfo.address)
@@ -85,21 +83,16 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 	// LEAVE HANDLER
 	const proceedPayment: FormEventHandler<HTMLFormElement> = async (e) => {
 		e.preventDefault()
-		if (!p0Done) {
-			// this is fine because `!p0Done` already implies there is an error
-			//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const errorMessage = validateP0FormError(fullName, address)!.message
-			toast.error(errorMessage, { theme: "colored" })
-			return
-		}
-		if (!address || !fullName) return //just for type narrowing
-
-		if (fullName == customerInfo.fullName && isEqual(address, customerInfo.address)) { setStage(1); return }
+		// this is fine because `!p0Done` already implies there is an error
+		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		if (!p0Done) return toast.error(validateP0FormError(fullName, address)!.message, { theme: "colored" })
+		if (!address || !fullName) return //just for type narrowing, form validation already should catch this
+		if (fullName == customerInfo.fullName && isEqual(address, customerInfo.address)) return setStage(1)
 
 		setCalculatingShipping(true)
 		try {
 			const { newPrice } = await updateOrderAddress(orderID, address, fullName)
-			setCustomerInfo(ci => ({ ...ci, fullName, address }))
+			addP0CustomerInfo(fullName, address)
 			setPriceInfo(newPrice)
 			setStage(1)
 		}
@@ -119,9 +112,9 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 							?
 							orderCart.map(productInfo =>
 								<div className="flex flex-row items-center gap-x-2 p-2" key={productInfo.PID}>
-									<img src={productInfo.product?.productImageURL} alt="" className="h-10" />
-									<p> {productInfo.product?.productName} </p>
-									<p> {productInfo.product?.price} x {productInfo.quantity} </p>
+									<img src={productInfo.product.productImageURL} alt="" className="h-10" />
+									<p> {productInfo.product.productName} </p>
+									<p> {productInfo.product.price} x {productInfo.quantity} </p>
 								</div>
 							)
 							:
@@ -131,10 +124,11 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 						}
 					</div>
 				</div>
+
 				{/* shipping */}
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4 font-bold">Shipping</h1>
-					<div className="grid grid-cols-2 grid-rows-5 gap-x-2 gap-y-2 text-sm" data-lpignore="true">
+					<div className=" grid grid-cols-2 grid-rows-5 gap-x-2 gap-y-2 text-sm " >
 						<InputField required setField={customerChange} field_id="fullName" placeholder="Full Name" defaultValue={fullName || ""} className="col-span-2" />
 						<InputField required setField={shippingChange} field_id="address_line_1" placeholder="Address" defaultValue={address?.address_line_1} className="col-span-2" />
 						<InputField setField={shippingChange} field_id="address_line_2" placeholder="Apt/Suite (Optional)" defaultValue={address?.address_line_2} className="col-span-2" />
@@ -142,8 +136,8 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 						<ProvinceDropdown setProvince={shippingChange} province={address?.admin_area_1} />
 						<InputField required setField={shippingChange} field_id="postal_code" placeholder="Postal Code" defaultValue={address?.postal_code} pattern={postalCodePattern} />
 						<div className="relative">
-							<input type="text" name="" id="" className="border-2 rounded-[5px] w-full p-2 py-4" disabled />
-							<div className="absolute flex flex-row top-[50%] translate-y-[-50%] left-4 items-center gap-x-1">
+							<InputField field_id="country" disabled />
+							<div className="absolute inset-0 pl-4 flex flex-row items-center gap-x-1">
 								<p className="text-gray-400">Canada</p>
 								<Tippy content="JHY Canada only ships to Canadian Addresses">
 									<svg className="w-5 h-5 stroke-gray-500" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth={2.3} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -155,28 +149,26 @@ const ShippingForm = ({ setStage, customerInfo, setCustomerInfo, setPriceInfo, v
 						<div></div>
 					</div>
 				</div>
+
+				{/* Bottom Buttons */}
 				<div className="flex flex-row justify-end gap-x-8 mt-10 items-center">
 					<Link href="/cart" className="underline">
 						Back to Cart
 					</Link>
-					<button
-						className="bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color] grid place-items-center relative"
-						type="submit" disabled={!p0Done || calculatingShipping}>
-							<Transition
-								show={calculatingShipping}
-								// as={Fragment}
-								enter="transition-[opacity] duration-200"
-								enterFrom="opacity-0"
-								enterTo="opacity-100"
-								leave="transition-[opacity] duration-200"
-								leaveFrom="opacity-100"
-								leaveTo="opacity-0"
-							>
-								<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]" strokeWidthSecondary={10} color="white" secondaryColor="white"/>
-							</Transition>
-							<div className={`transition-transform ${calculatingShipping ? "translate-x-[1rem]" : ""}`}>
-								Proceed to Payment
-							</div>
+					<button type="submit" disabled={calculatingShipping}
+						className="grid place-items-center relative
+						bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color]">
+						<Transition
+							show={calculatingShipping}
+							className="transition-[opacity] duration-200"
+							enterFrom="opacity-0" enterTo="opacity-100" leaveFrom="opacity-100" leaveTo="opacity-0"
+						>
+							<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]"
+								strokeWidthSecondary={10} color="white" secondaryColor="white"/>
+						</Transition>
+						<div className={`transition-transform ${calculatingShipping ? "translate-x-[1rem]" : ""}`}>
+							Proceed to Payment
+						</div>
 					</button>
 				</div>
 			</form>

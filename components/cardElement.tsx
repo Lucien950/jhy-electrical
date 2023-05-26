@@ -86,7 +86,7 @@ export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInfo
 	}
 
 	const CardDead = ()=>(
-		<div className="relative inline-block pointer-events-none will-change-transform" ref={boxRef}>
+		<div className="relative inline-block pointer-events-none" ref={boxRef}>
 			<CardSVG className={`w-80 ${chosenColour}`} />
 			<div className="text-white fill-white flex flex-row items-end justify-between absolute inset-0 px-4 py-4 select-none">
 				{/* digits and dots */}

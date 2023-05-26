@@ -1,6 +1,6 @@
-import { clientErrorFactory } from "util/clientErrorFactory"
+import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
 // API types
-import { apiResponse } from "util/api"
+import { apiResponse } from "util/paypal/server/api"
 import { approveCardProps, approveCardRes } from "pages/api/paypal/approve/card"
 import { approvePayPalRes } from "pages/api/paypal/approve/paypal"
 // types
@@ -13,9 +13,9 @@ export const approveCard = async (token: string, cardInfo: Partial<CardInfoInter
 	if (!validateCard(cardInfo as CardInfoInterface))
 		return approveCardError(validateCardError(cardInfo as CardInfoInterface))
 	const response = await fetch("/api/paypal/approve/card", {
-		method: "POST",
+		method: "PATCH",
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ token, ...cardInfo } as approveCardProps)
+		body: JSON.stringify({ token, card: cardInfo } as approveCardProps)
 	})
 	const {res, err} = await response.json() as apiResponse<approveCardRes, any>
 	if(response.ok){
@@ -26,7 +26,7 @@ export const approveCard = async (token: string, cardInfo: Partial<CardInfoInter
 
 export const approvePayPal = async (token: string) => {
 	const response = await fetch("/api/paypal/approve/paypal", {
-		method: "POST",
+		method: "PATCH",
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ token } as approveCardProps)
 	})

@@ -1,9 +1,10 @@
 import { generateAccessToken } from 'util/paypal/server/auth'
 import { CustomerInterface } from 'types/customer';
-import { PriceInterface } from "types/price";
+import { FinalPriceInterface, PriceInterface } from "types/price";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 import { PayPalError } from 'types/paypal';
+import { PAYPALDOMAIN } from 'util/paypal/server/domain';
 
 const provinceConvert = {
 	"AB": "Alberta",
@@ -28,7 +29,7 @@ const provinceConvert = {
  */
 export const getOrder = async (orderID: string) => {
 	const accessToken = await generateAccessToken()
-	const response = await fetch(`https://api.sandbox.paypal.com/v2/checkout/orders/${orderID}`, {
+	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${orderID}`, {
 		method: 'GET',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
@@ -60,24 +61,31 @@ export const getOrder = async (orderID: string) => {
 	// PAYMENT INFORMATION
 	const amount = purchaseUnit0.amount
 	const breakdown = amount.breakdown! //eslint-disable-line @typescript-eslint/no-non-null-assertion
-	// idk why those are even possibly null
-	const priceInfo = {
+	const taxTotal = breakdown.tax_total?.value
+	const shippingTotal = breakdown.shipping?.value
+	const finalcalculated = !!taxTotal && !!shippingTotal
+	const priceInfo = finalcalculated ? {
 		subtotal: Number(breakdown.item_total!.value), 	//eslint-disable-line @typescript-eslint/no-non-null-assertion
-		tax: Number(breakdown.tax_total!.value),				//eslint-disable-line @typescript-eslint/no-non-null-assertion
-		shipping: Number((breakdown.shipping?.value) || 0),
+		tax: Number(taxTotal),
+		shipping: Number(shippingTotal),
 		total: Number(amount.value)
-	} as PriceInterface
+	} as FinalPriceInterface
+		:
+		{
+			subtotal: Number(breakdown.item_total!.value), 	//eslint-disable-line @typescript-eslint/no-non-null-assertion
+			total: Number(amount.value)
+		} as PriceInterface
 
 	// products
-	const products = purchaseUnit0.items!.map(i => ({
-		PID: i.name,
+	const products: OrderProduct[] = purchaseUnit0.items!.map(i => ({
+		PID: i.sku!,
 		quantity: Number(i.quantity)
-	} as OrderProduct))
+	}))
 
 	// redirect link
 	const redirect_link = data.links.find(v => v.rel == "approve")?.href || null
 
 	const status = data.status
 
-	return { customerInfo, priceInfo, products, redirect_link, status } 
+	return { customerInfo, priceInfo, products, redirect_link, status }
 }

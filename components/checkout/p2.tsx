@@ -1,12 +1,12 @@
 // ui
 import { motion } from "framer-motion";
-import { displayVariants } from "util/formVariants";
+import { displayVariants } from "./checkoutFormVariants";
 import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
 import { CustomerInterface } from "types/customer";
-import { OrderProduct } from "types/order";
-import { PriceInterface } from "types/price";
+import { OrderProductFilled } from "types/order";
+import { PriceInterface, validateFinalPrice, validateFinalPriceError } from "types/price";
 // react
 import { Dispatch, MouseEventHandler, SetStateAction, useState } from "react";
 import { useRouter } from "next/router"
@@ -14,14 +14,14 @@ import { useRouter } from "next/router"
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
 import { useDispatch } from "react-redux";
-import { submitOrder } from "util/paypal/client/submitOrderClient";
+import { submitOrder } from "util/paypal/client/submitOrder_client";
 import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
 
 type ReviewViewProps = {
 	customerInfo: CustomerInterface,
 	priceInfo: PriceInterface,
-	orderCart: OrderProduct[] | null,
+	orderCart: OrderProductFilled[] | null,
 	setStage: Dispatch<SetStateAction<number>>,
 	orderID: string
 }
@@ -32,16 +32,9 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
 	
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
-
 		// for extra security
-		if (Object.values(priceInfo).some(p=>p == 0)){
-			console.error("Payment Information is not Complete")
-			return
-		}
-		if (!customerInfo.payment_source) {
-			console.error("Payment Method Paypal does not have paypal information object")
-			return
-		}
+		if (!validateFinalPrice(priceInfo)) return toast.error(validateFinalPriceError(priceInfo)?.message)
+		if (!customerInfo.payment_source) return toast.error("Payment Method Paypal does not have paypal information object")
 
 		setSubmitOrderLoading(true)
 		let firebaseOrderID;
@@ -103,11 +96,11 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 					{orderCart
 						? orderCart.map(p =>
 							<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
-								<img src={p.product?.productImageURL} alt="Product Image" className="h-16" />
+								<img src={p.product.productImageURL} alt="Product Image" className="h-16" />
 								<div className="flex-1 text-sm">
-									<h1 className="font-bold text-base">{p.product?.productName}</h1>
-									<p>${p.product?.price.toFixed(2)}</p>
-									<p>{p.product?.description}</p>
+									<h1 className="font-bold text-base">{p.product.productName}</h1>
+									<p>${p.product.price.toFixed(2)} x {p.quantity}</p>
+									<p>{p.product.description}</p>
 								</div>
 							</div>
 						)

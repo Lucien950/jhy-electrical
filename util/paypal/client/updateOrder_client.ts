@@ -1,7 +1,7 @@
 import { Address } from "@paypal/paypal-js"
-import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder"
-import { apiResponse } from "util/api"
-import { clientErrorFactory } from "util/clientErrorFactory"
+import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder/address"
+import { apiResponse } from "util/paypal/server/api"
+import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
 
 
 const updateOrderAddressError = clientErrorFactory("Update Product Server Side Error: check console for more details")
@@ -13,9 +13,9 @@ const updateOrderAddressError = clientErrorFactory("Update Product Server Side E
  * @returns 
  */
 export const updateOrderAddress = async (orderID: string, address: Address, fullName: string)=>{
-	const response = await fetch(`/api/paypal/updateorder/address`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
+	const response = await fetch("/api/paypal/updateorder/address", {
+		method: "PATCH",
+		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderAddressProps)
 	})
 	const {res, err} = await response.json() as apiResponse<updateOrderAddressRes, any>
