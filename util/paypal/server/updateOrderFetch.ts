@@ -12,7 +12,7 @@ export const updateOrderAddress = async (token: string, newAddress: Address, ful
 	const orders = await getOrder(token)
 	const { products: emptyProducts } = orders
 	const products = await fillOrderProducts(emptyProducts)
-	const newPrice = await makePrice(products, newAddress.postal_code)
+	const newPrice = await makePrice(products, newAddress)
 	const body = [
 		{
 			op: "add",
@@ -39,7 +39,7 @@ export const updateOrderAddress = async (token: string, newAddress: Address, ful
 					},
 					shipping: {
 						currency_code: "CAD",
-						value: newPrice.shipping!.toFixed(2) // eslint-disable-line @typescript-eslint/no-non-null-assertion
+						value: newPrice.shipping.toFixed(2)
 					},
 					tax_total: {
 						currency_code: "CAD",

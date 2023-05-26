@@ -14,14 +14,13 @@ import { logEvent } from "firebase/analytics";
 import { toast } from "react-toastify";
 import Price from "components/price";
 import { PaypalSVG } from "components/paypalSVG";
-import { createPayPalOrderLink } from "util/paypal/client/createOrder_client";
+import { createPayPalOrder } from "util/paypal/client/createOrder_client";
 import { analytics } from "util/firebase/analytics";
 // util price
 import { Transition } from "@headlessui/react";
-import { TAX_RATE } from "util/priceUtil";
-import { PriceInterface } from "types/price";
 import { QuantitySelector } from "components/quantitySelector";
 import { clamp } from "lodash";
+import { estimatePrice } from "util/estimatePrice";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
 	const product = orderProduct.product
@@ -82,25 +81,45 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct})=>{
 	)
 }
 
-const CostLoader = ( <Oval height={18} width={18} strokeWidth={6} strokeWidthSecondary={6} color="#28a9fa" secondaryColor="#28a9fa"/> )
+const CostLoader = ()=><Oval height={18} width={18} strokeWidth={6} strokeWidthSecondary={6} color="#28a9fa" secondaryColor="#28a9fa"/>
 
 
 const usePrice = (cart: OrderProduct[])=>{
 	const [subtotal, setSubtotal] = useState(0)
 	const [tax, setTax] = useState(0)
+	const [shipping, setShipping] = useState(0)
 	const [total, setTotal] = useState(0)
-	// subtotal, tax, shipping, total
-	useEffect(() => { setSubtotal(cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)) }, [cart])
-	useEffect(() => { if (subtotal) setTax(subtotal * TAX_RATE) }, [subtotal])
-	useEffect(() => { if (subtotal && tax) setTotal(subtotal + tax) }, [subtotal, tax])
 
-	return { paymentInformation: {subtotal, tax, total} as PriceInterface }
+	useEffect(()=>{
+		(async () =>{
+			if(cart.length === 0) return
+			const newPrice = await estimatePrice(cart.map(p=>({...p, product: undefined}))).catch(err => {
+				toast.error("Error calculating Price")
+				console.error(err)
+			})
+			if(newPrice){
+				setSubtotal(newPrice.subtotal)
+				setShipping(newPrice.shipping || 0)
+				setTax(newPrice.tax || 0)
+				setTotal(newPrice.total)
+			}
+			else{
+				const cartSubtotal = cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)
+				setSubtotal(cartSubtotal)
+				setTax(subtotal * 0.13)
+				setShipping(0)
+				setTotal(subtotal + tax)
+			}
+		})()
+	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
+
+	return {subtotal, tax, shipping, total}
 }
 
 export default function Cart() {
 	const router = useRouter()
 	const cart = useSelector((state: { cart: OrderProduct[] })=>state.cart) as OrderProduct[]
-	const {paymentInformation: {subtotal, tax, total}} = usePrice(cart)
+	const { subtotal, tax, shipping, total } = usePrice(cart)
 
 	useEffect(() => logEvent(analytics(), "view_cart"), [])
 	useEffect(()=>{
@@ -114,7 +133,7 @@ export default function Cart() {
 	const paypalCheckout: MouseEventHandler<HTMLButtonElement> = async () => {
 		setPaypalLoading(true)
 		try{
-			const { redirect_link } = await createPayPalOrderLink(cart, true)
+			const { redirect_link } = await createPayPalOrder(cart, true)
 			router.push(redirect_link)
 		}
 		catch (e){
@@ -127,7 +146,7 @@ export default function Cart() {
 	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async () =>{
 		setCheckoutLoading(true)
 		try{
-			const { orderID } = await createPayPalOrderLink(cart, false)
+			const { orderID } = await createPayPalOrder(cart, false)
 			router.push({
 				pathname: '/checkout',
 				query: { token: orderID },
@@ -181,24 +200,28 @@ export default function Cart() {
 							<p className="flex-1"> Subtotal </p>
 							<Price price={subtotal} className="place-self-end"/>
 						</div>
+						<div className="flex flex-row mb-4">
+							<p className="flex-1"> Shipping </p>
+							{shipping ? <Price price={shipping} className="place-self-end" /> : <CostLoader />}
+						</div>
 						{/* Tax */}
 						<div className="flex flex-row mb-4">
 							<p className="flex flex-row items-center gap-x-2 flex-1">
 								Tax
-								<Tippy content={"Tax is calculated based on the Ontario rate of 13%"} delay={50}>
+								<Tippy content={"Tax is calculated based on your location, or the Ontario rate of 13%"} delay={50}>
 									<svg className="h-5 w-5 focus:outline-none hover:cursor-pointer" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 										<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
 									</svg>
 								</Tippy>
 							</p>
-							{ tax ? <Price price={tax} className="place-self-end" /> : CostLoader }
+							{ tax ? <Price price={tax} className="place-self-end" /> : <CostLoader /> }
 						</div>
 						{/* Total */}
 						<div className="flex flex-row mb-4">
 							<p className="flex-1">Total</p>
-							{ total ? <Price price={total} className="place-self-end" /> : CostLoader }
+							{ total ? <Price price={total} className="place-self-end" /> : <CostLoader /> }
 						</div>
-						<p className="text-sm mb-6">*Note that this calculation <strong>DOES NOT</strong> take into account shipping fees</p>
+						<p className="text-sm mb-6">*Note that this calculation is an estimation of the final cost based on your <em>approximate location</em></p>
 
 						{/* Checkout Buttons */}
 						<div className="text-black">

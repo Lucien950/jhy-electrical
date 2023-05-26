@@ -9,7 +9,8 @@ const createOrderError = clientErrorFactory("Order Link Server Error: Check cons
  * @param amount Amount of money to pay
  * @returns object of type createOrderAPIReturn
  */
-export const createPayPalOrderLink = async (products: OrderProduct[], express = false) => {
+// TODO break apart into express and non-express?
+export const createPayPalOrder = async (products: OrderProduct[], express = false) => {
 	if (!validateOrderProductFilledList(products)) return createOrderError(validateOrderProductFilledListError(products))
 	const response = await fetch(`/api/paypal/createorder`, {
 		method: 'POST',

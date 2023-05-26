@@ -3,12 +3,13 @@ import { validateSchemaFunctionsGenerator } from "util/typeValidate";
 
 export interface PriceInterface {
 	subtotal: number;
-	shipping?: number;
-	tax: number;
 	total: number;
+	shipping?: number;
+	tax?: number;
 }
 export interface FinalPriceInterface extends PriceInterface {
 	shipping: number;
+	tax: number;
 }
 export const finalPriceSchema = Joi.object({
 	subtotal: Joi.number().required().greater(0),

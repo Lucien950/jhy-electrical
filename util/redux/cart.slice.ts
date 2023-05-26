@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { OrderProduct } from 'types/order';
+import { OrderProduct, OrderProductFilled } from 'types/order';
 import { ProductInterface } from "types/product"
 
 const cartSlice = createSlice({
@@ -38,11 +38,12 @@ const cartSlice = createSlice({
 		},
 		cartFillProducts: (state, action)=>{
 			// return action.payload
-			const products = action.payload as ProductInterface[]
-			state.forEach(productInfo=>{
-				const newProduct = products.find(product => product.firestoreID == productInfo.PID)
-				productInfo.product = newProduct ?? productInfo.product
+			const products = action.payload as {PID: string, product: ProductInterface}[]
+			products.forEach(p=>{
+				const changeProduct = state.find(productInfo=>productInfo.PID == p.PID)
+				if (changeProduct) changeProduct.product = p.product
 			})
+			console.log("cart filled products")
 		}
 	},
 });

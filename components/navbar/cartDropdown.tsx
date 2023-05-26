@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { toast } from "react-toastify"
 import { Oval } from "react-loader-spinner"
 // util
-import { createPayPalOrderLink } from "util/paypal/client/createOrder_client"
+import { createPayPalOrder } from "util/paypal/client/createOrder_client"
 // types
 import { OrderProduct } from "types/order"
 // components
@@ -37,7 +37,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 	const goToCheckout = async () => {
 		setCheckoutLoading(true)
 		try {
-			const { orderID } = await createPayPalOrderLink(cart, false)
+			const { orderID } = await createPayPalOrder(cart, false)
 			router.push({
 				pathname: '/checkout',
 				query: { token: orderID },

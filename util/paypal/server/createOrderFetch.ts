@@ -35,7 +35,7 @@ export const createOrderAPICall = async(paymentInformation: PriceInterface, prod
 					},
 					tax_total: {
 						currency_code: "CAD",
-						value: paymentInformation.tax.toFixed(2)
+						value: (paymentInformation.tax || 0).toFixed(2)
 					},
 				}
 			}

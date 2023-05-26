@@ -14,7 +14,7 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 // util
 import { getProductByID } from 'util/productUtil'
-import { createPayPalOrderLink } from 'util/paypal/client/createOrder_client';
+import { createPayPalOrder } from 'util/paypal/client/createOrder_client';
 // ui
 import Price from 'components/price'
 import { motion } from 'framer-motion';
@@ -152,7 +152,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 	const buyNow: MouseEventHandler<HTMLButtonElement> = async () => {
 		setbuyNowButtonLoading(true)
 		try {
-			const { redirect_link } = await createPayPalOrderLink([{ PID: product.firestoreID, quantity: selectedQuantity, product }], true)
+			const { redirect_link } = await createPayPalOrder([{ PID: product.firestoreID, quantity: selectedQuantity, product }], true)
 			router.push(redirect_link)
 		}
 		catch (e) {
