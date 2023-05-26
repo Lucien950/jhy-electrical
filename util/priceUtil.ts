@@ -2,25 +2,22 @@ import { OrderProductFilled } from "types/order"
 import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
 import { FinalPriceInterface, PriceInterface } from "types/price"
 import { Address } from "@paypal/paypal-js"
-
-export const roundPriceUp = (n: number)=>{
-	return Math.ceil(n*100)/100
-}
+import { Decimal } from 'decimal.js';
 
 const PROVINCE_NAME_TO_CODE: {[key: string]: string} = {
-	"Alberta": "AB",
-	"British Columbia": "BC",
-	"Manitoba": "MB",
-	"New Brunswick": "NB",
-	"Newfoundland and Labrador": "NL",
-	"Northwest Territories": "NT",
-	"Nova Scotia": "NS",
-	"Nunavut": "NU",
-	"Ontario": "ON",
-	"Prince Edward Island": "PE",
-	"Quebec": "QC",
-	"Saskatchewan": "SK",
-	"Yukon": "YT"
+	"alberta": "AB",
+	"british columbia": "BC",
+	"manitoba": "MB",
+	"new brunswick": "NB",
+	"newfoundland and labrador": "NL", "newfoundland": "NL", "labrador": "NL",
+	"northwest territories": "NT",
+	"nova scotia": "NS",
+	"nunavut": "NU",
+	"ontario": "ON",
+	"prince edward island": "PE",
+	"quebec": "QC",
+	"saskatchewan": "SK",
+	"yukon": "YT"
 }
 const TAX_RATE_BY_PROVINCE: {[key: string]: number} = {
 	"AB": 0.05,
@@ -39,6 +36,7 @@ const TAX_RATE_BY_PROVINCE: {[key: string]: number} = {
 }
 
 export type subAddr = Pick<Required<Address>, "postal_code" | "admin_area_1">
+const DECIMAL_ZERO = new Decimal(0)
 
 /**
  * @param products Products in the order, MUST HAVE product field filled in
@@ -63,7 +61,11 @@ async function makePrice(products: OrderProductFilled[], address: Address): Prom
  */
 async function makePrice(products: OrderProductFilled[], address?: subAddr | Address) {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
-	const subtotal = roundPriceUp(products.reduce((acc, p) => acc + p.quantity * p.product!.price, 0))
+	const subtotal = products.reduce((acc, p) => {
+		const pQuant = new Decimal(p.quantity)
+		const pPrice = new Decimal(p.product!.price)
+		return acc.add(pQuant.times(pPrice))
+	}, DECIMAL_ZERO)
 
 	const shipping = address?.postal_code
 		? await calculateShippingProducts(products.map(p => {
@@ -71,11 +73,18 @@ async function makePrice(products: OrderProductFilled[], address?: subAddr | Add
 				return { weight, length, height, width, quantity: p.quantity, id: p.PID } as productPackageInfo
 			}), address.postal_code)
 		: undefined
-	const TAX_RATE = address?.admin_area_1 ? TAX_RATE_BY_PROVINCE[PROVINCE_NAME_TO_CODE[address.admin_area_1]] : undefined
-	const tax = roundPriceUp((TAX_RATE || 0) * (subtotal + (shipping || 0)))
-	const total = subtotal + (shipping || 0) + tax
+	const TAX_RATE = address?.admin_area_1
+		? new Decimal(TAX_RATE_BY_PROVINCE[PROVINCE_NAME_TO_CODE[address.admin_area_1.toLowerCase()]])
+		: undefined
+	const tax = TAX_RATE ? TAX_RATE.times(subtotal.add(shipping || 0)).toDecimalPlaces(2) : undefined
+	const total = subtotal.add(shipping || 0).add((tax || 0))
 
-	return { subtotal, shipping, tax, total }
+	return {
+		subtotal: subtotal.toNumber(),
+		shipping: shipping && shipping.toNumber(),
+		tax: tax && tax.toNumber(),
+		total: total.toNumber()
+	}
 }
 
 export {makePrice}

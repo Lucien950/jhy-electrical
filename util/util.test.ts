@@ -1,5 +1,3 @@
-import Joi from "joi"
-
 describe("String Tests", ()=>{
 	it("Should convert to Base64", async ()=>{
 		const { toB64 } = await import("util/string")
@@ -17,6 +15,9 @@ describe("String Tests", ()=>{
 	})
 })
 
+import Joi from "joi"
+import { OrderProductFilled } from "types/order"
+import { ProductInterface } from "types/product"
 describe("Type Validation Tests", ()=>{
 	const objSchema = Joi.object({
 		a: Joi.string().required(),
@@ -33,5 +34,55 @@ describe("Type Validation Tests", ()=>{
 		expect(validateObjErr({a: "a", b: 1, c: true, d: ["a", 1]})).toBeInstanceOf(Joi.ValidationError)
 		expect(validateObj({a: "a", b: 1, c: true, d: ["a", "b"]})).toBe(true)
 		expect(validateObjErr({a: "a", b: 1, c: true, d: ["a", "b"]})).toBe(undefined)
+	})
+})
+
+import * as calculateShippingModule from "./shipping/calculateShipping"
+import { makePrice } from "./priceUtil"
+import { Decimal } from "decimal.js"
+
+describe("Price Tests", ()=>{
+	const products: OrderProductFilled[] = [
+		{
+			PID: "abc",
+			quantity: 3,
+			product: { price: 0.01 } as ProductInterface
+		},
+		{
+			PID: "def",
+			quantity: 4,
+			product: { price: 0.01 } as ProductInterface
+		}
+	]
+
+	let mockCalculateShipping: jest.SpyInstance<Promise<Decimal>, [products: calculateShippingModule.productPackageInfo[], destination: string], any>;
+	beforeEach(() => {
+		mockCalculateShipping = jest.spyOn(calculateShippingModule, 'calculateShippingProducts')
+			.mockImplementation(async () => new Decimal(0.12))
+	})
+	afterEach(() => {
+		mockCalculateShipping.mockRestore();
+	})
+
+
+	it("should add accurately", async ()=>{
+		const res = await makePrice(products)
+		expect(res.subtotal).toBe(0.07)
+		expect(res.total).toBe(0.07)
+		expect(res.shipping).toBe(undefined)
+		expect(res.tax).toBe(undefined)
+	})
+
+	it("should add accurately with shipping and taxes", async ()=>{
+		const res = await makePrice(products, {
+			postal_code: "TESTPOSTALCODE",
+			admin_area_1: "Ontario"
+		})
+		expect(res.subtotal).toBe(0.07)
+		expect(res.shipping).toBe(0.12)
+		expect(res.tax).toBe(0.02)
+		expect(res.total).toBe(0.21)
+		expect(mockCalculateShipping).toHaveBeenCalledTimes(1)
+		expect(mockCalculateShipping).toHaveBeenNthCalledWith(1, [{ id: "abc", quantity: 3 }, { id: "def", quantity: 4 }], "TESTPOSTALCODE")
 	})
 })
