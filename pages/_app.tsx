@@ -21,6 +21,8 @@ import { cartFillProducts } from "util/redux/cart.slice";
 import { OrderProduct } from "types/order"
 import { firebaseConsoleBadge } from 'util/firebase/console'
 
+import "util/firebase/emulator"
+
 // dispatch here in order to be inside the provider
 const CartUpdater = ()=>{
 	const dispatch = useDispatch()

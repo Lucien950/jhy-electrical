@@ -37,15 +37,16 @@ next-env.d.ts
 
 .todo
 *.pur
-
 /productsdetails
 .firebase/
-
 firebase-debug.log
 .prettierignore
 type.json
 ./analyze
-
 .vscode/settings.json
 assets
 public/card_back.ai
+firestore-debug.log
+ui-debug.log
+firebaseExport/
+storage.rules
