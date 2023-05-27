@@ -20,13 +20,31 @@ export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)
 }
 
 /**
+ * @param productID Product ID
+ * @returns The product document from firebase
+ */
+export const getFirebaseProductDocByID = async (productID: string)=>{
+	const productDoc = await getDoc(doc(db, "products", productID))
+	if (!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
+	return productDoc
+}
+
+/**
+ * @param productID Product ID
+ * @returns The product object raw from firebase
+ */
+export const getFirebaseProductByID = async (productID: string)=>{
+	const productDoc = await getFirebaseProductDocByID(productID)
+	return productDoc.data() as FirebaseProductInterface
+}
+
+/**
  * Given a product ID, returns the product object
  * @param productID Product ID
  * @returns product object
  */
 export const getProductByID = async (productID: string)=>{
-	const productDoc = await getDoc(doc(db, "products", productID))
-	if(!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
+	const productDoc = await getFirebaseProductDocByID(productID)
 	return fillProductDoc(productDoc)
 }
 

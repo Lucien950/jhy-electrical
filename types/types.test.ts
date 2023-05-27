@@ -2,8 +2,7 @@ import Joi from "joi"
 import { Card } from "./card"
 import {validateCard, validateCardError} from "types/card"
 import { validateFinalCustomer, validateFinalCustomerError, FinalCustomerInterface } from "./customer"
-import { validateAddress, validateAddressError } from "types/paypal"
-import { validatePostalCode, validatePostalCodeError } from "util/shipping/postalCode"
+import { validateAddress, validateAddressError, validatePostalCode, validatePostalCodeError } from "types/address"
 // types
 import { ProductInterface, validateProduct, validateProductError } from "./product"
 import { OrderProduct, OrderProductFilled, validateOrderProduct, validateOrderProductError, validateOrderProductFilled, validateOrderProductFilledError } from "./order"
@@ -42,20 +41,20 @@ describe("Should Validate Postal Code Correctly", () => {
 const successAddress: Address = {
 	address_line_1: "123 Test Street",
 	address_line_2: "Test Apartment",
-	admin_area_2: "Test City",
-	admin_area_1: "Test Province",
+	admin_area_1: "Test City",
+	admin_area_2: "Ontario",
 	postal_code: successPostalCode,
 	country_code: "CA",
 }
-describe("Should Validate Address Correctly", () => {
+describe("Address Validation", () => {
 	it("Should Validate Successful Address", () => {
-		expect(validateAddress(successAddress)).toBe(true)
 		expect(validateAddressError(successAddress)).toBe(undefined)
+		expect(validateAddress(successAddress)).toBe(true)
 	})
 	it("Should validate address with no address_line_2", () => {
 		const shortAddress = { ...successAddress, address_line_2: "" }
-		expect(validateAddress(shortAddress)).toBe(true)
 		expect(validateAddressError(shortAddress)).toBe(undefined)
+		expect(validateAddress(shortAddress)).toBe(true)
 	})
 	it("Should Validate Address with no address line 1", () => {
 		const shortAddressError = { ...successAddress, address_line_1: "" }
@@ -73,7 +72,7 @@ describe("Should Validate Address Correctly", () => {
 		const shortCityError = { ...successAddress, admin_area_2: "" }
 		expect(validateAddress(shortCityError)).toBe(false)
 		expect(validateAddressError(shortCityError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCityError)?.message).toBe('"admin_area_2" is not allowed to be empty')
+		expect(validateAddressError(shortCityError)?.message).toBe("\"admin_area_2\" must be one of [alberta, british columbia, manitoba, new brunswick, newfoundland and labrador, newfoundland, labrador, northwest territories, nova scotia, nunavut, ontario, prince edward island, quebec, saskatchewan, yukon]")
 	})
 	it("Should Validate Address with no province", () => {
 		const shortProvinceError = { ...successAddress, admin_area_1: "" }
@@ -91,23 +90,23 @@ describe("Should Validate Address Correctly", () => {
 		const shortCountryCodeError = { ...successAddress, country_code: "" }
 		expect(validateAddress(shortCountryCodeError)).toBe(false)
 		expect(validateAddressError(shortCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCountryCodeError)?.message).toBe('"country_code" is not allowed to be empty')
+		expect(validateAddressError(shortCountryCodeError)?.message).toBe('\"country_code\" must be [CA]')
 	})
 	it("Should Validate Address with long country code", () => {
 		const longCountryCodeError = { ...successAddress, country_code: "a".repeat(3) }
 		expect(validateAddress(longCountryCodeError)).toBe(false)
 		expect(validateAddressError(longCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(longCountryCodeError)?.message).toBe("\"country_code\" length must be 2 characters long")
+		expect(validateAddressError(longCountryCodeError)?.message).toBe("\"country_code\" must be [CA]")
 	})
 	it("Should Validate Address with short country code", () => {
 		const shortCountryCodeError = { ...successAddress, country_code: "a" }
 		expect(validateAddress(shortCountryCodeError)).toBe(false)
 		expect(validateAddressError(shortCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCountryCodeError)?.message).toBe("\"country_code\" length must be 2 characters long")
+		expect(validateAddressError(shortCountryCodeError)?.message).toBe("\"country_code\" must be [CA]")
 	})
 })
 
-describe("Should Validate Card Correctly", ()=>{
+describe("Card Validation", ()=>{
 	const successCard: Card = {
 		cardName: "Test Card",
 		cardNumber: "4214029346506481",
@@ -180,7 +179,7 @@ const successCustomer: FinalCustomerInterface = {
 	},
 	address: successAddress,
 }
-describe("Should Validate Final Customer Correctly", ()=>{
+describe("Final Customer Validation", ()=>{
 	it("Should Validate Successful Customer", ()=>{
 		expect(validateFinalCustomer(successCustomer)).toBe(true)
 		expect(validateFinalCustomerError(successCustomer)).toBe(undefined)
@@ -238,7 +237,7 @@ const successProductWithoutImageAndID: Omit<ProductInterface, "productImageURL" 
 	weight: 1,
 }
 const successProduct = { ...successProductWithoutImageAndID, productImageURL: "test", firestoreID: "test" }
-describe("Should Validate Product Correctly", ()=>{
+describe("Product Validation", ()=>{
 	it("Should Validate Successful Product", ()=>{
 		expect(validateProduct(successProductWithoutImageAndID)).toBe(true)
 		expect(validateProductError(successProductWithoutImageAndID)).toBe(undefined)
@@ -372,7 +371,7 @@ const successOrderProductFilled: OrderProductFilled = {
 	quantity: 1,
 	product: successProduct
 }
-describe("Should Validate Order Product Correctly", ()=>{
+describe("Order Product Validation", ()=>{
 	it("Should validate Order Product", ()=>{
 		expect(validateOrderProduct(successOrderProduct)).toBe(true)
 		expect(validateOrderProductError(successOrderProduct)).toBe(undefined)

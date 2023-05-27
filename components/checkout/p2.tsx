@@ -14,7 +14,7 @@ import { useRouter } from "next/router"
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
 import { useDispatch } from "react-redux";
-import { submitOrder } from "util/paypal/client/submitOrder_client";
+import { submitOrder } from "util/paypal/submitOrder_client";
 import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
 

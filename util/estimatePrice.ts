@@ -1,6 +1,6 @@
 import { priceAPIProps, priceAPIRes } from "pages/api/price";
 import { OrderProduct } from "types/order";
-import { apiResponse } from "./paypal/server/api";
+import { apiResponse } from "server/api";
 
 
 export const estimatePrice = async (productIDs: OrderProduct[])=>{

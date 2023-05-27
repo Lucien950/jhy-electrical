@@ -9,8 +9,8 @@ import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // util
-import { getOrder } from 'util/paypal/server/getOrderFetch'
-import { validateAddress, validateAddressError } from 'types/paypal'
+import { getOrder } from 'server/paypal/getOrderFetch'
+import { validateAddress, validateAddressError } from 'types/address'
 // types
 import { OrderProduct, OrderProductFilled } from 'types/order'
 import { validateName, CustomerInterface, validateNameError, FinalCustomerInterface } from 'types/customer'
@@ -221,7 +221,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 	);
 }
 
-import { updateOrderAddress } from 'util/paypal/server/updateOrderFetch'
+import { updateOrderAddress } from 'server/paypal/updateOrderFetch'
 import { fillOrderProducts } from 'util/orderUtil'
 import { Address } from '@paypal/paypal-js'
 

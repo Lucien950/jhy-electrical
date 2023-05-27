@@ -9,13 +9,13 @@ import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
 // types
 import { CustomerInterface } from 'types/customer';
-import { postalCodePattern } from "util/shipping/postalCode";
+import { postalCodePattern } from "types/address";
 import { Address } from "@paypal/paypal-js"
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
 import { ValidationError } from "joi";
 import { OrderProductFilled } from "types/order";
-import { updateOrderAddress } from "util/paypal/client/updateOrder_client";
+import { updateOrderAddress } from "util/paypal/updateOrder_client";
 import { PriceInterface } from "types/price";
 import { isEqual } from "lodash";
 

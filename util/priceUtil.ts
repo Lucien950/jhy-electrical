@@ -1,24 +1,10 @@
 import { OrderProductFilled } from "types/order"
-import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
+import { calculateShippingProducts, productPackageInfo } from "../server/shipping/calculateShipping"
 import { FinalPriceInterface, PriceInterface } from "types/price"
 import { Address } from "@paypal/paypal-js"
 import { Decimal } from 'decimal.js';
+import { PROVINCE_NAME_TO_CODE } from "types/address";
 
-const PROVINCE_NAME_TO_CODE: {[key: string]: string} = {
-	"alberta": "AB",
-	"british columbia": "BC",
-	"manitoba": "MB",
-	"new brunswick": "NB",
-	"newfoundland and labrador": "NL", "newfoundland": "NL", "labrador": "NL",
-	"northwest territories": "NT",
-	"nova scotia": "NS",
-	"nunavut": "NU",
-	"ontario": "ON",
-	"prince edward island": "PE",
-	"quebec": "QC",
-	"saskatchewan": "SK",
-	"yukon": "YT"
-}
 const TAX_RATE_BY_PROVINCE: {[key: string]: number} = {
 	"AB": 0.05,
 	"BC": 0.12,

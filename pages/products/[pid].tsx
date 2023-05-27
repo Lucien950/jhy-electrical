@@ -14,7 +14,7 @@ import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 // util
 import { getProductByID } from 'util/productUtil'
-import { createPayPalOrder } from 'util/paypal/client/createOrder_client';
+import { createPayPalOrder } from 'util/paypal/createOrder_client';
 // ui
 import Price from 'components/price'
 import { motion } from 'framer-motion';

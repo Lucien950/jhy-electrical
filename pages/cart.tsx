@@ -14,7 +14,7 @@ import { logEvent } from "firebase/analytics";
 import { toast } from "react-toastify";
 import Price from "components/price";
 import { PaypalSVG } from "components/paypalSVG";
-import { createPayPalOrder } from "util/paypal/client/createOrder_client";
+import { createPayPalOrder } from "util/paypal/createOrder_client";
 import { analytics } from "util/firebase/analytics";
 // util price
 import { Transition } from "@headlessui/react";

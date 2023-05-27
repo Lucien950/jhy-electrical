@@ -1,12 +1,12 @@
 // SERVERSIDE
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { apiHandler, apiRespond } from 'util/paypal/server/api';
+import { apiHandler, apiRespond } from 'server/api';
 // types
 import { OrderProduct, orderProductSchema } from 'types/order';
 import { makePrice } from 'util/priceUtil';
 import { OrderResponseBodyMinimal } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/orderUtil';
-import { createOrderAPICall } from 'util/paypal/server/createOrderFetch';
+import { createOrderAPICall } from 'server/paypal/createOrderFetch';
 import Joi from 'joi';
 import { validateSchema } from 'util/typeValidate';
 

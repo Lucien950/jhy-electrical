@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { validateFinalCustomer, validateFinalCustomerError } from "types/customer"
 import { validateFinalPrice, validateFinalPriceError } from "types/price"
-import { apiHandler, apiRespond } from "util/paypal/server/api"
+import { apiHandler, apiRespond } from "server/api"
 import { fillOrderProducts } from "util/orderUtil"
-import { getOrder } from "util/paypal/server/getOrderFetch"
-import { submitOrderFetch } from "util/paypal/server/submitOrderFetch"
+import { getOrder } from "server/paypal/getOrderFetch"
+import { submitOrderFetch } from "server/paypal/submitOrderFetch"
 import Joi from "joi"
 import { validateSchema } from "util/typeValidate"
 
