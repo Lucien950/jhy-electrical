@@ -1,5 +1,5 @@
 import { PayPalAuth, PayPalSimpleError } from "types/paypal"
-import { PAYPALDOMAIN } from "util/paypal/server/domain";
+import { PAYPALDOMAIN } from "server/paypal/domain";
 import { toB64 } from "util/string";
 
 const generateAccessToken = async () => {

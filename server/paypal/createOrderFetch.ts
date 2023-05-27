@@ -1,5 +1,5 @@
 // util
-import { DOMAIN, PAYPALDOMAIN } from "util/paypal/server/domain"
+import { DOMAIN, PAYPALDOMAIN } from "server/paypal/domain"
 // types
 import { PayPalError } from 'types/paypal';
 import { OrderProduct, OrderProductFilled } from "types/order";

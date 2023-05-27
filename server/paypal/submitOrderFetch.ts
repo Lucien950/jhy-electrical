@@ -1,5 +1,5 @@
 // paypal
-import { PAYPALDOMAIN } from "util/paypal/server/domain";
+import { PAYPALDOMAIN } from "server/paypal/domain";
 import { getOrder } from "./getOrderFetch";
 import { generateAccessToken } from "./auth";
 // types

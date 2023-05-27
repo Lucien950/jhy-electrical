@@ -3,9 +3,9 @@ import { PayPalError } from "types/paypal";
 import { Address } from "@paypal/paypal-js"
 // util
 import { makePrice } from "util/priceUtil";
-import { getOrder } from "util/paypal/server/getOrderFetch";
-import { generateAccessToken } from "util/paypal/server/auth";
-import { PAYPALDOMAIN } from "util/paypal/server/domain";
+import { getOrder } from "server/paypal/getOrderFetch";
+import { generateAccessToken } from "server/paypal/auth";
+import { PAYPALDOMAIN } from "server/paypal/domain";
 import { fillOrderProducts } from "util/orderUtil";
 
 export const updateOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
