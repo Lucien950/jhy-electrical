@@ -82,13 +82,18 @@ export const NavBar = () => {
 			</nav>
 			{/* side */}
 			<motion.div
-				className="fixed z-20 top-0 left-0 h-screen max-w-[32rem] w-full pt-36 bg-white bg-opacity-20 gap-y-4 md:hidden"
-				style={{ backdropFilter: "blur(16px)" }}
+				className="
+					fixed z-20 top-0 left-0 px-2 grid place-items-center
+					h-screen max-w-[32rem] w-full md:hidden
+					bg-white bg-opacity-20 backdrop-blur-lg"
 				animate={isMobileMenuOpen ? "opened" : "closed"} initial="closed"
-				variants={{ opened: { x: 0 }, closed: { x: "-100%" } }} transition={{ ease: "easeInOut", duration: 0.4 }}
+				variants={{ opened: { x: 0 }, closed: { x: "-100%" } }}
+				transition={{ ease: "easeInOut", duration: 0.4 }}
 				id="mobileMenu"
 			>
-				<LinkBoxes onClick={closeMobileMenu} />
+				<div className="w-full">
+					<LinkBoxes onClick={closeMobileMenu} />
+				</div>
 			</motion.div>
 		</>
 	)
