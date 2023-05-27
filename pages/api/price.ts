@@ -4,7 +4,7 @@ import { OrderProduct, orderProductSchema } from "types/order";
 import { FinalPriceInterface } from "types/price";
 import { fillOrderProducts } from "util/orderUtil";
 import { apiHandler, apiRespond } from "server/api";
-import { makePrice, subAddr } from "util/priceUtil";
+import { makePrice, subAddr } from "server/priceUtil";
 import { validateSchema } from "util/typeValidate";
 import {getClientIp} from "request-ip"
 

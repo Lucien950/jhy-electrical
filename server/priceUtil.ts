@@ -1,5 +1,5 @@
 import { OrderProductFilled } from "types/order"
-import { calculateShippingProducts, productPackageInfo } from "../server/shipping/calculateShipping"
+import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
 import { FinalPriceInterface, PriceInterface } from "types/price"
 import { Address } from "@paypal/paypal-js"
 import { Decimal } from 'decimal.js';

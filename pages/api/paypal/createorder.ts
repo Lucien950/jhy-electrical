@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { apiHandler, apiRespond } from 'server/api';
 // types
 import { OrderProduct, orderProductSchema } from 'types/order';
-import { makePrice } from 'util/priceUtil';
+import { makePrice } from 'server/priceUtil';
 import { OrderResponseBodyMinimal } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/orderUtil';
 import { createOrderAPICall } from 'server/paypal/createOrderFetch';

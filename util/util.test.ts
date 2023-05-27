@@ -53,7 +53,7 @@ describe("Type Validation Tests", () => {
 })
 
 import * as calculateShippingModule from "../server/shipping/calculateShipping"
-import { makePrice } from "./priceUtil"
+import { makePrice } from "../server/priceUtil"
 import { Decimal } from "decimal.js"
 
 describe("Price Tests", () => {
