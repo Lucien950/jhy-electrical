@@ -31,7 +31,8 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 				return res.send({ err: payload.details.map((detail) => detail.message).join(", ") } as apiResponse<never, string>)
 			}
 			if (payload instanceof Error) {
-				if (process.env.NODE_ENV === "development") res.send({ err: `${payload.name}: ${payload.message}` } as apiResponse<never, string>)
+				if (process.env.NODE_ENV === "development")
+					res.send({ err: { name: payload.name, message: payload.message, cause: payload.cause }} as apiResponse<never, {name: string, message: string, cause: string}>)
 				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
 			}
 			else res.send({ err: payload } as apiResponse<never, T>)
