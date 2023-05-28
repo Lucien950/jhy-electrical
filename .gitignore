@@ -50,3 +50,7 @@ firestore-debug.log
 ui-debug.log
 firebaseExport/
 storage.rules
+
+server/firebase/jhy-electrical-firebase-adminsdk-ogqh7-b885703f25.json
+
+server/firebase/serviceAccountKey.json

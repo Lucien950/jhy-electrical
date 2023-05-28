@@ -163,10 +163,8 @@ export const ProductsComponent = () => {
 		<>
 			{/* Modal */}
 			<Transition show={modalProduct !== null}>
-				{/* this is allowed because transition certifies that modalProuct isn't null */}
-				{/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
 				<ProductModal
-					closeModal={closeModal} defaultModalProduct={modalProduct!}
+					closeModal={closeModal} defaultModalProduct={modalProduct!} //eslint-disable-line @typescript-eslint/no-non-null-assertion
 					defaultMode={modalMode} insertProduct={insertProduct}
 				/>
 			</Transition >

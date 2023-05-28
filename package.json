@@ -25,6 +25,7 @@
     "decimal.js": "^10.4.3",
     "eslint-config-next": "13.4.2",
     "firebase": "^9.22.0",
+    "firebase-admin": "^11.8.0",
     "framer-motion": "^10.12.10",
     "joi": "^17.9.2",
     "lodash": "^4.17.21",

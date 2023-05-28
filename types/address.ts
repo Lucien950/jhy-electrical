@@ -28,8 +28,8 @@ export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1"
 export const addressSchema = Joi.object({
 	address_line_1: Joi.string().max(300).required(),
 	address_line_2: Joi.string().max(300).optional().allow(""),
-	admin_area_1: Joi.string().required(),
-	admin_area_2: Joi.string().valid(...PROVINCES).insensitive().required(),
+	admin_area_1: Joi.string().valid(...PROVINCES).insensitive().required(),
+	admin_area_2: Joi.string().required(),
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().valid("CA").required(),
 })

@@ -51,7 +51,7 @@ const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 							[customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 						 [customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
 
 	return {stage, setStage, p0CusUpdated, p1CusUpdated}

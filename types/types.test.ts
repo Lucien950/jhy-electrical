@@ -41,8 +41,8 @@ describe("Should Validate Postal Code Correctly", () => {
 const successAddress: Address = {
 	address_line_1: "123 Test Street",
 	address_line_2: "Test Apartment",
-	admin_area_1: "Test City",
-	admin_area_2: "Ontario",
+	admin_area_1: "Ontario",
+	admin_area_2: "Test City",
 	postal_code: successPostalCode,
 	country_code: "CA",
 }
@@ -72,13 +72,13 @@ describe("Address Validation", () => {
 		const shortCityError = { ...successAddress, admin_area_2: "" }
 		expect(validateAddress(shortCityError)).toBe(false)
 		expect(validateAddressError(shortCityError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCityError)?.message).toBe("\"admin_area_2\" must be one of [alberta, british columbia, manitoba, new brunswick, newfoundland and labrador, newfoundland, labrador, northwest territories, nova scotia, nunavut, ontario, prince edward island, quebec, saskatchewan, yukon]")
+		expect(validateAddressError(shortCityError)?.message).toBe("\"admin_area_2\" is not allowed to be empty")
 	})
 	it("Should Validate Address with no province", () => {
 		const shortProvinceError = { ...successAddress, admin_area_1: "" }
 		expect(validateAddress(shortProvinceError)).toBe(false)
 		expect(validateAddressError(shortProvinceError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortProvinceError)?.message).toBe('"admin_area_1" is not allowed to be empty')
+		expect(validateAddressError(shortProvinceError)?.message).toBe('\"admin_area_1\" must be one of [alberta, british columbia, manitoba, new brunswick, newfoundland and labrador, newfoundland, labrador, northwest territories, nova scotia, nunavut, ontario, prince edward island, quebec, saskatchewan, yukon]')
 	})
 	it("Should Validate Address with no postal code", () => {
 		const shortPostalCodeError = { ...successAddress, postal_code: "" }
