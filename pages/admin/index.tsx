@@ -10,7 +10,6 @@ import { auth } from "util/firebase/auth"
 import { db } from 'util/firebase/firestore';
 import { fillOrder } from "util/orderUtil"
 // types
-import { ProductInterface } from 'types/product';
 import { AdminInterface } from 'types/admin';
 import { OrderInterface } from 'types/order';
 // UI
@@ -19,9 +18,6 @@ import { ProductsComponent } from 'components/admin/ProductsComponents';
 import { OrdersComponent } from 'components/admin/OrdersComponent';
 import AnalyticsComponent from 'components/admin/AnalyticsComponent';
 import { firebaseConsoleBadge } from 'util/firebase/console';
-import { Transition } from '@headlessui/react';
-import ProductModal from 'components/admin/ProductModal';
-import { getAllProducts, sortProductsByName } from 'util/productUtil';
 import { toast } from 'react-toastify';
 
 interface SidebarButtonProps {
@@ -91,41 +87,10 @@ const useOrders = () => {
 
 	return { allOrders }
 }
-const useProducts = () => {
-	const [products, setProducts] = useState<ProductInterface[]>([])
-	const [productsLoaded, setProductsLoaded] = useState(false)
-	useEffect(() => {
-		getAllProducts()
-			.then(allProducts => {
-				setProducts(sortProductsByName(allProducts))
-				setProductsLoaded(true)
-			})
-	}, [])
-	const insertProduct = (newP: ProductInterface) => {
-		setProducts(p => {
-			const removedP = p.filter(p => p.firestoreID !== newP.firestoreID)
-			const sortedProducts = sortProductsByName([...removedP, newP])
-			return sortedProducts
-		})
-	}
-	const deleteDisplayProduct = (id: string) => setProducts(p => p.filter(p => p.firestoreID !== id))
-	return { products, productsLoaded, insertProduct, deleteDisplayProduct }
-}
-const useModal = () => {
-	// edit product modal
-	const [modalProduct, setModalProduct] = useState<Partial<ProductInterface> | null>(null)
-	const [modalMode, setModalMode] = useState<string | null>(null)
-	const openEditModal = (defaultProduct: ProductInterface) => { setModalMode("edit"); setModalProduct(defaultProduct) }
-	const openNewModal = () => { setModalMode("new"); setModalProduct({}) }
-	const closeModal = () => { setModalMode(null); setModalProduct(null) }
-	return { modalProduct, modalMode, openEditModal, openNewModal, closeModal }
-}
 
 export default function Admin() {
 	const { authLoading, admin, signout } = useGoogleAuth()
-	const { modalProduct, modalMode, openEditModal, openNewModal, closeModal } = useModal()
 	const { allOrders } = useOrders()
-	const { products, productsLoaded, insertProduct, deleteDisplayProduct } = useProducts()
 	
 	// Sidebar scrolling
 	const analyticSection = useRef<HTMLDivElement>(null)
@@ -138,12 +103,7 @@ export default function Admin() {
 			<Head>
 				<title>Admin | JHY Electrical</title>
 			</Head>
-			{/* Modal */}
-			<Transition show={modalProduct !== null}>
-				{/* this is allowed because transition certifies that modalProuct isn't null */}
-				{/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-				<ProductModal closeModal={closeModal} defaultModalProduct={modalProduct!} defaultMode={modalMode} insertProduct={insertProduct} />
-			</Transition>
+			
 			<div className="flex flex-row gap-x-2">
 				{/* sidebar */}
 				<div className="lg:flex-[1.7] overflow-hidden rounded-xl bg-zinc-100 flex flex-col items-center lg:items-start sticky top-0 max-h-screen py-6 px-2 lg:px-6">
@@ -186,9 +146,7 @@ export default function Admin() {
 
 					{/* products */}
 					<h1 className="text-4xl font-bold mb-4 mt-7" id="products" ref={productSection}>Products</h1>
-					<ProductsComponent
-						newProductModal={openNewModal} openEditModal={openEditModal}
-						products={products} deleteDisplayProduct={deleteDisplayProduct} loaded={productsLoaded} />
+					<ProductsComponent />
 				</div>
 			</div>
 		</>
