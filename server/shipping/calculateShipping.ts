@@ -1,9 +1,9 @@
 import CanadaPostClient from "canadapost-api"
 import { Decimal } from "decimal.js";
 
-const userID = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_USERID_DEV : process.env.NEXT_PUBLIC_CANADAPOST_USERID
-const password = process.env.NODE_ENV === "development" ? process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD_DEV : process.env.NEXT_PUBLIC_CANADAPOST_PASSWORD
-const cpc = new CanadaPostClient(userID, password, process.env.NEXT_PUBLIC_CANADAPOST_CUSTOMERID);
+const userID = process.env.NODE_ENV === "development" ? process.env.CANADAPOST_USERID_DEV : process.env.CANADAPOST_USERID
+const password = process.env.NODE_ENV === "development" ? process.env.CANADAPOST_PASSWORD_DEV : process.env.CANADAPOST_PASSWORD
+const cpc = new CanadaPostClient(userID, password, process.env.CANADAPOST_CUSTOMERID);
 export interface productPackageInfo {
 	width: number,
 	height: number,
@@ -23,7 +23,7 @@ export const calculateShippingProduct = async (product: productPackageInfo, dest
 			weight: product.weight,
 			dimensions: { length, width, height }
 		},
-		originPostalCode: process.env.NEXT_PUBLIC_ORIGIN_POSTAL_CODE,
+		originPostalCode: process.env.ORIGIN_POSTAL_CODE,
 		destination: {
 			domestic: {
 				postalCode: destination.replace(" ", "").toUpperCase()

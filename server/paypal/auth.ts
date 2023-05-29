@@ -4,11 +4,11 @@ import { toB64 } from "util/string";
 
 const generateAccessToken = async () => {
 	const clientid = process.env.NODE_ENV === "development"
-										? process.env.NEXT_PUBLIC_PAYPAL_CLIENTID_DEV
-										: process.env.NEXT_PUBLIC_PAYPAL_CLIENTID
+										? process.env.PAYPAL_CLIENTID_DEV
+										: process.env.PAYPAL_CLIENTID
 	const secret = process.env.NODE_ENV === "development"
-										? process.env.NEXT_PUBLIC_PAYPAL_CLIENT_SECRET_DEV
-										: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_SECRET
+										? process.env.PAYPAL_CLIENT_SECRET_DEV
+										: process.env.PAYPAL_CLIENT_SECRET
 	
 	const auth = toB64(`${clientid}:${secret}`)
 	const options = {

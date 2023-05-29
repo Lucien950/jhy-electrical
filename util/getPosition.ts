@@ -69,7 +69,7 @@ export const getUserPostcode = async () => {
 
 	const lat = position.coords.latitude,
 				long = position.coords.longitude,
-				url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
+				url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
 	
 	const response = await fetch(url)
 	let geocodeResponse = await response.json() as GeocodeAPI, postalCode = '';
