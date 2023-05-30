@@ -281,10 +281,9 @@ export default function Cart() {
 							</div>
 
 							<p className="mt-4 text-gray-600 text-sm">
-								**TEMPORARY, AND NOT REFLECTIVE OF COMPANY POLICY <br />
-								30 days withdrawal and free returns. Read more about Return and Refund. <br />
 								Prices and shipping costs are not confirmed until you&apos;ve reached the checkout <br />
-								The items in your shopping bad are saved for 8 days on this computer. We cannot guarantee availability
+								Taxes and shipping are calculated based on the shipping address. Estimated shipping is based on your current approximate location. <br />
+								The items in your shopping bag are saved on the computer per refresh. Availability is not guaranteed. <br />
 							</p>
 						</div>
 					}

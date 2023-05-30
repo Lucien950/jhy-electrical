@@ -78,10 +78,20 @@ const useGoogleAuth = () => {
 const useOrders = () => {
 	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
 	useEffect(() => {
-		const unsubOrders = onSnapshot(query(collection(db, "orders"), orderBy("completed", "asc"), orderBy("dateTS", "desc"), orderBy("__name__", "asc")), (querySnapshot) => {
-			console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
-			Promise.all(querySnapshot.docs.map(fillOrder)).then(newOrders => setAllOrders(newOrders))
-		})
+		const unsubOrders = onSnapshot(
+			query(collection(db, "orders"), 
+			orderBy("completed", "asc"), 
+			orderBy("dateTS", "desc"), orderBy("__name__", "asc")),
+			(querySnapshot) => {
+				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
+				Promise.all(querySnapshot.docs.map(fillOrder)).then(newOrders => setAllOrders(newOrders))
+			},
+			(error) => {
+				if(error.code === "permission-denied") return
+				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Error: ', error);
+				toast.error("Admin Orders Listing Error, check console for more information")
+			}
+		)
 		return () => unsubOrders();
 	}, [])
 
