@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from 'next/image';
 
 const linkBoxes = ({ onClick }: { onClick?: () => void }) => (
-	<div className="mx-2 md:mx-8 my-2 mb-6">
+	<div>
 		<div className="flex flex-col md:flex-row gap-x-2 gap-y-2 overflow-hidden rounded-2xl">
 			<Link onClick={onClick} href="/products" className="block flex-1 focus:ring-4 outline-none rounded-md overflow-hidden">
 				<div className="p-4 h-72 md:h-80 flex flex-col justify-end relative text-white group">

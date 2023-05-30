@@ -11,7 +11,7 @@ import { displayVariants } from "./checkoutFormVariants";
 import { CustomerInterface, FinalCustomerInterface } from "types/customer";
 import { CardInfoInterface, validateCardError } from "types/card";
 // paypal hosted fields
-import { approveCard, approvePayPal } from "util/paypal/client/approvePayment_client";
+import { approveCard, approvePayPal } from "util/paypal/approvePayment_client";
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
 import { isEqual } from "lodash";

@@ -9,6 +9,7 @@ import { auth } from "util/firebase/auth"
 // loading
 import LoadingFullPage from "components/loadingFullPage";
 import { Oval } from 'react-loader-spinner';
+import { toast } from "react-toastify";
 
 const AdminLogin = () => {
 	const router = useRouter()
@@ -26,8 +27,11 @@ const AdminLogin = () => {
 		const password = ((e.target as HTMLFormElement).querySelector("#password") as HTMLInputElement).value
 
 		setLogInLoading(true)
-		const userCredential = await signInWithEmailAndPassword(auth, email, password)
-			
+		const userCredential = await signInWithEmailAndPassword(auth, email, password).catch((e)=>{
+			console.error(e)
+			toast.error("Login Error")
+			return null
+		})
 		console.log("login side user credential: ", userCredential)
 		setLogInLoading(false)
 	}

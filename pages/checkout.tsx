@@ -9,8 +9,8 @@ import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // util
-import { getOrder } from 'util/paypal/server/getOrderFetch'
-import { validateAddress, validateAddressError } from 'types/paypal'
+import { getOrder } from 'server/paypal/getOrderFetch'
+import { validateAddress, validateAddressError } from 'types/address'
 // types
 import { OrderProduct, OrderProductFilled } from 'types/order'
 import { validateName, CustomerInterface, validateNameError, FinalCustomerInterface } from 'types/customer'
@@ -51,7 +51,7 @@ const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 							[customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 						 [customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
 
 	return {stage, setStage, p0CusUpdated, p1CusUpdated}
@@ -221,7 +221,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 	);
 }
 
-import { updateOrderAddress } from 'util/paypal/server/updateOrderFetch'
+import { updateOrderAddress } from 'server/paypal/updateOrderFetch'
 import { fillOrderProducts } from 'util/orderUtil'
 import { Address } from '@paypal/paypal-js'
 

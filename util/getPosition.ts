@@ -1,5 +1,3 @@
-import Joi from "joi";
-
 interface GeocodeAPI {
 	plus_code?: PlusCode;
 	results: Result[];
@@ -43,17 +41,13 @@ enum LocationType {
 	Rooftop = "ROOFTOP",
 }
 
-export const postalCodePattern = "^(?!.*[DFIOQUdfioqu])[A-VXYa-vxy][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]$"
-export const postalCodeSchema = Joi.string().regex(new RegExp(postalCodePattern)).required()
-export const validatePostalCodeError = (candidate?: string) => postalCodeSchema.validate(candidate).error
-export const validatePostalCode = (candidate?: string) => (candidate !== undefined) && (validatePostalCodeError(candidate) === undefined)
+const getPosition = (): Promise<GeolocationPosition> => new Promise((res, rej) => {
+	navigator.geolocation.getCurrentPosition(res, rej)
+})
 
-const getPosition = () => new Promise((res, rej) => { navigator.geolocation.getCurrentPosition(res, rej) }) as Promise<GeolocationPosition>
+// TODO make this a api endpoint
 export const getUserPostcode = async () => {
-	if (!navigator.geolocation) {
-		console.error("Sorry, Geolocation is not supported by your browser.")
-		return
-	}
+	if (!navigator.geolocation) return console.error("Sorry, Geolocation is not supported by your browser.")
 
 	const position = await getPosition().catch(error=>{
 		switch (error.code) {
@@ -73,15 +67,13 @@ export const getUserPostcode = async () => {
 	})
 	if(!position) return
 
-	let lat = position.coords.latitude,
-		long = position.coords.longitude,
-		url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + long + "&key=AIzaSyAoZ63l_01Pq3QnOomUFZEJdVzL3OOWf5o";
-	console.log("MAPS API CALL")
+	const lat = position.coords.latitude,
+				long = position.coords.longitude,
+				url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${long}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+	
 	const response = await fetch(url)
 	let geocodeResponse = await response.json() as GeocodeAPI, postalCode = '';
-	if (geocodeResponse.status == "REQUEST_DENIED"){
-		throw geocodeResponse.error_message
-	}
+	if (geocodeResponse.status == "REQUEST_DENIED") throw geocodeResponse.error_message
 	postalCode = geocodeResponse.results
 		.filter(res => res.types.includes("postal_code"))[0].address_components
 		.filter(res => res.types.includes("postal_code"))[0].long_name

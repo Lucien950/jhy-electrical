@@ -36,8 +36,9 @@ export default function Services() {
 
 						<div className="flex flex-row justify-between items-center mt-6">
 							<p className="font-semibold text-xl">- Wei from JHY Electrical</p>
-							{/* TODO change to correct image */}
-							<img className="rounded-full object-cover h-16 md:h-24 w-16 md:w-24 shadow-sm pointer-events-none select-none" src="https://media.istockphoto.com/id/1386479313/photo/happy-millennial-afro-american-business-woman-posing-isolated-on-white.jpg?s=612x612&w=0&k=20&c=8ssXDNTp1XAPan8Bg6mJRwG7EXHshFO5o0v9SIj96nY=" alt="" />
+							<div className="h-16 md:h-24 w-16 md:w-24 relative">
+								<Image className="rounded-full object-cover shadow-md select-none" src="/wei_profile.webp" alt="Picture of Wei" fill />
+							</div>
 						</div>
 					</div>
 				</div>

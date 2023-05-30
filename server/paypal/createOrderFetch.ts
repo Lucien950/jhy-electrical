@@ -1,8 +1,8 @@
 // util
-import { DOMAIN, PAYPALDOMAIN } from "util/paypal/server/domain"
+import { DOMAIN, PAYPALDOMAIN } from "server/paypal/domain"
 // types
 import { PayPalError } from 'types/paypal';
-import { OrderProduct, OrderProductFilled } from "types/order";
+import { OrderProductFilled } from "types/order";
 import { PriceInterface } from "types/price";
 // paypal
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"

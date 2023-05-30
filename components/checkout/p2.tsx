@@ -14,9 +14,11 @@ import { useRouter } from "next/router"
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
 import { useDispatch } from "react-redux";
-import { submitOrder } from "util/paypal/client/submitOrder_client";
+import { submitOrder } from "util/paypal/submitOrder_client";
 import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
+import { logEvent } from "firebase/analytics";
+import { analytics } from "util/firebase/analytics";
 
 type ReviewViewProps = {
 	customerInfo: CustomerInterface,
@@ -46,7 +48,8 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 			setSubmitOrderLoading(false)
 			return
 		}
-		
+
+		logEvent(analytics(), "purchase")
 		dispatch(clearCart())
 		router.push(`/order/${firebaseOrderID}`)
 	}

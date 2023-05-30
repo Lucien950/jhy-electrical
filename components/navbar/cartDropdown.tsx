@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { toast } from "react-toastify"
 import { Oval } from "react-loader-spinner"
 // util
-import { createPayPalOrder } from "util/paypal/client/createOrder_client"
+import { createPayPalOrder } from "util/paypal/createOrder_client"
 // types
 import { OrderProduct } from "types/order"
 // components

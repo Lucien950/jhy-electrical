@@ -1,7 +1,7 @@
 import { Address } from "@paypal/paypal-js"
 import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder/address"
-import { apiResponse } from "util/paypal/server/api"
-import { clientErrorFactory } from "util/paypal/client/clientErrorFactory"
+import { apiResponse } from "server/api"
+import { clientErrorFactory } from "util/paypal/clientErrorFactory"
 
 
 const updateOrderAddressError = clientErrorFactory("Update Product Server Side Error: check console for more details")

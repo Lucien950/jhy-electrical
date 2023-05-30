@@ -5,7 +5,6 @@ import { DragEventHandler, FormEvent, useRef, useState } from "react";
 import { Oval } from "react-loader-spinner";
 import { toast } from "react-toastify";
 import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "types/product";
-import { stopProp } from "util/event";
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
@@ -49,6 +48,8 @@ const Pill = ({ label, checked, handleChange }: { label: string, checked?: boole
 		</label>
 	)
 }
+
+const stopProp: DragEventHandler<HTMLDivElement> = (e) => { e.preventDefault(); e.stopPropagation() }
 
 type ProductModalType = {
 	closeModal: () => void,

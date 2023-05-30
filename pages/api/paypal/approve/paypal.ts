@@ -1,8 +1,8 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import { apiHandler, apiRespond } from "util/paypal/server/api";
+import { apiHandler, apiRespond } from "server/api";
 import Joi from "joi";
 import { validateSchema } from "util/typeValidate";
-import { approvePayPalFetch } from "util/paypal/server/approveOrderFetch";
+import { approvePayPalFetch } from "server/paypal/approveOrderFetch";
 
 export type approvePayPalProps = { token: string }
 const approvePayPalPropsSchema = Joi.object({ token: Joi.string().required() })

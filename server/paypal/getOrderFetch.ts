@@ -1,10 +1,10 @@
-import { generateAccessToken } from 'util/paypal/server/auth'
+import { generateAccessToken } from 'server/paypal/auth'
 import { CustomerInterface } from 'types/customer';
 import { FinalPriceInterface, PriceInterface } from "types/price";
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 import { PayPalError } from 'types/paypal';
-import { PAYPALDOMAIN } from 'util/paypal/server/domain';
+import { PAYPALDOMAIN } from 'server/paypal/domain';
 
 const provinceConvert = {
 	"AB": "Alberta",

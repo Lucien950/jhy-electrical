@@ -53,22 +53,8 @@ export const OrdersComponent = ({ allOrders }: { allOrders: OrderInterface[] }) 
 	//UI
 	const [selectedIndex, setSelectedIndex] = useState(0)
 	const tabVariants = {
-		"hide": {
-			opacity: 0,
-			transition: {
-				duration: 0.2,
-				ease: 'linear',
-				when: 'beforeChildren',
-			},
-		},
-		"show": {
-			opacity: 1,
-			transition: {
-				duration: 0.2,
-				ease: 'linear',
-				when: 'beforeChildren',
-			},
-		},
+		hide: { opacity: 0 },
+		show: { opacity: 1 },
 	}
 	return (
 		<Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
@@ -102,19 +88,15 @@ export const OrdersComponent = ({ allOrders }: { allOrders: OrderInterface[] }) 
 						</tr>
 					</thead>
 					<Tab.Panels as={Fragment}>
-					<AnimatePresence mode="wait">
-					<Tab.Panel as={motion.tbody}
-						key={`panel${selectedIndex}`} initial="hide" animate="show" exit="hide" variants={tabVariants} static
-					>
-						{
-							[incompleteOrders, completeOrders, allOrders].map(orders =>
-								orders.map(order =>
-									<TableRow order={order} key={order.firebaseOrderID} />
-									)
-								)[selectedIndex]
-						}
-					</Tab.Panel>
-					</AnimatePresence>
+						<AnimatePresence mode="wait">
+							<Tab.Panel as={motion.tbody} initial="hide" animate="show" exit="hide"
+								key={`panel${selectedIndex}`} variants={tabVariants} static>
+								{
+									[incompleteOrders, completeOrders, allOrders][selectedIndex]
+										.map(order => <TableRow order={order} key={order.firebaseOrderID} />)
+								}
+							</Tab.Panel>
+						</AnimatePresence>
 					</Tab.Panels>
 				</table>
 			</div>
