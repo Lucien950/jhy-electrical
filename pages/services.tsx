@@ -54,21 +54,21 @@ export default function Services() {
 							{<ResidentialIcon className="w-12 h-12" />}
 							<h3 className="font-bold text-xl">Residential</h3>
 						</div>
-						<p>Ihor and his team tackled the projects with great professionalism and creativity. They understood our brand value and turned this into excellent slide designs. The process was seamless and very effective, so we decided to roll this out across all our presentation decks. Furthermore, their understanding, professionalism, and creativity have secured a continued partnership.</p>
+						<p>FILLER RESIDENTIAL</p>
 					</div>
 					<div className="flex-1">
 						<div className="flex items-center gap-x-4 mb-4">
 							{<IndustrialIcon className="w-12 h-12" />}
 							<h3 className="font-bold text-xl">Industrial</h3>
 						</div>
-						<p>Ochi has an impressive understanding of what&apos;s needed to do an effective presentation. The stakeholders at work said it&apos;s the best most complete PP template they&apos;ve ever seen. Ochi delivered more than I was expecting and we were really surprised with the quality of his work. Will work with Ochi design again for sure!</p>
+						<p>FILLER INDUSTRIAL</p>
 					</div>
 					<div className="flex-1">
 						<div className="flex items-center gap-x-4 mb-4">
 							{<CommercialIcon className="w-12 h-12" />}
 							<h3 className="font-bold text-xl">Commercial</h3>
 						</div>
-						<p>This is just a great experience for us! As an established company, you operate within different industries and expect immediate input with a certain level of service. Ihor and the team delivered exactly that. Fantastic result, quick delivery time, and highly responsive. This team is a hidden gem. We&apos;ve already started to outline our next projects for them.</p>
+						<p>FILLER COMMERCIAL</p>
 					</div>
 				</div>
 
@@ -89,7 +89,10 @@ export default function Services() {
 				<div>
 					<div className="flex flex-col md:flex-row items-center justify-around max-w-4xl mx-auto my-10">
 						<img src="erca.svg" alt="" className="h-24 max-w-[50%]" />
-						<img src="esa.svg" alt="" className="h-24 max-w-[50%]" />
+						<div className="max-w-[50%]">
+							<img src="esa.svg" alt="" className="h-24" />
+							<p className="font-semibold text-center mt-2 text-blue-700">ECRA/ESA #7013745</p>
+						</div>
 					</div>
 					<p className="text-medium text-center">We are proud to be licensed by the ECRA/ESA to offer residential andcommercial services in the Ottawa Area and with a full team of qualified electricians.</p>
 				</div>
