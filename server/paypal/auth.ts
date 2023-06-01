@@ -9,7 +9,7 @@ const generateAccessToken = async () => {
 	const secret = process.env.NODE_ENV === "development"
 										? process.env.PAYPAL_CLIENT_SECRET_DEV
 										: process.env.PAYPAL_CLIENT_SECRET
-	
+	if(clientid === undefined || secret === undefined) throw new Error("PayPal clientid or secret not found")
 	const auth = toB64(`${clientid}:${secret}`)
 	const options = {
 		method: 'POST',
