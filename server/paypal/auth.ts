@@ -1,12 +1,13 @@
 import { PayPalAuth, PayPalSimpleError } from "types/paypal"
 import { PAYPALDOMAIN } from "server/paypal/domain";
 import { toB64 } from "util/string";
+import { DEVENV } from "util/env";
 
 const generateAccessToken = async () => {
-	const clientid = process.env.NODE_ENV === "development"
+	const clientid = DEVENV
 										? process.env.PAYPAL_CLIENTID_DEV
 										: process.env.PAYPAL_CLIENTID
-	const secret = process.env.NODE_ENV === "development"
+	const secret = DEVENV
 										? process.env.PAYPAL_CLIENT_SECRET_DEV
 										: process.env.PAYPAL_CLIENT_SECRET
 	if(clientid === undefined || secret === undefined) throw new Error("PayPal clientid or secret not found")

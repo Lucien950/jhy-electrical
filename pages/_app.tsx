@@ -23,6 +23,7 @@ import { OrderProduct } from "types/order"
 import { firebaseConsoleBadge } from 'util/firebase/console'
 
 import "util/firebase/emulator"
+import { DEVENV } from 'util/env'
 
 // dispatch here in order to be inside the provider
 const CartInitialFiller = ()=>{
@@ -55,7 +56,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	<PersistGate persistor={persistor}>
 	<CartInitialFiller />
 	<NavBar />
-	<ToastContainer autoClose={process.env.NODE_ENV === "development" ? 2000 : 4000} transition={Slide}/>
+	<ToastContainer autoClose={DEVENV ? 2000 : 4000} transition={Slide}/>
 	<AnimatePresence
 		initial={false}
 		mode = "wait"

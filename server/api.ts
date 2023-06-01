@@ -1,6 +1,7 @@
 // Arguably the most professional code I have written in my life
 import Joi from "joi"
 import { NextApiHandler, NextApiRequest, NextApiResponse } from "next"
+import { DEVENV } from "util/env"
 
 export interface apiResponse<ResType, ErrType> { res?: ResType, err?: ErrType, }
 
@@ -31,7 +32,7 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 				return res.send({ err: payload.details.map((detail) => detail.message).join(", ") } as apiResponse<never, string>)
 			}
 			if (payload instanceof Error) {
-				if (process.env.NODE_ENV === "development")
+				if (DEVENV)
 					res.send({ err: { name: payload.name, message: payload.message, cause: payload.cause }} as apiResponse<never, {name: string, message: string, cause: string}>)
 				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
 			}

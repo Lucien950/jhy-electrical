@@ -3,10 +3,11 @@ import { connectStorageEmulator } from "firebase/storage";
 import { db } from "./firestore";
 import { storage } from "./storage";
 import { firebaseConsoleBadge } from "./console";
+import { DEVENV } from "util/env";
 
 const EMULATORS_STARTED = 'EMULATORS_STARTED';
 function startEmulators() {
-	const isDev = process.env.NODE_ENV === "development"
+	const isDev = DEVENV
 	const isEmulate = process.env.NEXT_PUBLIC_FIREBASE_EMULATE === "true"
 	if (!(isDev && isEmulate) || (global as any)[EMULATORS_STARTED] ) {
 		return
