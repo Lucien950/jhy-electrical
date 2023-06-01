@@ -16,7 +16,7 @@ export default function Services() {
 					<h1 className="font-semibold text-6xl lg:text-8xl leading-none md:ml-14 text-white">JHY Electrical Services</h1>
 				</div>
 				<div className="col-span-4">
-					<div className="h-[40rem] w-3/4 mx-auto md:h-[50rem] md:w-auto relative bg-red-500">
+					<div className="h-[40rem] w-3/4 mx-auto md:h-[50rem] md:w-auto relative">
 						<Image src="/services.webp" alt="" className="object-cover" fill priority/>
 					</div>
 				</div>
@@ -68,7 +68,7 @@ export default function Services() {
 							{<CommercialIcon className="w-12 h-12" />}
 							<h3 className="font-bold text-xl">Commercial</h3>
 						</div>
-						<p>FiLLER COMMERCIAL</p>
+						<p>FILLER COMMERCIAL</p>
 					</div>
 				</div>
 

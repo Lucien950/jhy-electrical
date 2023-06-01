@@ -5,10 +5,11 @@ import { useRouter } from 'next/router'
 // ui
 import "styles/tailwind.css"
 import 'tippy.js/dist/tippy.css'
+import 'react-toastify/dist/ReactToastify.min.css'
 import NavBar from 'components/navbar'
 import { motion, AnimatePresence } from "framer-motion"
-import 'react-toastify/dist/ReactToastify.min.css'
 import { ToastContainer, Slide } from 'react-toastify'
+import { ibmFont, jostFont, bitterFont } from 'util/fonts'
 // redux
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from 'util/redux/store'
@@ -49,6 +50,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	const transition = { duration: 0.3 }
 
 	return (
+	<main className={`${ibmFont.variable} ${jostFont.variable} ${bitterFont.variable} font-sans`}>
 	<Provider store={store}>
 	<PersistGate persistor={persistor}>
 	<CartInitialFiller />
@@ -71,4 +73,5 @@ export default function App({ Component, pageProps }: AppProps) {
 	</AnimatePresence>
 	</PersistGate>
 	</Provider>
+	</main>
 )}

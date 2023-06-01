@@ -255,7 +255,7 @@ export default function Cart() {
 										</Transition>
 										<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${paypalLoading && "translate-x-[14px] !delay-[0s]"}`}>
 											<PaypalSVG className="h-4 translate-y-[2px]" />
-											<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
+											<span className="ml-1 font-bold font-paypal leading-none italic">Express Checkout</span>
 										</div>
 									</button>
 									{/* checkout */}
@@ -283,7 +283,7 @@ export default function Cart() {
 							<p className="mt-4 text-gray-600 text-sm">
 								Prices and shipping costs are not confirmed until you&apos;ve reached the checkout <br />
 								Taxes and shipping are calculated based on the shipping address. Estimated shipping is based on your current approximate location. <br />
-								The items in your shopping bag are saved on the computer per refresh. Availability is not guaranteed. <br />
+								The items in your shopping bag are updated on the computer per refresh. Availability is not guaranteed. <br />
 							</p>
 						</div>
 					}

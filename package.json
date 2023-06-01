@@ -14,6 +14,7 @@
     "@firebase/rules-unit-testing": "^2.0.7",
     "@headlessui/react": "^1.7.14",
     "@next/bundle-analyzer": "^13.4.2",
+    "@next/font": "^13.4.4",
     "@paypal/paypal-js": "^5.1.6",
     "@reduxjs/toolkit": "^1.9.5",
     "@tippyjs/react": "^4.2.6",

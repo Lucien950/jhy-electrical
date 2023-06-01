@@ -209,7 +209,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 								wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${buyNowButtonLoading && "opacity-100"} justify-self-start`} />
 							<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${buyNowButtonLoading && "translate-x-[14px] !delay-[0s]"}`}>
 								<PayPalWhiteSVG className="h-4 translate-y-[2px]" />
-								<span className="ml-1 font-bold font-paypal leading-none">Express Checkout</span>
+								<span className="ml-1 font-bold font-paypal italic leading-none">Express Checkout</span>
 							</div>
 						</button>
 					</div>
