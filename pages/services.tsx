@@ -68,7 +68,7 @@ export default function Services() {
 							{<CommercialIcon className="w-12 h-12" />}
 							<h3 className="font-bold text-xl">Commercial</h3>
 						</div>
-						<p>FILLER COMMERCIAL</p>
+						<p>FiLLER COMMERCIAL</p>
 					</div>
 				</div>
 
