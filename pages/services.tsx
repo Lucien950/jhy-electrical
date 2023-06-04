@@ -1,8 +1,47 @@
 import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
-
 import Head from "next/head";
-
 import Image from "next/image";
+import Link from "next/link";
+import { JSX, ClassAttributes, HTMLAttributes, SVGProps } from "react";
+
+type SVGPROPS = JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>
+const STAR = (props: SVGPROPS) => (
+	<svg {...props} fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+		<path clipRule="evenodd" fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" />
+	</svg>
+)
+
+type DIVPROPS = JSX.IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>
+type TestimonialCardProps = {
+	testimonial: string
+	imageURL: string
+	name: string
+	starCount: number
+	source?: string
+	link?: string
+}
+const TestimonialCard = ({ testimonial, imageURL, name, link, starCount, source, ...props }: TestimonialCardProps & DIVPROPS) => (
+	<div {...props}>
+		<Link href={link ?? "#"} target="_blank">
+			<div className="p-6 ring-1 ring-gray-300 rounded-xl shadow-md hover:shadow-lg transition-[box-shadow]">
+				<div className="flex flex-row">
+					{[...Array(starCount)].map((_, i) => <STAR key={i} className="h-6 w-6 fill-yellow-400" />)}
+				</div>
+				<p className="text-lg font-medium mt-6">{testimonial}</p>
+				<div className="flex flex-row justify-around items-end mt-4">
+					<div className="flex flex-row items-center gap-x-3 w-full">
+						<img src={imageURL} alt="Testimonial User Image" />
+						<p className="font-semibold text-base">{name}</p>
+					</div>
+					{
+						source === "google" &&
+						<img src="/googleSVG.svg" alt="Google Logo" className="h-6 w-6 justify-end"/>
+					}
+				</div>
+			</div>
+		</Link>
+	</div>
+)
 
 export default function Services() {
 	return (
@@ -17,7 +56,7 @@ export default function Services() {
 				</div>
 				<div className="col-span-4">
 					<div className="h-[40rem] w-3/4 mx-auto md:h-[50rem] md:w-auto relative">
-						<Image src="/services.webp" alt="" className="object-cover" fill priority/>
+						<Image src="/services.webp" alt="" className="object-cover" fill priority />
 					</div>
 				</div>
 			</div>
@@ -72,15 +111,48 @@ export default function Services() {
 					</div>
 				</div>
 
+				<div className="py-28">
+					<div className="text-center max-w-[46rem] mx-auto mb-16">
+						<h1 className="text-lg font-semibold mb-2 text-blue-500">Testimonials</h1>
+						<h2 className="text-4xl font-bold">We provide great results to all of our amazing customers</h2>
+					</div>
+					<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 xl:grid-flow-col gap-y-4 gap-x-8 py-4">
+						<TestimonialCard
+							className="md:col-span-2 xl:col-start-2"
+							testimonial="Amazing work! Wei knows what he is doing. Very professional and autonomous. We had installed potlights and his smart suggestions helped us a lot in making our house look beautiful. Would definitely recommend using the services for any electrical work."
+							name="Suniel Inigo"
+							imageURL="https://lh3.googleusercontent.com/a-/AD_cMMQw1CidBR_9Q6pypV5NDIkNR95dpi6suTYPvfyNHA=s40-c-c0x00000000-cc-rp-mo-br100"
+							link="https://g.co/kgs/p5kmqz"
+							starCount={5}
+							source="google"
+						/>
+						<div>
+							<TestimonialCard
+								testimonial="5-Star service and experience! Excellent work, would highly recommend!"
+								name="Donnie MacGregor"
+								imageURL="https://lh3.googleusercontent.com/a-/AD_cMMSq7BNug-LVEH1k_8Ia2ZT4ChTY1WwC7JJqLC1z=s40-c-c0x00000000-cc-rp-mo-ba2-br100"
+								link="https://g.co/kgs/ASUJTA"
+								starCount={5}
+								source="google"
+							/>
+						</div>
+						<div>
+							<div className="border-2 border-dashed rounded-xl py-20 p-8 grid place-items-center text-2xl font-bold text-zinc-400">
+								Your Experience Here
+							</div>
+						</div>
+					</div>
+				</div>
+
 				{/* Specialty */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mb-4 md:mb-20">
 					<div className="h-[30rem] relative">
-						<Image src="/breakers.webp" alt="Image of electrical breakers" className="object-cover object-center" fill/>
+						<Image src="/breakers.webp" alt="Image of electrical breakers" className="object-cover object-center" fill />
 					</div>
 					<div className="flex flex-col gap-y-6">
 						<p className="text-3xl">Our specialty is residential services for older homes, aluminum wiring replacement, upgrades to electrical service panels, assistance with renovations and new builds.</p>
 						<div className="flex-1 relative">
-							<Image src="/commercial.webp" alt="Image of Commercial Worksite" className="object-cover object-bottom" fill/>
+							<Image src="/commercial.webp" alt="Image of Commercial Worksite" className="object-cover object-bottom" fill />
 						</div>
 					</div>
 				</div>
