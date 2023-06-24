@@ -24,11 +24,11 @@ const Order = ({ order }: { order: OrderInterface }) => {
 
 	const backgroundID = Math.floor(seedRandom(order.firebaseOrderID)() * BACKGROUNDCOUNT) + 1
 	const backgroundFilters = [
-		{ brightness: 0.7, contrast: 0.9, saturation: 1.4},
+		{ brightness: 0.7, contrast: 0.9, saturation: 1.4 },
 		{ brightness: 0.6, contrast: 0.85, saturation: 1 },
 		{ brightness: 0.8, contrast: 0.85, saturation: 1 },
 	]
-	
+
 	return (
 		<>
 			<Head>
@@ -36,8 +36,8 @@ const Order = ({ order }: { order: OrderInterface }) => {
 			</Head>
 			<div className="h-screen w-screen" >
 				{/* background */}
-				<img src={`/order_${backgroundID}.webp`} alt="" className="w-full h-full object-cover fixed -z-40"
-					style={{ filter: `brightness(${backgroundFilters[backgroundID - 1].brightness}) contrast(${backgroundFilters[backgroundID - 1].contrast}) saturate(${backgroundFilters[backgroundID - 1].saturation})` }}/>
+				<img src={`/orderBackgrounds/order_${backgroundID}.webp`} alt="" className="w-full h-full object-cover fixed -z-40"
+					style={{ filter: `brightness(${backgroundFilters[backgroundID - 1].brightness}) contrast(${backgroundFilters[backgroundID - 1].contrast}) saturate(${backgroundFilters[backgroundID - 1].saturation})` }} />
 				<div className="container mx-auto flex flex-row gap-x-10 pt-20 min-h-screen relative">
 					{/* left side */}
 					<div className="flex-[5] text-white flex flex-col gap-y-4 sticky top-[10rem] self-start">
@@ -71,7 +71,7 @@ const Order = ({ order }: { order: OrderInterface }) => {
 									{
 										order.payment_source.card &&
 										<div>
-											<CardElement cardInformation={order.payment_source.card} seed={order.firebaseOrderID}/>
+											<CardElement cardInformation={order.payment_source.card} seed={order.firebaseOrderID} />
 										</div>
 									}
 									<p>{order.name}</p>

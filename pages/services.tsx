@@ -30,12 +30,12 @@ const TestimonialCard = ({ testimonial, imageURL, name, link, starCount, source,
 				<p className="text-lg font-medium mt-6">{testimonial}</p>
 				<div className="flex flex-row justify-around items-end mt-4">
 					<div className="flex flex-row items-center gap-x-3 w-full">
-						<img src={imageURL} alt="Testimonial User Image" />
+						<img src={imageURL} alt="Testimonial User Image" className="w-10 h-10" />
 						<p className="font-semibold text-base">{name}</p>
 					</div>
 					{
 						source === "google" &&
-						<img src="/googleSVG.svg" alt="Google Logo" className="h-6 w-6 justify-end"/>
+						<img src="/services/googleSVG.svg" alt="Google Logo" className="h-6 w-6 justify-end" />
 					}
 				</div>
 			</div>
@@ -56,7 +56,7 @@ export default function Services() {
 				</div>
 				<div className="col-span-4">
 					<div className="h-[40rem] w-3/4 mx-auto md:h-[50rem] md:w-auto relative">
-						<Image src="/services.webp" alt="" className="object-cover" fill priority />
+						<Image src="/services/services.webp" alt="" className="object-cover" fill priority />
 					</div>
 				</div>
 			</div>
@@ -76,7 +76,7 @@ export default function Services() {
 						<div className="flex flex-row justify-between items-center mt-6">
 							<p className="font-semibold text-xl">- Wei from JHY Electrical</p>
 							<div className="h-16 md:h-24 w-16 md:w-24 relative">
-								<Image className="rounded-full object-cover shadow-md select-none" src="/wei_profile.webp" alt="Picture of Wei" fill />
+								<Image className="rounded-full object-cover shadow-md select-none" src="/services/wei_profile.webp" alt="Picture of Wei" fill />
 							</div>
 						</div>
 					</div>
@@ -121,7 +121,7 @@ export default function Services() {
 							className="md:col-span-2 xl:col-start-2"
 							testimonial="Amazing work! Wei knows what he is doing. Very professional and autonomous. We had installed potlights and his smart suggestions helped us a lot in making our house look beautiful. Would definitely recommend using the services for any electrical work."
 							name="Suniel Inigo"
-							imageURL="https://lh3.googleusercontent.com/a-/AD_cMMQw1CidBR_9Q6pypV5NDIkNR95dpi6suTYPvfyNHA=s40-c-c0x00000000-cc-rp-mo-br100"
+							imageURL="/services/test1.png"
 							link="https://g.co/kgs/p5kmqz"
 							starCount={5}
 							source="google"
@@ -130,7 +130,7 @@ export default function Services() {
 							<TestimonialCard
 								testimonial="5-Star service and experience! Excellent work, would highly recommend!"
 								name="Donnie MacGregor"
-								imageURL="https://lh3.googleusercontent.com/a-/AD_cMMSq7BNug-LVEH1k_8Ia2ZT4ChTY1WwC7JJqLC1z=s40-c-c0x00000000-cc-rp-mo-ba2-br100"
+								imageURL="/services/test2.png"
 								link="https://g.co/kgs/ASUJTA"
 								starCount={5}
 								source="google"
@@ -147,12 +147,12 @@ export default function Services() {
 				{/* Specialty */}
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mb-4 md:mb-20">
 					<div className="h-[30rem] relative">
-						<Image src="/breakers.webp" alt="Image of electrical breakers" className="object-cover object-center" fill />
+						<Image src="/services/breakers.webp" alt="Image of electrical breakers" className="object-cover object-center" fill />
 					</div>
 					<div className="flex flex-col gap-y-6">
 						<p className="text-3xl">Our specialty is residential services for older homes, aluminum wiring replacement, upgrades to electrical service panels, assistance with renovations and new builds.</p>
 						<div className="flex-1 relative">
-							<Image src="/commercial.webp" alt="Image of Commercial Worksite" className="object-cover object-bottom" fill />
+							<Image src="/services/commercial.webp" alt="Image of Commercial Worksite" className="object-cover object-bottom" fill />
 						</div>
 					</div>
 				</div>
@@ -160,9 +160,9 @@ export default function Services() {
 				{/* Licencing */}
 				<div>
 					<div className="flex flex-col md:flex-row items-center justify-around max-w-4xl mx-auto my-10">
-						<img src="erca.svg" alt="" className="h-24 max-w-[50%]" />
+						<img src="/services/erca.svg" alt="" className="h-24 max-w-[50%]" />
 						<div className="max-w-[50%]">
-							<img src="esa.svg" alt="" className="h-24" />
+							<img src="/services/esa.svg" alt="" className="h-24" />
 							<p className="font-semibold text-center mt-2 text-blue-700">ECRA/ESA #7013745</p>
 						</div>
 					</div>
