@@ -1,4 +1,4 @@
-import { IBM_Plex_Sans, Jost, Bitter } from "@next/font/google"
+import { IBM_Plex_Sans, Jost, Bitter } from "next/font/google"
 
 export const ibmFont = IBM_Plex_Sans({
 	subsets: ["latin"],
