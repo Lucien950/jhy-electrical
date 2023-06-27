@@ -11,7 +11,6 @@ export interface FirebaseProductInterface {
 
 	variants: ProductVariantListing[]
 }
-
 export interface ProductVariantListing {
 	sku: string,
 	label: string,

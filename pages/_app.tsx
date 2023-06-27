@@ -29,18 +29,19 @@ import { DEVENV } from 'util/env'
 const CartInitialFiller = () => {
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
-	const [initialFilled, setInitialFilled] = useState(false)
 	useEffect(() => {
-		if (initialFilled) return
-		console.log(...firebaseConsoleBadge, 'Cart Snapshot Update', cart);
-		setInitialFilled(true)
-		const newProductsPromise = cart.map(async p => ({
-			PID: p.PID,
-			product: await getProductByID(p.PID).catch(() => null)
-		}))
+		const newProductsPromise = cart.map(cartItem => cartItem.PID)
+			.filter((value, index, array) => array.indexOf(value) === index) //filter unique PID (cause they have all the SKUs)
+			.map(async cartItemPID => ({
+				PID: cartItemPID,
+				product: await getProductByID(cartItemPID).catch(() => null)
+			}))
 		Promise.all(newProductsPromise)
-			.then(newProducts => { dispatch(cartFillProducts(newProducts)) })
-	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
+			.then(newProducts => {
+				console.log(...firebaseConsoleBadge, 'Cart Snapshot Update', newProducts);
+				dispatch(cartFillProducts(newProducts))
+			})
+	}, []) //eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }
 

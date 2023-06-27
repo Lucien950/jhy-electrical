@@ -29,7 +29,7 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) 
 	const dispatch = useDispatch()
 	const removeSelf = () => {
 		if (product) logEvent(analytics(), "remove_from_cart", { items: [{ item_id: product.productName, price: product.price, quantity: product.quantity }] })
-		dispatch(removeFromCart({ PID: orderProduct.PID }))
+		dispatch(removeFromCart(orderProduct.PID))
 	}
 
 	if (!product) {
@@ -167,7 +167,7 @@ export default function Cart() {
 				query: { token: orderID },
 			})
 		}
-		catch (e) { toast.error("Checkout Order Generation Error, see console for more details", { theme: "colored" }) }
+		catch (e) { toast.error((e as Error).message, { theme: "colored" }) }
 		finally { setCheckoutLoading(false) }
 	}
 

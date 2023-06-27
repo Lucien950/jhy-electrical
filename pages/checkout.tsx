@@ -30,8 +30,8 @@ import CheckoutStageTwo from "components/checkout/p2"
  */
 const validateP0FormData = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => validateP0FormError(name, address) === null
 const validateP0FormError = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => {
-	if (!validateName(name)) {return validateNameError(name)}
-	if (!validateAddress(address)) {return validateAddressError(address)}
+	if (!validateName(name)) { return validateNameError(name) }
+	if (!validateAddress(address)) { return validateAddressError(address) }
 	return null
 }
 /**
@@ -46,15 +46,15 @@ const validateP0FormError = (name: CustomerInterface["fullName"], address: Custo
 const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
 
 // STAGE TECHNOLOGY
-const useStage = (initialStage: number, customerInfo: CustomerInterface)=>{
+const useStage = (initialStage: number, customerInfo: CustomerInterface) => {
 	const [stage, setStage] = useState(initialStage)
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
 
-	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), 						 [customerInfo?.address, 			customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)), [customerInfo?.address, customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)), [customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
 
-	return {stage, setStage, p0CusUpdated, p1CusUpdated}
+	return { stage, setStage, p0CusUpdated, p1CusUpdated }
 }
 
 type ErrorCheckoutProps = {
@@ -67,24 +67,24 @@ type CheckoutProps = {
 	orderID: string,
 	initialStage: number
 }
-export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps & ErrorCheckoutProps){
+export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation, paypalPriceInfo: paypalPaymentInformation, emptyOrderProducts, paypal_error, orderID, initialStage }: CheckoutProps & ErrorCheckoutProps) {
 	// IMPORTANT GLOBAL STATE
 	const [customerInfo, setCustomerInfo] = useState<CustomerInterface>(paypalCustomerInformation)
 	const addP0CustomerInfo = (fullName: string, address: Address) => setCustomerInfo(ci => ({ ...ci, fullName, address }))
-	const addP1CustomerInfo =  (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => setCustomerInfo(ci => ({ ...ci, paymentMethod, payment_source }))
+	const addP1CustomerInfo = (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => setCustomerInfo(ci => ({ ...ci, paymentMethod, payment_source }))
 	const [priceInfo, setPriceInfo] = useState<PriceInterface>(paypalPaymentInformation)
 	const [orderCart, setOrderCart] = useState<OrderProductFilled[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
-	const {stage, setStage, p0CusUpdated, p1CusUpdated} = useStage(initialStage, customerInfo)
+	const { stage, setStage, p0CusUpdated, p1CusUpdated } = useStage(initialStage, customerInfo)
 	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
 
 	const CheckoutStageView = () => {
-		if ( customerInfo === null || priceInfo === null || stage === null) return <></>
+		if (customerInfo === null || priceInfo === null || stage === null) return <></>
 		if (stage == 0)
 			return (
 				<CheckoutStageZero
-				{...{ 
+					{...{
 						setStage,
 						addP0CustomerInfo,
 						setPriceInfo,
@@ -104,7 +104,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 				addP1CustomerInfo,
 				setStage,
 				orderID
-			}}/>
+			}} />
 		else if (stage == 2)
 			return <CheckoutStageTwo {...{
 				customerInfo,
@@ -112,7 +112,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 				orderCart,
 				setStage,
 				orderID
-			}}/>
+			}} />
 		throw new Error("Current checkout stage is not a valid value")
 	}
 
@@ -247,7 +247,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 
 		if (status == "COMPLETED") return { props: { paypal_error: "Order has already been completed", ...EMPTYRET } as CheckoutProps }
 
-		// base address
+		// base address 
 		if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" }
 
 		const p0Done = validateP0FormData(paypalCustomerInfo.fullName, paypalCustomerInfo.address)

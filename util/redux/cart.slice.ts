@@ -23,8 +23,8 @@ const cartSlice = createSlice({
 			if (quantity === 0) state.splice(state.findIndex((item) => item.PID === PID), 1);
 			else item.quantity = quantity;
 		},
-		removeFromCart: (state, action: { payload: { PID: string } }) => {
-			const { PID } = action.payload
+		removeFromCart: (state, action: { payload: string }) => {
+			const PID = action.payload
 			const index = state.findIndex(item => item.PID === PID);
 			if (index >= 0) state.splice(index, 1);
 		},
@@ -34,13 +34,13 @@ const cartSlice = createSlice({
 			const products = action.payload
 			products.forEach(p => {
 				if (p.product === null) return
-				const changeProduct = state.find(productInfo => productInfo.PID == p.PID)
-				if (changeProduct) {
-					const { variants, ...product } = p.product
+				const { variants, ...noVariantsProduct } = p.product
+				const changeProducts = state.filter(productInfo => productInfo.PID == p.PID)
+				changeProducts.forEach((changeProduct) => {
 					const productVariant = variants.find(v => v.sku == changeProduct.variantSKU)
 					if (!productVariant) throw new Error(`Variant ${changeProduct.variantSKU} does not exist`)
-					changeProduct.product = { ...product, ...productVariant }
-				}
+					changeProduct.product = { ...noVariantsProduct, ...productVariant }
+				})
 			})
 			console.log("cart filled products")
 		}

@@ -1,7 +1,7 @@
 // react
 import Link from "next/link"
 import { useRouter } from "next/router"
-import { useEffect, useState } from "react"
+import { MouseEventHandler, useEffect, useState } from "react"
 // redux
 import { useDispatch } from "react-redux"
 import { removeFromCart } from "util/redux/cart.slice"
@@ -21,18 +21,47 @@ import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 import { encodePayPalSKU } from "server/paypal/sku"
 
+const CartDropDownProductListing = ({ p }: { p: OrderProductFilled }) => {
+	const dispatch = useDispatch()
+	const HandleRemoveFromCart: MouseEventHandler<HTMLSpanElement> = (e) => {
+		e.preventDefault()
+		e.stopPropagation()
+		dispatch(removeFromCart(p.PID))
+	}
+	return (
+		<div>
+			{
+				!p.product
+					? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link" onClick={HandleRemoveFromCart}>Remove?</span> </p> </div>
+					:
+					<div className="flex flex-row items-center justify-between">
+						<div className="flex flex-row items-center gap-x-4">
+							<div className="h-10 w-12">
+								<img src={p.product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
+							</div>
+							<p>{p.product.productName}</p>
+						</div>
+						<div>
+							{
+								p.product.quantity > 0
+									? <span> <Price price={p.product.price} /> x {p.quantity} </span>
+									:
+									<span>Out of Stock,
+										<span className="underline text-blue-500 hover:cursor-pointer" onClick={HandleRemoveFromCart}>
+											remove
+										</span>
+									</span>
+							}
+						</div>
+					</div>
+			}
+		</div>
+	)
+}
+
 export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], closeCart: () => void }) => {
 	const router = useRouter()
-	const dispatch = useDispatch()
-
-	const HandleRemoveFromCart = (productInfo: OrderProductFilled) => {
-		dispatch(removeFromCart(productInfo))
-	}
-
-	useEffect(() => {
-		logEvent(analytics(), "view_item_list")
-	}, [])
-
+	useEffect(() => { logEvent(analytics(), "view_item_list") }, [])
 
 	const [checkoutLoading, setCheckoutLoading] = useState(false)
 	const goToCheckout = async () => {
@@ -45,25 +74,15 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], 
 			})
 			closeCart()
 		}
-		catch (e) {
-			toast.error(`Checkout Order Generation Error, see console for more details`, { theme: "colored" })
-		}
-		finally {
-			setCheckoutLoading(false)
-		}
+		catch (e) { toast.error((e as Error).message, { theme: "colored" }) }
+		finally { setCheckoutLoading(false) }
 	}
 
 	return (
 		<motion.div
-			className="absolute right-0 top-[130%] min-h-[8rem] min-w-[22rem]
+			className="absolute right-0 top-[140%] min-h-[8rem] min-w-[22rem]
 			bg-white text-black drop-shadow-md rounded-md overflow-hidden select-text [&>*]:p-4"
-			initial="closed"
-			animate="opened"
-			exit="closed"
-			variants={{
-				closed: { y: -5, opacity: 0 },
-				opened: { y: 0, opacity: 1 },
-			}}
+			initial="closed" animate="opened" exit="closed" variants={{ closed: { y: -5, opacity: 0 }, opened: { y: 0, opacity: 1 }, }}
 			transition={{ ease: "easeInOut", duration: 0.15 }}
 			id="cartDropDown"
 		>
@@ -76,35 +95,8 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], 
 				? <div className="text-gray-400 text-center">Cart Empty</div>
 				:
 				<>
-					{cart.map(p => (
-						<div key={encodePayPalSKU(p.PID, p.variantSKU)}>
-							{
-								!p.product
-									? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link" onClick={() => HandleRemoveFromCart(p)}>Remove?</span> </p> </div>
-									:
-									<div className="flex flex-row items-center justify-between">
-										<div className="flex flex-row items-center gap-x-4">
-											<div className="h-10 w-12">
-												<img src={p.product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
-											</div>
-											<p>{p.product.productName}</p>
-										</div>
-										<div>
-											{
-												p.product.quantity > 0
-													? <span> <Price price={p.product.price} /> x {p.quantity} </span>
-													:
-													<span>Out of Stock,
-														<span className="underline text-blue-500 hover:cursor-pointer" onClick={() => HandleRemoveFromCart(p)}>
-															remove
-														</span>
-													</span>
-											}
-										</div>
-									</div>
-							}
-						</div>
-					))}
+					{cart.map(p => <CartDropDownProductListing p={p} key={encodePayPalSKU(p.PID, p.variantSKU)} />)}
+					{/* bottom buttons */}
 					<div className="flex flex-row w-full justify-around bg-slate-100 select-none">
 						<Link href="/cart" onClick={closeCart}>
 							<button className="p-3 px-10 rounded-sm border-2 border-white bg-black font-medium text-white hover:scale-[102%] transition-transform">

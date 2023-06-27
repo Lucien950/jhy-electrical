@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from 'util/redux/cart.slice';
 // types
 import { ProductInterface, ProductVariantListing } from 'types/product'
-import { OrderProduct } from 'types/order';
+import { OrderProduct, OrderProductFilled } from 'types/order';
 // analytics
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
@@ -119,15 +119,15 @@ const AddCartButton = ({ available, selectedQuantZero, onClick }: AddCartButtonP
 
 const useProductQuantity = (product: ProductInterface, selectedProductVariant: ProductVariantListing) => {
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
-	const [quantityInCart, setQuantity] = useState(0)
+	const [quantityInCart, setCartQuantity] = useState(0)
 	const [availableToAdd, setAvailableToAdd] = useState(0)
 	const [selectedQuantity, setSelectedQuantity] = useState(0)
 	//eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(() => setQuantity(cart.find(p => (p.PID == product.firestoreID) && (p.variantSKU === selectedProductVariant.sku))?.quantity || 0), [selectedProductVariant, cart])
+	useEffect(() => setCartQuantity(cart.find(p => (p.PID == product.firestoreID) && (p.variantSKU === selectedProductVariant.sku))?.quantity || 0), [selectedProductVariant, cart])
 	//eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(() => setAvailableToAdd(selectedProductVariant.quantity - quantityInCart), [selectedProductVariant, quantityInCart])
+	useEffect(() => setAvailableToAdd(Math.max(0, selectedProductVariant.quantity - quantityInCart)), [selectedProductVariant, quantityInCart])
 	useEffect(() => setSelectedQuantity(s => {
-		if (availableToAdd == 0) return 0
+		if (availableToAdd <= 0) return 0
 		return clamp(s, 1, availableToAdd)
 	}), [availableToAdd])//clamp to below availableToAdd
 	return { availableToAdd, selectedQuantity, setSelectedQuantity }
@@ -154,7 +154,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 
 	// Adding to cart or purchasing
 	const { variants: _, ...productNoVariants } = product
-	const newOrderProduct = {
+	const newOrderProduct: OrderProductFilled = {
 		PID: product.firestoreID,
 		product: { ...productNoVariants, ...selectedProductVariant, },
 		variantSKU: selectedVariant,
@@ -242,7 +242,7 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 								<span className="ml-1 font-bold font-paypal italic leading-none">Express Checkout </span>
 								{
 									selectedQuantity > 0 &&
-									<span className="ml-2">with {selectedQuantity} elements</span>
+									<span className="ml-2">with {selectedQuantity} element{selectedQuantity > 1 && "s"}</span>
 								}
 							</div>
 						</button>
