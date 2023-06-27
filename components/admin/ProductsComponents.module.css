@@ -1,0 +1,24 @@
+@property --progress {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+
+@keyframes rotate {
+	from {
+		--progress: 0%
+	}
+
+	to {
+		--progress: 100%
+	}
+}
+.confirmDeleteRound{
+	--progress: 0%;
+	--bg-color: #56b84d;
+	animation: 1s linear 2s rotate;
+	background-image: conic-gradient(from 0deg at 50% 50%,
+				var(--bg-color) 0%,
+				var(--bg-color) var(--progress), #FFFFFF00 var(--progress),
+				#FFFFFF00 100%)
+}
