@@ -6,7 +6,7 @@ import { fillOrderProducts } from "util/orderUtil";
 import { apiHandler, apiRespond } from "server/api";
 import { makePrice, subAddr } from "server/priceUtil";
 import { validateSchema } from "util/typeValidate";
-import {getClientIp} from "request-ip"
+import { getClientIp } from "request-ip"
 
 interface ipAPILocation {
 	ip: string;
@@ -57,12 +57,9 @@ const priceAPI: NextApiHandler = async (req, res) => {
 		admin_area_1: data.region,
 	}
 
-	const products = await fillOrderProducts(productIDs)
-	
+	const products = await fillOrderProducts(productIDs) //costs
 	const price = await makePrice(products, address)
 	return apiRespond(res, "response", { price } as priceAPIRes)
 }
 
-export default apiHandler({
-	"POST": priceAPI
-})
+export default apiHandler({ "POST": priceAPI })

@@ -18,6 +18,7 @@ import { OrderProductFilled } from "types/order";
 import { updateOrderAddress } from "util/paypal/updateOrder_client";
 import { PriceInterface } from "types/price";
 import { isEqual } from "lodash";
+import { encodePayPalSKU } from "server/paypal/sku";
 
 const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
 	const [query, setQuery] = useState('')
@@ -62,7 +63,7 @@ type p0Input = {
 	setPriceInfo: Dispatch<SetStateAction<PriceInterface>>,
 	customerInfo: CustomerInterface,
 	addP0CustomerInfo: (name: string, address: Address) => void,
-	
+
 	validateP0Form: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => boolean,
 	validateP0FormError: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => ValidationError | null | undefined,
 	orderID: string,
@@ -111,7 +112,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 						{orderCart
 							?
 							orderCart.map(productInfo =>
-								<div className="flex flex-row items-center gap-x-2 p-2" key={productInfo.PID}>
+								<div className="flex flex-row items-center gap-x-2 p-2" key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)}>
 									<img src={productInfo.product.productImageURL} alt="" className="h-10" />
 									<p> {productInfo.product.productName} </p>
 									<p> {productInfo.product.price} x {productInfo.quantity} </p>
@@ -164,7 +165,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 							enterFrom="opacity-0" enterTo="opacity-100" leaveFrom="opacity-100" leaveTo="opacity-0"
 						>
 							<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]"
-								strokeWidthSecondary={10} color="white" secondaryColor="white"/>
+								strokeWidthSecondary={10} color="white" secondaryColor="white" />
 						</Transition>
 						<div className={`transition-transform ${calculatingShipping ? "translate-x-[1rem]" : ""}`}>
 							Proceed to Payment

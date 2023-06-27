@@ -5,22 +5,27 @@ import Head from "next/head";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "util/firebase/firestore"
 
-import { EmptyOrderInterface, OrderInterface } from "types/order";
+import { FirebaseOrderInterface, OrderInterface } from "types/order";
 import Price from "components/price";
 import seedRandom from "seedrandom";
 import { CardElement } from "components/cardElement";
-import { fillOrder } from "util/orderUtil";
+import { UnserializeOrder } from "util/orderUtil";
+import { encodePayPalSKU } from "server/paypal/sku";
 
 const BACKGROUNDCOUNT = 3
-const Order = ({ order }: { order?: OrderInterface }) => {
-	if (!order) {
+const Order = ({ stringOrder }: { stringOrder?: OrderInterface }) => {
+	if (!stringOrder) {
 		return (
 			<div className="grid place-items-center text-5xl h-screen">
 				Order not found
 			</div>
 		)
 	}
-	order.date = new Date(order.date)
+
+	const order = {
+		...stringOrder,
+		date: new Date(stringOrder.date)
+	}
 
 	const backgroundID = Math.floor(seedRandom(order.firebaseOrderID)() * BACKGROUNDCOUNT) + 1
 	const backgroundFilters = [
@@ -110,7 +115,7 @@ const Order = ({ order }: { order?: OrderInterface }) => {
 									const { product } = productInfo
 									if (!product) return (<div></div>)
 									return (
-										<div key={productInfo.PID} className="flex flex-row items-center gap-x-5 justify-start">
+										<div key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
 											<div className="relative">
 												<img src={product.productImageURL} className="h-24 w-24 object-cover" alt="" />
 												<span className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] w-10 h-10 bg-blue-500 overflow-hidden rounded-full leading-none grid place-items-center text-white text-xl font-bold">{productInfo.quantity}</span>
@@ -126,12 +131,9 @@ const Order = ({ order }: { order?: OrderInterface }) => {
 						</div>
 						<hr />
 						<div className="p-6 grid grid-cols-2 text-xl gap-y-2">
-							<p>Subtotal</p>
-							<p className="justify-self-end">{order.orderPrice.subtotal.toFixed(2)}</p>
-							<p>Shipping</p>
-							<p className="justify-self-end">{order.orderPrice.shipping.toFixed(2)}</p>
-							<p>Tax</p>
-							<p className="justify-self-end">{order.orderPrice.tax.toFixed(2)}</p>
+							<p>Subtotal</p> <p className="justify-self-end">{order.orderPrice.subtotal.toFixed(2)}</p>
+							<p>Shipping</p> <p className="justify-self-end">{order.orderPrice.shipping.toFixed(2)}</p>
+							<p>Tax</p> <p className="justify-self-end">{order.orderPrice.tax.toFixed(2)}</p>
 						</div>
 						<hr />
 						<div className="p-6 text-xl flex flex-row justify-between">
@@ -157,13 +159,9 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	}
 	const orderDoc = await getDoc(doc(db, "orders", pid))
 	if (!orderDoc.exists) { return { props: {} } }
-	const order = fillOrder(orderDoc.data() as EmptyOrderInterface, orderDoc.id)
-
-	return {
-		props: {
-			order: JSON.parse(JSON.stringify(order))
-		}
-	}
+	const orderData = orderDoc.data() as FirebaseOrderInterface
+	const stringOrder = JSON.parse(JSON.stringify(UnserializeOrder(orderData, pid)))
+	return { props: { stringOrder, firebaseOrderID: pid } }
 }
 
 export default Order

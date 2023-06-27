@@ -153,9 +153,10 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 
 
 	// Adding to cart or purchasing
+	const { variants: _, ...productNoVariants } = product
 	const newOrderProduct = {
 		PID: product.firestoreID,
-		product: { ...product, ...selectedProductVariant, },
+		product: { ...productNoVariants, ...selectedProductVariant, },
 		variantSKU: selectedVariant,
 		quantity: selectedQuantity
 	}

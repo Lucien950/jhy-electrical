@@ -21,6 +21,7 @@ import { Transition } from "@headlessui/react";
 import { QuantitySelector } from "components/quantitySelector";
 import { clamp } from "lodash";
 import { estimatePrice } from "util/estimatePrice";
+import { encodePayPalSKU } from "server/paypal/sku";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) => {
 	const product = orderProduct.product
@@ -42,7 +43,8 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) 
 
 	const setProductQuantity = (newQuantity: number) => dispatch(setQuantity({
 		PID: orderProduct.PID,
-		quantity: clamp(newQuantity, 1, product.quantity)
+		quantity: clamp(newQuantity, 1, product.quantity),
+		variantSKU: orderProduct.variantSKU,
 	}))
 	const inStock = product.quantity > 0
 	return (
@@ -158,18 +160,15 @@ export default function Cart() {
 		e.preventDefault()
 		setCheckoutLoading(true)
 		try {
+			console.log(cart)
 			const { orderID } = await createPayPalOrder(cart, false)
 			router.push({
 				pathname: '/checkout',
 				query: { token: orderID },
 			})
 		}
-		catch (e) {
-			toast.error("Checkout Order Generation Error, see console for more details", { theme: "colored" })
-		}
-		finally {
-			setCheckoutLoading(false)
-		}
+		catch (e) { toast.error("Checkout Order Generation Error, see console for more details", { theme: "colored" }) }
+		finally { setCheckoutLoading(false) }
 	}
 
 	return (
@@ -194,7 +193,7 @@ export default function Cart() {
 										<div>Price</div>
 									</div>
 									<div className="flex flex-col gap-y-2">
-										{cart.map(productInfo => <ProductListing orderProduct={productInfo} key={productInfo.PID} />)}
+										{cart.map(productInfo => <ProductListing orderProduct={productInfo} key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)} />)}
 									</div>
 								</>
 						}

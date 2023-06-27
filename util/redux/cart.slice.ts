@@ -9,46 +9,37 @@ const cartSlice = createSlice({
 		addToCart: (state, action: { payload: OrderProductFilled }) => {
 			const { PID, product, variantSKU, quantity = 1 } = action.payload
 
-			const itemExists = state.find((item) => item.PID === PID && item.variantSKU === variantSKU);
-			if (itemExists) {
-				itemExists.quantity += quantity;
-				return
-			}
-			state.push({ PID, quantity, variantSKU, product });
+			const foundItem = state.find((item) => item.PID === PID && item.variantSKU === variantSKU);
+			if (foundItem) foundItem.quantity += quantity
+			else state.push({ PID, quantity, variantSKU, product })
 		},
-		setQuantity: (state, action) => {
-			const { PID, quantity } = action.payload as OrderProduct
-			const item = state.find((item) => item.PID === PID);
-			if (!item) return
+		setQuantity: (state, action: { payload: OrderProduct }) => {
+			const { PID, variantSKU, quantity } = action.payload
 
-			if (quantity === 0) {
-				const index = state.findIndex((item) => item.PID === PID);
-				state.splice(index, 1);
-				return
-			}
-			item.quantity = quantity;
+			const item = state.find((item) => item.PID === PID && item.variantSKU === variantSKU);
+			if (!item) throw new Error(`Item ${PID} with sku ${variantSKU} does not exist in cart`)
+
+			// remove element if it has 0 quantity
+			if (quantity === 0) state.splice(state.findIndex((item) => item.PID === PID), 1);
+			else item.quantity = quantity;
 		},
-		removeFromCart: (state, action) => {
-			const { PID } = action.payload as OrderProduct
+		removeFromCart: (state, action: { payload: { PID: string } }) => {
+			const { PID } = action.payload
 			const index = state.findIndex(item => item.PID === PID);
 			if (index >= 0) state.splice(index, 1);
 		},
-		clearCart: (state) => {
-			return []
-		},
-		cartFillProducts: (state, action) => {
+		clearCart: (state) => [],
+		cartFillProducts: (state, action: { payload: { PID: string, product: ProductInterface | null }[] }) => {
 			// return action.payload
-			const products = action.payload as { PID: string, product: ProductInterface }[]
+			const products = action.payload
 			products.forEach(p => {
+				if (p.product === null) return
 				const changeProduct = state.find(productInfo => productInfo.PID == p.PID)
 				if (changeProduct) {
 					const { variants, ...product } = p.product
 					const productVariant = variants.find(v => v.sku == changeProduct.variantSKU)
 					if (!productVariant) throw new Error(`Variant ${changeProduct.variantSKU} does not exist`)
-					changeProduct.product = {
-						...product,
-						...productVariant
-					}
+					changeProduct.product = { ...product, ...productVariant }
 				}
 			})
 			console.log("cart filled products")
@@ -57,7 +48,6 @@ const cartSlice = createSlice({
 });
 
 export const cartReducer = cartSlice.reducer;
-
 export const {
 	addToCart,
 	setQuantity,

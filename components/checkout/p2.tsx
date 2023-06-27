@@ -19,6 +19,7 @@ import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
+import { encodePayPalSKU } from "server/paypal/sku";
 
 type ReviewViewProps = {
 	customerInfo: CustomerInterface,
@@ -32,7 +33,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
-	
+
 	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
 		// for extra security
 		if (!validateFinalPrice(priceInfo)) return toast.error(validateFinalPriceError(priceInfo)?.message)
@@ -43,8 +44,8 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 		try {
 			firebaseOrderID = (await submitOrder(orderID)).firebaseOrderID
 		}
-		catch(e) {
-			toast.error((e as Error).message, {theme: "colored"})
+		catch (e) {
+			toast.error((e as Error).message, { theme: "colored" })
 			setSubmitOrderLoading(false)
 			return
 		}
@@ -53,7 +54,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 		dispatch(clearCart())
 		router.push(`/order/${firebaseOrderID}`)
 	}
-	
+
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="reviewView">
 			{/* shipping address */}
@@ -70,7 +71,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 						</>
 					}
 				</div>
-				<button className="underline" onClick={()=>setStage(0)}>Edit</button>
+				<button className="underline" onClick={() => setStage(0)}>Edit</button>
 			</div>
 			{/* payment method */}
 			<div className="bg-gray-200 p-5 flex flex-row mb-2 items-start">
@@ -90,7 +91,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 						</div>
 					}
 				</div>
-				<button className="underline" onClick={()=>setStage(1)}>Edit</button>
+				<button className="underline" onClick={() => setStage(1)}>Edit</button>
 			</div>
 			{/* items */}
 			<div className="bg-gray-200 p-5 mb-2">
@@ -98,7 +99,7 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 				<div className="grid grid-cols-2">
 					{orderCart
 						? orderCart.map(p =>
-							<div className="flex flex-row gap-x-2 items-center" key={p.PID}>
+							<div className="flex flex-row gap-x-2 items-center" key={encodePayPalSKU(p.PID, p.variantSKU)}>
 								<img src={p.product.productImageURL} alt="Product Image" className="h-16" />
 								<div className="flex-1 text-sm">
 									<h1 className="font-bold text-base">{p.product.productName}</h1>
@@ -108,14 +109,14 @@ const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: R
 							</div>
 						)
 						: <div>
-								<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
-							</div>
+							<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
+						</div>
 					}
 				</div>
 			</div>
 			{/* submit buttons */}
 			<div className="flex flex-row items-center justify-end gap-x-6">
-				<button className="underline" onClick={()=>setStage(1)}>Back to Payment</button>
+				<button className="underline" onClick={() => setStage(1)}>Back to Payment</button>
 				<button className="bg-black p-4 px-24 text-white text-bold relative grid place-items-center" onClick={handleOrder}>
 					<Oval height={20} width={20} strokeWidth={8} strokeWidthSecondary={8} color="white" secondaryColor="white" wrapperClass={`absolute translate-x-[-60px] transition-[opacity] opacity-0 ${submitOrderLoading && "!opacity-100"}`} />
 					<span className={`absolute transition-transform ${submitOrderLoading && "translate-x-[10px]"}`}>

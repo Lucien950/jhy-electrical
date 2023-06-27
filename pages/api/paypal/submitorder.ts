@@ -11,7 +11,7 @@ import { fillOrderProducts } from "util/orderUtil"
 // paypal
 import { getOrder } from "server/paypal/getOrderFetch"
 import { submitOrderFetch } from "server/paypal/submitOrderFetch"
-import { Timestamp } from "firebase/firestore"
+import { Timestamp } from "firebase-admin/firestore"
 import { EmptyOrderInterface } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"

@@ -22,18 +22,18 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response", payload: 
  */
 function apiRespond<T>(res: NextApiResponse, responseType: "error", payload: T): void;
 function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error", payload: T) {
-	if(!["response", "error"].includes(responseType)) throw new Error("API Response Type Not Valid") // 1
-	if(!payload) throw new Error("No Payload")  // 2
+	if (!["response", "error"].includes(responseType)) throw new Error("API Response Type Not Valid") // 1
+	if (!payload) throw new Error("No Payload")  // 2
 	switch (responseType) {
 		case "response": return res.status(200).send({ res: payload } as apiResponse<T, never>)
 		case "error":
 			res.status(500)
-			if (payload instanceof Joi.ValidationError){
+			if (payload instanceof Joi.ValidationError) {
 				return res.send({ err: payload.details.map((detail) => detail.message).join(", ") } as apiResponse<never, string>)
 			}
 			if (payload instanceof Error) {
 				if (DEVENV)
-					res.send({ err: { name: payload.name, message: payload.message, cause: payload.cause }} as apiResponse<never, {name: string, message: string, cause: string}>)
+					res.send({ err: { name: payload.name, message: payload.message, cause: payload.cause } } as apiResponse<never, { name: string, message: string, cause: string }>)
 				else res.send({ err: "Internal Server Error" } as apiResponse<never, string>)
 			}
 			else res.send({ err: payload } as apiResponse<never, T>)
@@ -45,16 +45,13 @@ function apiRespond<T>(res: NextApiResponse, responseType: "response" | "error",
 
 export { apiRespond }
 
-export function apiHandler(handler: {[method: string]: NextApiHandler}) {
+export function apiHandler(handler: { [method: string]: NextApiHandler }) {
 	return async (req: NextApiRequest, res: NextApiResponse) => {
 		const method = req.method?.toUpperCase();
 		// check handler supports HTTP method
 		if (!method) return res.status(405).end(`Method undefined`);
 		if (!handler[method]) return res.status(405).end(`Method ${req.method} Not Allowed`);
-		try {
-			await handler[method](req, res);
-		} catch (err) {
-			apiRespond(res, "error", err)
-		}
+		try { await handler[method](req, res); }
+		catch (err) { apiRespond(res, "error", err) }
 	}
 }

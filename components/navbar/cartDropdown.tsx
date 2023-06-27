@@ -19,6 +19,7 @@ import Price from "components/price"
 // analytics
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
+import { encodePayPalSKU } from "server/paypal/sku"
 
 export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], closeCart: () => void }) => {
 	const router = useRouter()
@@ -76,7 +77,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], 
 				:
 				<>
 					{cart.map(p => (
-						<div key={p.PID}>
+						<div key={encodePayPalSKU(p.PID, p.variantSKU)}>
 							{
 								!p.product
 									? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link" onClick={() => HandleRemoveFromCart(p)}>Remove?</span> </p> </div>

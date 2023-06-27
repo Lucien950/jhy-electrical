@@ -4,7 +4,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { DragEventHandler, FormEvent, useRef, useState } from "react";
 import { Oval } from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "types/product";
+import { FirebaseProductInterface, ProductInterface, ProductVariantListing, validateProduct, validateProductError } from "types/product";
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
@@ -141,6 +141,17 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 	// editing
 	//eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const handleProductEdit = (id: string, val: any) => setModalProduct(mp => ({ ...mp, [id]: val }))
+	const deleteVariant = (sku: string) => setModalProduct(mp => ({
+		...mp,
+		variants: mp.variants?.filter(vv => vv.sku != sku) || []
+	}))
+	const addVariant = () => setModalProduct(mp => ({
+		...mp,
+		variants: [
+			...(mp.variants || []),
+			{ sku: Math.random().toString(36).substring(2, 15) } as ProductVariantListing
+		]
+	}))
 
 	// submission
 	const submitProduct = async (e: FormEvent<HTMLFormElement>) => {
@@ -164,7 +175,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		let { productImageURL: newProductImageURL, firestoreID: newFirestoreID, ...rest } = modalProduct
 		const firestoreAddProduct = rest as FirebaseProductInterface
 		try {
-			if (newFirestoreID) await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct)
+			if (newFirestoreID) await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct) //updateDoc??
 			else {
 				const addedDoc = await addDoc(collection(db, "products"), firestoreAddProduct)
 				newFirestoreID = addedDoc.id
@@ -267,7 +278,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 													<div className="flex-1">
 														<InputField productKey="label" defaultValue={v.label} handleChange={handleVariantEdit} />
 													</div>
-													<svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+													<svg onClick={() => deleteVariant(v.sku)} className="h-8 w-8 cursor-pointer" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 														<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
 													</svg>
 												</div>
@@ -283,6 +294,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 										)
 									})
 								}
+								<button className="border-2 py-1 outline-none focus:ring rounded-md" onClick={addVariant} type="button">Add Variant</button>
 							</div>
 
 							<div className="col-span-2">

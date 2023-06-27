@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase/firestore";
+import { Timestamp as TimestampAdmin } from "firebase-admin/firestore";
 import { ProductVariantInterface, productVariantSchema } from "./product";
 import { Address } from "@paypal/paypal-js"
 import { FinalPriceInterface } from "types/price";
@@ -21,7 +22,7 @@ export interface OrderProductFilled extends OrderProduct {
 export interface EmptyOrderInterface {
 	products: OrderProduct[],
 	completed: boolean,
-	dateTS: Timestamp,
+	dateTS: Timestamp | TimestampAdmin,
 	// price information
 	orderPrice: FinalPriceInterface,
 	// customer information
@@ -33,12 +34,14 @@ export interface EmptyOrderInterface {
 export interface FirebaseOrderInterface extends EmptyOrderInterface {
 	products: OrderProductFilled[],
 }
-export interface OrderInterface extends Omit<EmptyOrderInterface, "dateTS"> {
-	// order metadata
-	products: OrderProductFilled[],
+export interface SerializedOrderInterface extends Omit<EmptyOrderInterface, "dateTS"> {
 	// because of serialization sadge
 	date: Date,
 	firebaseOrderID: string,
+}
+export interface OrderInterface extends SerializedOrderInterface {
+	// order metadata
+	products: OrderProductFilled[],
 }
 
 // VALIDATIONS
