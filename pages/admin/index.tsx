@@ -6,12 +6,11 @@ import Head from 'next/head';
 // firebase
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, onSnapshot, orderBy, query, doc, getDoc } from "firebase/firestore";
-import { auth } from "util/firebase/auth"
+import { auth } from "util/firebase/auth";
 import { db } from 'util/firebase/firestore';
-import { fillOrder } from "util/orderUtil"
 // types
 import { AdminInterface } from 'types/admin';
-import { OrderInterface } from 'types/order';
+import { FirebaseOrderInterface, OrderInterface } from 'types/order';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
 import { ProductsComponent } from 'components/admin/ProductsComponents';
@@ -19,6 +18,7 @@ import { OrdersComponent } from 'components/admin/OrdersComponent';
 import AnalyticsComponent from 'components/admin/AnalyticsComponent';
 import { firebaseConsoleBadge } from 'util/firebase/console';
 import { toast } from 'react-toastify';
+import { UnserializeOrder } from 'util/orderUtil';
 
 interface SidebarButtonProps {
 	name: "Orders" | "Products" | "Analytics",
@@ -79,15 +79,17 @@ const useOrders = () => {
 	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
 	useEffect(() => {
 		const unsubOrders = onSnapshot(
-			query(collection(db, "orders"), 
-			orderBy("completed", "asc"), 
-			orderBy("dateTS", "desc"), orderBy("__name__", "asc")),
+			query(collection(db, "orders"),
+				orderBy("completed", "asc"),
+				orderBy("dateTS", "desc"), orderBy("__name__", "asc")),
 			(querySnapshot) => {
 				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
-				Promise.all(querySnapshot.docs.map(fillOrder)).then(newOrders => setAllOrders(newOrders))
+				// setAllOrders(querySnapshot.docs.map(d => d.data()) as OrderInterface[])
+				const newOrders = querySnapshot.docs.map(d => UnserializeOrder(d.data() as FirebaseOrderInterface, d.id))
+				setAllOrders(newOrders)
 			},
 			(error) => {
-				if(error.code === "permission-denied") return
+				if (error.code === "permission-denied") return
 				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Error: ', error);
 				toast.error("Admin Orders Listing Error, check console for more information")
 			}
@@ -101,7 +103,7 @@ const useOrders = () => {
 export default function Admin() {
 	const { authLoading, admin, signout } = useGoogleAuth()
 	const { allOrders } = useOrders()
-	
+
 	// Sidebar scrolling
 	const analyticSection = useRef<HTMLDivElement>(null)
 	const orderSection = useRef<HTMLDivElement>(null)
@@ -113,7 +115,7 @@ export default function Admin() {
 			<Head>
 				<title>Admin | JHY Electrical</title>
 			</Head>
-			
+
 			<div className="flex flex-row gap-x-2">
 				{/* sidebar */}
 				<div className="lg:flex-[1.7] overflow-hidden rounded-xl bg-zinc-100 flex flex-col items-center lg:items-start sticky top-0 max-h-screen py-6 px-2 lg:px-6">

@@ -13,18 +13,18 @@ import { Oval } from "react-loader-spinner"
 // util
 import { createPayPalOrder } from "util/paypal/createOrder_client"
 // types
-import { OrderProduct } from "types/order"
+import { OrderProductFilled } from "types/order"
 // components
 import Price from "components/price"
 // analytics
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 
-export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: () => void }) => {
+export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], closeCart: () => void }) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 
-	const HandleRemoveFromCart = (productInfo: OrderProduct) => {
+	const HandleRemoveFromCart = (productInfo: OrderProductFilled) => {
 		dispatch(removeFromCart(productInfo))
 	}
 
@@ -70,7 +70,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 				<h1 className="text-xl font-medium">Cart</h1>
 				<p className="rounded-full bg-slate-300 text-gray-500 w-6 h-6 grid place-items-center font-bold">{cart.length}</p>
 			</div>
-			<hr className="!p-0"/>
+			<hr className="!p-0" />
 			{cart.length <= 0
 				? <div className="text-gray-400 text-center">Cart Empty</div>
 				:
@@ -79,7 +79,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 						<div key={p.PID}>
 							{
 								!p.product
-									? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link">Remove?</span> </p> </div>
+									? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link" onClick={() => HandleRemoveFromCart(p)}>Remove?</span> </p> </div>
 									:
 									<div className="flex flex-row items-center justify-between">
 										<div className="flex flex-row items-center gap-x-4">
@@ -91,8 +91,13 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 										<div>
 											{
 												p.product.quantity > 0
-													? <span> <Price price={p.product?.price} /> x {p.quantity} </span>
-													: <span>Out of Stock, <span className="underline text-blue-500 hover:cursor-pointer" onClick={() => HandleRemoveFromCart(p)}>remove</span></span>
+													? <span> <Price price={p.product.price} /> x {p.quantity} </span>
+													:
+													<span>Out of Stock,
+														<span className="underline text-blue-500 hover:cursor-pointer" onClick={() => HandleRemoveFromCart(p)}>
+															remove
+														</span>
+													</span>
 											}
 										</div>
 									</div>

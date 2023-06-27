@@ -5,14 +5,14 @@ import Head from "next/head";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "util/firebase/firestore"
 
-import { FirestoreOrderInterface, OrderInterface } from "types/order";
-import { getProductByID } from "util/productUtil";
+import { EmptyOrderInterface, OrderInterface } from "types/order";
 import Price from "components/price";
 import seedRandom from "seedrandom";
 import { CardElement } from "components/cardElement";
+import { fillOrder } from "util/orderUtil";
 
 const BACKGROUNDCOUNT = 3
-const Order = ({ order }: { order: OrderInterface }) => {
+const Order = ({ order }: { order?: OrderInterface }) => {
 	if (!order) {
 		return (
 			<div className="grid place-items-center text-5xl h-screen">
@@ -147,7 +147,7 @@ const Order = ({ order }: { order: OrderInterface }) => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const { pid } = ctx.query
-	if (!pid || typeof pid != "string") {
+	if (!(pid && typeof pid === "string")) {
 		return {
 			redirect: {
 				destination: "/",
@@ -156,18 +156,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		}
 	}
 	const orderDoc = await getDoc(doc(db, "orders", pid))
-	const firestoreOrder = orderDoc.data() as FirestoreOrderInterface
-	if (!firestoreOrder) {
-		return {
-			props: {}
-		}
-	}
-	const order = { ...firestoreOrder, firebaseOrderID: orderDoc.id, date: firestoreOrder.dateTS.toDate() } as OrderInterface
-
-	order.products = await Promise.all(order.products.map(async productInfo => {
-		productInfo.product = await getProductByID(productInfo.PID)
-		return productInfo
-	}))
+	if (!orderDoc.exists) { return { props: {} } }
+	const order = fillOrder(orderDoc.data() as EmptyOrderInterface, orderDoc.id)
 
 	return {
 		props: {

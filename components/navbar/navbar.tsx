@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 // animations
 import { AnimatePresence, motion, useScroll } from "framer-motion"
 // types
-import { OrderProduct } from "types/order";
+import { OrderProductFilled } from "types/order";
 // components
 import LinkBoxes from "components/linkBoxes"
 import { CartIcon } from "./cartIcon"
@@ -19,7 +19,7 @@ import { Transition } from "@headlessui/react";
 
 export const NavBar = () => {
 	const router = useRouter();
-	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
+	const cart = useSelector((state: { cart: OrderProductFilled[] }) => state.cart) as OrderProductFilled[]
 	const cartSize = cart.reduce((a, p) => a + p.quantity, 0)
 	// cart and mobile menus
 	const [isMobileMenuOpen, toggleMobileMenuOpen, closeMobileMenu] = useMenu(["mobileMenu", "mobileMenuButton"]);

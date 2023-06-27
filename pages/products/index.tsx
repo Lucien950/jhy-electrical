@@ -15,27 +15,39 @@ import Price from "components/price";
 import { getAllProducts } from "util/productUtil";
 import { Oval } from "react-loader-spinner";
 
-const ProductItem = ({ product }: {product: ProductInterface})=>{
+const ProductItem = ({ product }: { product: ProductInterface }) => {
 	// const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
 	const backgroundColours = ["bg-slate-800"]
 	const backgroundColour = backgroundColours[Math.round(seedRandom(product.firestoreID)() * (backgroundColours.length - 1))]
-	return(
+
+	const minPrice = Math.min(...product.variants.map(v => v.price)), maxPrice = Math.max(...product.variants.map(v => v.price))
+	const onePrice = product.variants.length === 1 || product.variants.map(v => v.price).every((val, _, arr) => val === arr[0])
+	return (
 		<motion.div layout>
 			<Link href={`products/${product.firestoreID}`} className="block focus:ring-8 focus:outline-none rounded-lg">
-			<div className={`grid place-items-center py-10 lg:py-14 mb-2 lg:mb-6 group ${backgroundColour} rounded-lg`}>
-				<img src={product.productImageURL} alt="" className="h-24 md:h-32 group-hover:scale-105 transition-transform"/>
-			</div>
+				<div className={`grid place-items-center py-10 lg:py-14 mb-2 lg:mb-6 group ${backgroundColour} rounded-lg`}>
+					<img src={product.productImageURL} alt="" className="h-24 md:h-32 group-hover:scale-105 transition-transform" />
+				</div>
 			</Link>
 
 			<div className="flex flex-col gap-y-2 md:flex-row justify-between">
 				<div>
 					<Link href={`products/${product.firestoreID}`} tabIndex={-1}>
-					<h1 className="font-bold text-xl mb-2 leading-none">
-						{product.productName}
-					</h1>
+						<h1 className="font-bold text-xl mb-2 leading-none">
+							{product.productName}
+						</h1>
 
-					{/* price */}
-					<Price price={product.price}/>
+						{/* price */}
+						{
+							onePrice ?
+								<Price price={minPrice} />
+								:
+								<>
+									<Price price={minPrice} />
+									<span className="mx-1 font-bold"> - </span>
+									<Price price={maxPrice} />
+								</>
+						}
 					</Link>
 				</div>
 				<div className="flex flex-row gap-x-3 items-center">
@@ -48,8 +60,8 @@ const ProductItem = ({ product }: {product: ProductInterface})=>{
 	)
 }
 
-const FilterButton = ({ isSelected, setFilterActive, children }: { children: (string | JSX.Element)[],  isSelected: boolean, setFilterActive: ()=>void})=>{
-	return(
+const FilterButton = ({ isSelected, setFilterActive, children }: { children: (string | JSX.Element)[], isSelected: boolean, setFilterActive: () => void }) => {
+	return (
 		<button className={`flex flex-row items-center gap-x-2 py-2 px-4 border-[3px] rounded-full leading-none
 			transition-colors duration-75 hover:bg-blue-200 hover:border-blue-300
 			outline-none focus:ring-4
@@ -70,17 +82,13 @@ const Products = () => {
 	const [products, setProducts] = useState([] as ProductInterface[])
 	const [displayProducts, setDisplayProducts] = useState([] as ProductInterface[])
 
-	const handleFilter = (property: "residential" | "industrial" | "commercial")=>{
-		setFilter({...filter, [property]: !filter[property]})
+	const handleFilter = (property: "residential" | "industrial" | "commercial") => {
+		setFilter({ ...filter, [property]: !filter[property] })
 	}
 
-	useEffect(()=>{
-		getAllProducts().then(newProducts => {
-			setProducts(newProducts)
-		})
-	}, [])
-	useEffect(()=>{
-		if(!Object.values(filter).some(p=>p)) setDisplayProducts(products)
+	useEffect(() => { getAllProducts().then(setProducts) }, [])
+	useEffect(() => {
+		if (!Object.values(filter).some(p => p)) setDisplayProducts(products)
 		else setDisplayProducts(products.filter(p => p.residential && filter.residential || p.commercial && filter.commercial || p.industrial && filter.industrial))
 	}, [products, filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -99,7 +107,7 @@ const Products = () => {
 					<Image src="/product_2.webp" alt="" className="object-cover brightness-50" fill
 						style={{
 							objectPosition: "center 25%"
-						}}/>
+						}} />
 				</div>
 
 				{/* TEXT, outside width limiter, inside */}
@@ -112,7 +120,7 @@ const Products = () => {
 
 			{/* product grid */}
 			<div className="container mx-auto pb-16">
-					{/* Filter Bar */}
+				{/* Filter Bar */}
 				<div
 					className="sm:sticky top-[80px] z-10
 					flex flex-row items-center gap-x-2 flex-wrap gap-y-2
@@ -126,32 +134,32 @@ const Products = () => {
 					<FilterButton isSelected={filter.industrial} setFilterActive={() => handleFilter("industrial")}>
 						{<IndustrialIcon className="w-7 h-7" />} Industrial
 					</FilterButton>
-					<FilterButton isSelected={filter.commercial} setFilterActive={()=>handleFilter("commercial")}>
+					<FilterButton isSelected={filter.commercial} setFilterActive={() => handleFilter("commercial")}>
 						{<CommercialIcon className="w-7 h-7" />} Commercial
 					</FilterButton>
 				</div>
-				
+
 				<AnimatePresence mode="wait">
 					{
 						products.length === 0
-						?
-						<motion.div className="grid place-items-center py-10" initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloading"}>
-							<Oval height={100} strokeWidth={8} />
-						</motion.div>
-						: 
-						<motion.div
-							className="
+							?
+							<motion.div className="grid place-items-center py-10" initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloading"}>
+								<Oval height={100} strokeWidth={8} />
+							</motion.div>
+							:
+							<motion.div
+								className="
 								grid
 								grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
 								gap-x-2 2xl:gap-x-4 gap-y-6
 								px-2 lg:px-4
 							"
-							layout initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloaded"}
-						>
-							{displayProducts.map((product)=>
-								<ProductItem product={product} key={product.firestoreID}/>
-							)}
-						</motion.div>
+								layout initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloaded"}
+							>
+								{displayProducts.map((product) =>
+									<ProductItem product={product} key={product.firestoreID} />
+								)}
+							</motion.div>
 					}
 				</AnimatePresence>
 			</div>

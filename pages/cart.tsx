@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useSelector, useDispatch } from "react-redux"
 import { removeFromCart, setQuantity } from "util/redux/cart.slice";
 // products
-import { OrderProduct } from "types/order";
+import { OrderProduct, OrderProductFilled } from "types/order";
 // ui
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
@@ -22,8 +22,9 @@ import { QuantitySelector } from "components/quantitySelector";
 import { clamp } from "lodash";
 import { estimatePrice } from "util/estimatePrice";
 
-const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
+const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) => {
 	const product = orderProduct.product
+
 	const dispatch = useDispatch()
 	const removeSelf = () => {
 		if (product) logEvent(analytics(), "remove_from_cart", { items: [{ item_id: product.productName, price: product.price, quantity: product.quantity }] })
@@ -84,7 +85,7 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 const CostLoader = () => <Oval height={18} width={18} strokeWidth={6} strokeWidthSecondary={6} color="#28a9fa" secondaryColor="#28a9fa" />
 
 
-const usePrice = (cart: OrderProduct[]) => {
+const usePrice = (cart: OrderProductFilled[]) => {
 	const [subtotal, setSubtotal] = useState<number>()
 	const [tax, setTax] = useState<number>()
 	const [shipping, setShipping] = useState<number>()
@@ -98,7 +99,7 @@ const usePrice = (cart: OrderProduct[]) => {
 			console.log("Update Price Estimation")
 
 			// pre subtotal calculation (just to display something)
-			const cartSubtotal = cart.reduce((a: number, p) => a + (p.product?.price || 0) * p.quantity, 0)
+			const cartSubtotal = cart.reduce((a: number, p) => a + (p.product.price || 0) * p.quantity, 0)
 			setSubtotal(cartSubtotal)
 
 			setLoadingPrice(true)
@@ -126,7 +127,7 @@ const usePrice = (cart: OrderProduct[]) => {
 
 export default function Cart() {
 	const router = useRouter()
-	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
+	const cart: OrderProductFilled[] = useSelector((state: { cart: OrderProductFilled[] }) => state.cart)
 	const { subtotal, tax, shipping, total, loadingPrice } = usePrice(cart)
 
 	useEffect(() => logEvent(analytics(), "view_cart"), [])

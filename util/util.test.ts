@@ -44,7 +44,7 @@ describe("Type Validation Tests", () => {
 		expect(validateSchema({ a: "a", b: 1, c: true, d: ["a", "b"] }, objSchema)).toStrictEqual({ a: "a", b: 1, c: true, d: ["a", "b"] })
 	})
 
-	it("Should throw errors when invalid", ()=>{
+	it("Should throw errors when invalid", () => {
 		expect(() => validateSchema({ a: "a", b: 1, c: true, d: ["a", 1] }, objSchema)).toThrow()
 		expect(() => validateSchema({ a: "a", b: 1, c: "no", d: ["a"] }, objSchema)).toThrow()
 		expect(() => validateSchema({ a: "a", b: null, c: true, d: ["a"] }, objSchema)).toThrow()
@@ -57,18 +57,18 @@ import { makePrice } from "../server/priceUtil"
 import { Decimal } from "decimal.js"
 
 describe("Price Tests", () => {
-	const products: OrderProductFilled[] = [
+	const products = [
 		{
 			PID: "abc",
 			quantity: 3,
-			product: { price: 0.01 } as ProductInterface
+			product: { price: 0.01 }
 		},
 		{
 			PID: "def",
 			quantity: 4,
-			product: { price: 0.01 } as ProductInterface
+			product: { price: 0.01 }
 		}
-	]
+	] as OrderProductFilled[]
 
 	let mockCalculateShipping: jest.SpyInstance<Promise<Decimal>, [products: calculateShippingModule.productPackageInfo[], destination: string], any>;
 	beforeEach(() => {

@@ -5,6 +5,7 @@ import { OrderResponseBody } from "@paypal/paypal-js"
 import { OrderProduct } from 'types/order';
 import { PayPalError } from 'types/paypal';
 import { PAYPALDOMAIN } from 'server/paypal/domain';
+import { decodePayPalSKU } from './sku';
 
 const provinceConvert = {
 	"AB": "Alberta",
@@ -77,10 +78,14 @@ export const getOrder = async (orderID: string) => {
 		} as PriceInterface
 
 	// products
-	const products: OrderProduct[] = purchaseUnit0.items!.map(i => ({
-		PID: i.sku!,
-		quantity: Number(i.quantity)
-	}))
+	const products: OrderProduct[] = purchaseUnit0.items!.map(i => {
+		const { productID, variantID } = decodePayPalSKU(i.sku!)
+		return {
+			PID: productID,
+			quantity: Number(i.quantity),
+			variantSKU: variantID,
+		}
+	})
 
 	// redirect link
 	const redirect_link = data.links.find(v => v.rel == "approve")?.href || null

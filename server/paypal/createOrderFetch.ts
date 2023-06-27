@@ -7,15 +7,16 @@ import { PriceInterface } from "types/price";
 // paypal
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
 import { generateAccessToken } from "./auth";
+import { encodePayPalSKU } from "./sku";
 
-export const createOrderAPICall = async(paymentInformation: PriceInterface, productIDS: OrderProductFilled[], express: boolean) => {
+export const createOrderAPICall = async (paymentInformation: PriceInterface, productIDS: OrderProductFilled[], express: boolean) => {
 	const orderInformation = {
 		intent: "AUTHORIZE",
 		purchase_units: [{
 			items: productIDS.map(p => ({
 				name: p.product.productName,
 				quantity: p.quantity.toString(),
-				sku: p.PID,
+				sku: encodePayPalSKU(p.PID, p.variantSKU),
 				unit_amount: {
 					currency_code: "CAD",
 					value: p.product.price.toFixed(2)
@@ -51,7 +52,7 @@ export const createOrderAPICall = async(paymentInformation: PriceInterface, prod
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
-			Authorization: `Bearer ${await generateAccessToken() }`,
+			Authorization: `Bearer ${await generateAccessToken()}`,
 		},
 		body: JSON.stringify(orderInformation)
 	})

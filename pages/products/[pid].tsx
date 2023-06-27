@@ -7,13 +7,13 @@ import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from 'util/redux/cart.slice';
 // types
-import { ProductInterface } from 'types/product'
+import { ProductInterface, ProductVariantListing } from 'types/product'
 import { OrderProduct } from 'types/order';
 // analytics
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 // util
-import { getProductByID } from 'util/productUtil'
+import { getProductByID, getProductVariant } from 'util/productUtil'
 import { createPayPalOrder } from 'util/paypal/createOrder_client';
 // ui
 import Price from 'components/price'
@@ -59,9 +59,10 @@ const AddCartButton = ({ available, selectedQuantZero, onClick }: AddCartButtonP
 					<>
 						{/* DEFAULT VIEW */}
 						<div
-							className="relative transition-all duration-200 left-[50%]"
+							className="relative transition-all duration-200 left-[50%] translate-x-[-50%]"
 							style={{
-								transform: `scale(${animating ? 0 : 1}) translateX(-50%)`,
+								transitionProperty: "opacity, scale",
+								scale: animating ? "0" : "1",
 								opacity: animating ? "0" : "1",
 								transitionDelay: animating ? "" : "0.15s",
 								transformOrigin: "left"
@@ -116,13 +117,16 @@ const AddCartButton = ({ available, selectedQuantZero, onClick }: AddCartButtonP
 	)
 }
 
-const useProductQuantity = (product: ProductInterface) => {
+const useProductQuantity = (product: ProductInterface, selectedProductVariant: ProductVariantListing) => {
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const [quantityInCart, setQuantity] = useState(0)
 	const [availableToAdd, setAvailableToAdd] = useState(0)
 	const [selectedQuantity, setSelectedQuantity] = useState(0)
-	useEffect(() => setQuantity(cart.find(p => p.PID == product.firestoreID)?.quantity || 0), [cart]) //eslint-disable-line react-hooks/exhaustive-deps
-	useEffect(() => setAvailableToAdd(product.quantity - quantityInCart), [quantityInCart]) //eslint-disable-line react-hooks/exhaustive-deps
+	//eslint-disable-next-line react-hooks/exhaustive-deps
+	useEffect(() => setQuantity(cart.find(p => (p.PID == product.firestoreID) && (p.variantSKU === selectedProductVariant.sku))?.quantity || 0)
+		, [selectedProductVariant, cart])
+	//eslint-disable-next-line react-hooks/exhaustive-deps
+	useEffect(() => setAvailableToAdd(selectedProductVariant.quantity - quantityInCart), [selectedProductVariant, quantityInCart])
 	useEffect(() => setSelectedQuantity(s => {
 		if (availableToAdd == 0) return 0
 		return clamp(s, 1, availableToAdd)
@@ -134,25 +138,31 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 
-
 	// Quantity Adjuster
-	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product)
+	const [selectedVariant, setSelectedVariant] = useState(product.variants[0].sku)
+	const selectedProductVariant = getProductVariant(product, selectedVariant)!
+	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product, selectedProductVariant)
 
 
+	// Adding to cart or purchasing
+	const newOrderProduct = {
+		PID: product.firestoreID,
+		product: { ...product, ...selectedProductVariant, },
+		variantSKU: selectedVariant,
+		quantity: selectedQuantity
+	}
 	// Add to Cart Button
 	const addCartHandler = () => {
 		if (availableToAdd <= 0) return toast.error("No more stock") // should be unreachable code, if button is acting right.
-		dispatch(addToCart({ PID: product.firestoreID, product, quantity: selectedQuantity }))
+		dispatch(addToCart(newOrderProduct))
 		logEvent(analytics(), "add_to_cart", { PID: product.firestoreID })
 	}
-
-
 	// Buy Now Button
 	const [buyNowButtonLoading, setbuyNowButtonLoading] = useState(false)
 	const buyNow: MouseEventHandler<HTMLButtonElement> = async () => {
 		setbuyNowButtonLoading(true)
 		try {
-			const { redirect_link } = await createPayPalOrder([{ PID: product.firestoreID, quantity: selectedQuantity, product }], true)
+			const { redirect_link } = await createPayPalOrder([newOrderProduct], true)
 			router.push(redirect_link)
 		}
 		catch (e) {
@@ -176,9 +186,20 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 						{/* Basic Information */}
 						<h1 className="font-bold text-4xl mb-1">{product.productName}</h1>
 						<p className="mb-4 text-lg">{product.description}</p>
-						<p className="mb-1 text-lg">{product.quantity} in stock</p>
+						<p className="mb-1 text-lg">{selectedProductVariant.quantity} in stock, {availableToAdd > 0 ? availableToAdd : "No"} more to add</p>
 						<div className="mb-3">
-							<Price price={product.price} large />
+							<Price price={selectedProductVariant.price} large />
+						</div>
+
+						{/* variant selector */}
+						<div className="flex flex-row gap-x-2">
+							{product.variants.map(v =>
+								<button key={v.sku} onClick={() => setSelectedVariant(v.sku)}
+									className="p-2 border-2 hover:bg-neutral-200 data-[selected='true']:font-bold data-[selected='true']:border-blue-500" data-selected={v.sku === selectedVariant}
+								>
+									{v.label || "Default"}
+								</button>
+							)}
 						</div>
 
 						{/* Categories */}
@@ -209,7 +230,11 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 								wrapperClass={`ml-3 mr-2 opacity-0 transition-[opacity] ${buyNowButtonLoading && "opacity-100"} justify-self-start`} />
 							<div className={`absolute flex justify-center items-center group-disabled:opacity-60 transition-[transform,opacity] duration-200 delay-300 ${buyNowButtonLoading && "translate-x-[14px] !delay-[0s]"}`}>
 								<PayPalWhiteSVG className="h-4 translate-y-[2px]" />
-								<span className="ml-1 font-bold font-paypal italic leading-none">Express Checkout</span>
+								<span className="ml-1 font-bold font-paypal italic leading-none">Express Checkout </span>
+								{
+									selectedQuantity > 0 &&
+									<span className="ml-2">with {selectedQuantity} elements</span>
+								}
 							</div>
 						</button>
 					</div>
@@ -221,7 +246,8 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	try {
-		const product = await getProductByID(ctx.params!.pid as string) //eslint-disable-line @typescript-eslint/no-non-null-assertion
+		if (!ctx.params?.pid) throw new Error("No PID provided")
+		const product = await getProductByID(ctx.params.pid as string)
 		return { props: { product } }
 	}
 	catch (e) {

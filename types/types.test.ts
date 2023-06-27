@@ -1,10 +1,10 @@
 import Joi from "joi"
 import { Card } from "./card"
-import {validateCard, validateCardError} from "types/card"
+import { validateCard, validateCardError } from "types/card"
 import { validateFinalCustomer, validateFinalCustomerError, FinalCustomerInterface } from "./customer"
 import { validateAddress, validateAddressError, validatePostalCode, validatePostalCodeError } from "types/address"
 // types
-import { ProductInterface, validateProduct, validateProductError } from "./product"
+import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "./product"
 import { OrderProduct, OrderProductFilled, validateOrderProduct, validateOrderProductError, validateOrderProductFilled, validateOrderProductFilledError } from "./order"
 import { Address } from "@paypal/paypal-js"
 
@@ -29,7 +29,7 @@ describe("Should Validate Postal Code Correctly", () => {
 
 	it("Should Validate Postal Code with invalid postal code", () => {
 		// create list of invalid 6 character postal codes
-		const invalidPostalCodes = [ "123456", "1234a6", "1a3456", "a23456", "aaaaaa", "1a1 a1a", "1a1a1a", "1a1 a1", "1a1a 1a", "1a1a1", ]
+		const invalidPostalCodes = ["123456", "1234a6", "1a3456", "a23456", "aaaaaa", "1a1 a1a", "1a1a1a", "1a1 a1", "1a1a 1a", "1a1a1",]
 		invalidPostalCodes.forEach((invalidPostalCode) => {
 			expect(validatePostalCode(invalidPostalCode)).toBe(false)
 			expect(validatePostalCodeError(invalidPostalCode)).toBeInstanceOf(Joi.ValidationError)
@@ -72,13 +72,13 @@ describe("Address Validation", () => {
 		const shortCityError = { ...successAddress, admin_area_2: "" }
 		expect(validateAddress(shortCityError)).toBe(false)
 		expect(validateAddressError(shortCityError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCityError)?.message).toBe("\"admin_area_2\" is not allowed to be empty")
+		expect(validateAddressError(shortCityError)?.message).toBe('"admin_area_2" is not allowed to be empty')
 	})
 	it("Should Validate Address with no province", () => {
 		const shortProvinceError = { ...successAddress, admin_area_1: "" }
 		expect(validateAddress(shortProvinceError)).toBe(false)
 		expect(validateAddressError(shortProvinceError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortProvinceError)?.message).toBe('\"admin_area_1\" must be one of [alberta, british columbia, manitoba, new brunswick, newfoundland and labrador, newfoundland, labrador, northwest territories, nova scotia, nunavut, ontario, prince edward island, quebec, saskatchewan, yukon]')
+		expect(validateAddressError(shortProvinceError)?.message).toBe('"admin_area_1" must be one of [alberta, british columbia, manitoba, new brunswick, newfoundland and labrador, newfoundland, labrador, northwest territories, nova scotia, nunavut, ontario, prince edward island, quebec, saskatchewan, yukon]')
 	})
 	it("Should Validate Address with no postal code", () => {
 		const shortPostalCodeError = { ...successAddress, postal_code: "" }
@@ -90,57 +90,57 @@ describe("Address Validation", () => {
 		const shortCountryCodeError = { ...successAddress, country_code: "" }
 		expect(validateAddress(shortCountryCodeError)).toBe(false)
 		expect(validateAddressError(shortCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCountryCodeError)?.message).toBe('\"country_code\" must be [CA]')
+		expect(validateAddressError(shortCountryCodeError)?.message).toBe('"country_code" must be [CA]')
 	})
 	it("Should Validate Address with long country code", () => {
 		const longCountryCodeError = { ...successAddress, country_code: "a".repeat(3) }
 		expect(validateAddress(longCountryCodeError)).toBe(false)
 		expect(validateAddressError(longCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(longCountryCodeError)?.message).toBe("\"country_code\" must be [CA]")
+		expect(validateAddressError(longCountryCodeError)?.message).toBe('"country_code" must be [CA]')
 	})
 	it("Should Validate Address with short country code", () => {
 		const shortCountryCodeError = { ...successAddress, country_code: "a" }
 		expect(validateAddress(shortCountryCodeError)).toBe(false)
 		expect(validateAddressError(shortCountryCodeError)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateAddressError(shortCountryCodeError)?.message).toBe("\"country_code\" must be [CA]")
+		expect(validateAddressError(shortCountryCodeError)?.message).toBe('"country_code" must be [CA]')
 	})
 })
 
-describe("Card Validation", ()=>{
+describe("Card Validation", () => {
 	const successCard: Card = {
 		cardName: "Test Card",
 		cardNumber: "4214029346506481",
 		cardExpiry: "2025-03",
 		cardCVV: "191",
 	}
-	it("Should Validate Successful Card", ()=>{
+	it("Should Validate Successful Card", () => {
 		expect(validateCard(successCard)).toBe(true)
 		expect(validateCardError(successCard)).toBe(undefined)
 	})
 
-	it("Should Validate Card with no name", ()=>{
-		const shortNameErrorCard = { ...successCard , cardName: ""}
+	it("Should Validate Card with no name", () => {
+		const shortNameErrorCard = { ...successCard, cardName: "" }
 		expect(validateCard(shortNameErrorCard)).toBe(false)
 		expect(validateCardError(shortNameErrorCard)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateCardError(shortNameErrorCard)?.message).toBe('"cardName" is not allowed to be empty')
 	})
 
-	it("Should Validate Card with name too long", ()=>{
-		const longNameCard = {...successCard, cardName: "a".repeat(301)}
+	it("Should Validate Card with name too long", () => {
+		const longNameCard = { ...successCard, cardName: "a".repeat(301) }
 		expect(validateCard(longNameCard)).toBe(false)
 		expect(validateCardError(longNameCard)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateCardError(longNameCard)?.message).toBe('"cardName" length must be less than or equal to 300 characters long')
 	})
 
 	it("Should Validate Card with bad number", () => {
-		const badCardNumberCard = {...successCard, cardNumber: "1234567890123456"}
+		const badCardNumberCard = { ...successCard, cardNumber: "1234567890123456" }
 		expect(validateCard(badCardNumberCard)).toBe(false)
 		expect(validateCardError(badCardNumberCard)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateCardError(badCardNumberCard)?.message).toBe('"cardNumber" must be a credit card')
 	})
 
 	it("Should Validate Card with long CVV", () => {
-		const badCVVCard = {...successCard, cardCVV: "1234"}
+		const badCVVCard = { ...successCard, cardCVV: "1234" }
 		expect(validateCard(badCVVCard)).toBe(false)
 		expect(validateCardError(badCVVCard)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateCardError(badCVVCard)?.message).toBe('"cardCVV" length must be 3 characters long')
@@ -152,12 +152,12 @@ describe("Card Validation", ()=>{
 		expect(validateCardError(badCVVCard)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateCardError(badCVVCard)?.message).toBe('"cardCVV" length must be 3 characters long')
 	})
-	
+
 	it("Should Validate Card with malformed expiry", () => {
-		const malformedExpiryCard = {...successCard, cardExpiry: "13/25"}
+		const malformedExpiryCard = { ...successCard, cardExpiry: "13/25" }
 		expect(validateCard(malformedExpiryCard)).toBe(false)
 		expect(validateCardError(malformedExpiryCard)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateCardError(malformedExpiryCard)?.message).toBe('"cardExpiry" with value \"13/25\" fails to match the required pattern: /^[0-9]{4}-(0[1-9]|1[0-2])$/')
+		expect(validateCardError(malformedExpiryCard)?.message).toBe('"cardExpiry" with value "13/25" fails to match the required pattern: /^[0-9]{4}-(0[1-9]|1[0-2])$/')
 	})
 })
 
@@ -179,227 +179,236 @@ const successCustomer: FinalCustomerInterface = {
 	},
 	address: successAddress,
 }
-describe("Final Customer Validation", ()=>{
-	it("Should Validate Successful Customer", ()=>{
+describe("Final Customer Validation", () => {
+	it("Should Validate Successful Customer", () => {
 		expect(validateFinalCustomer(successCustomer)).toBe(true)
 		expect(validateFinalCustomerError(successCustomer)).toBe(undefined)
 	})
 
-	it("Should Validate Customer with no name", ()=>{
-		const shortNameErrorCustomer = { ...successCustomer , fullName: ""}
+	it("Should Validate Customer with no name", () => {
+		const shortNameErrorCustomer = { ...successCustomer, fullName: "" }
 		expect(validateFinalCustomer(shortNameErrorCustomer)).toBe(false)
 		expect(validateFinalCustomerError(shortNameErrorCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(shortNameErrorCustomer)?.message).toBe('"fullName" is not allowed to be empty')
 	})
 
-	it("Should Validate Customer with name too long", ()=>{
-		const longNameCustomer = {...successCustomer, fullName: "a".repeat(301)}
+	it("Should Validate Customer with name too long", () => {
+		const longNameCustomer = { ...successCustomer, fullName: "a".repeat(301) }
 		expect(validateFinalCustomer(longNameCustomer)).toBe(false)
 		expect(validateFinalCustomerError(longNameCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(longNameCustomer)?.message).toBe('"fullName" length must be less than or equal to 300 characters long')
 	})
 
 	it("Should Validate Customer with bad payment method", () => {
-		const badPaymentMethodCustomer = {...successCustomer, paymentMethod: "bad"}
+		const badPaymentMethodCustomer = { ...successCustomer, paymentMethod: "bad" }
 		expect(validateFinalCustomer(badPaymentMethodCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badPaymentMethodCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(badPaymentMethodCustomer)?.message).toBe('"paymentMethod" must be one of [card, paypal]')
 	})
 
 	it("Should Validate Customer with bad payment source", () => {
-		const badPaymentSourceCustomer = {...successCustomer, payment_source: {bad: {}}}
+		const badPaymentSourceCustomer = { ...successCustomer, payment_source: { bad: {} } }
 		expect(validateFinalCustomer(badPaymentSourceCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badPaymentSourceCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(badPaymentSourceCustomer)?.message).toBe('"payment_source.bad" is not allowed')
 	})
 
 	it("Should Validate Customer with bad address", () => {
-		const badAddressCustomer = {...successCustomer, address: {}}
+		const badAddressCustomer = { ...successCustomer, address: {} }
 		expect(validateFinalCustomer(badAddressCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badAddressCustomer)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateFinalCustomerError(badAddressCustomer)?.message).toBe('\"address.address_line_1\" is required')
+		expect(validateFinalCustomerError(badAddressCustomer)?.message).toBe('"address.address_line_1" is required')
 	})
 })
 
-const successProductWithoutImageAndID: Omit<ProductInterface, "productImageURL" | "firestoreID"> = {
+const successProductWithoutImageAndID: FirebaseProductInterface = {
 	productName: "Test Product",
-	quantity: 1,
-	price: 1,
 	description: "Test Description",
-	
+
 	commercial: true,
 	residential: true,
 	industrial: false,
 
-	length: 1,
-	width: 1,
-	height: 1,
-	weight: 1,
+	variants: [{
+		sku: "testsku",
+		quantity: 1,
+		price: 1,
+		length: 1,
+		width: 1,
+		height: 1,
+		weight: 1,
+		label: "normal"
+	}]
 }
 const successProduct = { ...successProductWithoutImageAndID, productImageURL: "test", firestoreID: "test" }
-describe("Product Validation", ()=>{
-	it("Should Validate Successful Product", ()=>{
-		expect(validateProduct(successProductWithoutImageAndID)).toBe(true)
+describe("Product Validation", () => {
+	it("Should Validate Successful Product", () => {
 		expect(validateProductError(successProductWithoutImageAndID)).toBe(undefined)
+		expect(validateProduct(successProductWithoutImageAndID)).toBe(true)
 	})
 	it("Should allow inclusion of productImageURL and firestoreID", () => {
-		expect(validateProduct(successProduct)).toBe(true)
 		expect(validateProductError(successProduct)).toBe(undefined)
+		expect(validateProduct(successProduct)).toBe(true)
 	})
 
-	it("Should Validate Product with no name", ()=>{
-		const shortNameErrorProduct = { ...successProduct , productName: ""}
+	it("Should Validate Product with no name", () => {
+		const shortNameErrorProduct = { ...successProduct, productName: "" }
 		expect(validateProduct(shortNameErrorProduct)).toBe(false)
 		expect(validateProductError(shortNameErrorProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(shortNameErrorProduct)?.message).toBe('"productName" is not allowed to be empty')
 	})
 
-	it("Should validate quantity is a number", ()=>{
-		const badQuantityProduct = {...successProduct, quantity: "bad"}
+	it("Should validate quantity is a number", () => {
+		const badQuantityProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], quantity: "bad" }] }
 		expect(validateProduct(badQuantityProduct)).toBe(false)
 		expect(validateProductError(badQuantityProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badQuantityProduct)?.message).toBe('"quantity" must be a number')
+		expect(validateProductError(badQuantityProduct)?.message).toBe('"variants[0].quantity" must be a number')
 	})
 	it("Should validate quantity too low", () => {
-		const lowQuantityProduct = {...successProduct, quantity: 0}
+		const lowQuantityProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], quantity: 0 }] }
 		expect(validateProduct(lowQuantityProduct)).toBe(false)
 		expect(validateProductError(lowQuantityProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowQuantityProduct)?.message).toBe('\"quantity\" must be greater than 0')
+		expect(validateProductError(lowQuantityProduct)?.message).toBe('"variants[0].quantity" must be greater than 0')
 	})
 
-	it("Should validate price is a number", ()=>{
-		const badPriceProduct = {...successProduct, price: "bad"}
+	it("Should validate price is a number", () => {
+		const badPriceProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], price: "bad" }] }
 		expect(validateProduct(badPriceProduct)).toBe(false)
 		expect(validateProductError(badPriceProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badPriceProduct)?.message).toBe('"price" must be a number')
+		expect(validateProductError(badPriceProduct)?.message).toBe('"variants[0].price" must be a number')
 	})
 	it("Should validate price too low", () => {
-		const lowPriceProduct = {...successProduct, price: 0}
+		const lowPriceProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], price: 0 }] }
 		expect(validateProduct(lowPriceProduct)).toBe(false)
 		expect(validateProductError(lowPriceProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowPriceProduct)?.message).toBe('\"price\" must be greater than 0')
+		expect(validateProductError(lowPriceProduct)?.message).toBe('"variants[0].price" must be greater than 0')
 	})
 
-	it("Should validate description is present", ()=>{
-		const badDescriptionProduct = {...successProduct, description: ""}
+	it("Should validate description is present", () => {
+		const badDescriptionProduct = { ...successProduct, description: "" }
 		expect(validateProduct(badDescriptionProduct)).toBe(false)
 		expect(validateProductError(badDescriptionProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badDescriptionProduct)?.message).toBe('"description" is not allowed to be empty')
 	})
-	it("Should validate description is a string", ()=>{
-		const badDescriptionProduct = {...successProduct, description: 1}
+	it("Should validate description is a string", () => {
+		const badDescriptionProduct = { ...successProduct, description: 1 }
 		expect(validateProduct(badDescriptionProduct)).toBe(false)
 		expect(validateProductError(badDescriptionProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badDescriptionProduct)?.message).toBe('"description" must be a string')
 	})
 
-	it("Should validate commercial is a boolean", ()=>{
-		const badCommercialProduct = {...successProduct, commercial: "bad"}
+	it("Should validate commercial is a boolean", () => {
+		const badCommercialProduct = { ...successProduct, commercial: "bad" }
 		expect(validateProduct(badCommercialProduct)).toBe(false)
 		expect(validateProductError(badCommercialProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badCommercialProduct)?.message).toBe('"commercial" must be a boolean')
 	})
-	it("Should validate residential is a boolean", ()=>{
-		const badResidentialProduct = {...successProduct, residential: "bad"}
+	it("Should validate residential is a boolean", () => {
+		const badResidentialProduct = { ...successProduct, residential: "bad" }
 		expect(validateProduct(badResidentialProduct)).toBe(false)
 		expect(validateProductError(badResidentialProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badResidentialProduct)?.message).toBe('"residential" must be a boolean')
 	})
-	it("Should validate industrial is a boolean", ()=>{
-		const badIndustrialProduct = {...successProduct, industrial: "bad"}
+	it("Should validate industrial is a boolean", () => {
+		const badIndustrialProduct = { ...successProduct, industrial: "bad" }
 		expect(validateProduct(badIndustrialProduct)).toBe(false)
 		expect(validateProductError(badIndustrialProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badIndustrialProduct)?.message).toBe('"industrial" must be a boolean')
 	})
 
-	it("Should validate length is a number", ()=>{
-		const badLengthProduct = {...successProduct, length: "bad"}
+	it("Should validate length is a number", () => {
+		const badLengthProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], length: "bad" }] }
 		expect(validateProduct(badLengthProduct)).toBe(false)
 		expect(validateProductError(badLengthProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badLengthProduct)?.message).toBe('"length" must be a number')
+		expect(validateProductError(badLengthProduct)?.message).toBe('"variants[0].length" must be a number')
 	})
 	it("Should validate length too low", () => {
-		const lowLengthProduct = {...successProduct, length: 0}
+		const lowLengthProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], length: 0 }] }
 		expect(validateProduct(lowLengthProduct)).toBe(false)
 		expect(validateProductError(lowLengthProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowLengthProduct)?.message).toBe('\"length\" must be greater than 0')
+		expect(validateProductError(lowLengthProduct)?.message).toBe('"variants[0].length" must be greater than 0')
 	})
-	it("Should validate width is a number", ()=>{
-		const badWidthProduct = {...successProduct, width: "bad"}
+	it("Should validate width is a number", () => {
+		const badWidthProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], width: "bad" }] }
 		expect(validateProduct(badWidthProduct)).toBe(false)
 		expect(validateProductError(badWidthProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badWidthProduct)?.message).toBe('"width" must be a number')
+		expect(validateProductError(badWidthProduct)?.message).toBe('"variants[0].width" must be a number')
 	})
 	it("Should validate width too low", () => {
-		const lowWidthProduct = {...successProduct, width: 0}
+		const lowWidthProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], width: 0 }] }
 		expect(validateProduct(lowWidthProduct)).toBe(false)
 		expect(validateProductError(lowWidthProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowWidthProduct)?.message).toBe('\"width\" must be greater than 0')
+		expect(validateProductError(lowWidthProduct)?.message).toBe('"variants[0].width" must be greater than 0')
 	})
-	it("Should validate height is a number", ()=>{
-		const badHeightProduct = {...successProduct, height: "bad"}
+	it("Should validate height is a number", () => {
+		const badHeightProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], height: "bad" }] }
 		expect(validateProduct(badHeightProduct)).toBe(false)
 		expect(validateProductError(badHeightProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badHeightProduct)?.message).toBe('"height" must be a number')
+		expect(validateProductError(badHeightProduct)?.message).toBe('"variants[0].height" must be a number')
 	})
 	it("Should validate height too low", () => {
-		const lowHeightProduct = {...successProduct, height: 0}
+		const lowHeightProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], height: 0 }] }
 		expect(validateProduct(lowHeightProduct)).toBe(false)
 		expect(validateProductError(lowHeightProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowHeightProduct)?.message).toBe('\"height\" must be greater than 0')
+		expect(validateProductError(lowHeightProduct)?.message).toBe('"variants[0].height" must be greater than 0')
 	})
-	it("Should validate weight is a number", ()=>{
-		const badWeightProduct = {...successProduct, weight: "bad"}
+	it("Should validate weight is a number", () => {
+		const badWeightProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], weight: "bad" }] }
 		expect(validateProduct(badWeightProduct)).toBe(false)
 		expect(validateProductError(badWeightProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(badWeightProduct)?.message).toBe('"weight" must be a number')
+		expect(validateProductError(badWeightProduct)?.message).toBe('"variants[0].weight" must be a number')
 	})
 	it("Should validate weight too low", () => {
-		const lowWeightProduct = {...successProduct, weight: 0}
+		const lowWeightProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], weight: 0 }] }
 		expect(validateProduct(lowWeightProduct)).toBe(false)
 		expect(validateProductError(lowWeightProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowWeightProduct)?.message).toBe('\"weight\" must be greater than 0')
+		expect(validateProductError(lowWeightProduct)?.message).toBe('"variants[0].weight" must be greater than 0')
 	})
 })
 
 const successOrderProduct: OrderProduct = {
 	PID: "abcedf",
 	quantity: 1,
+	variantSKU: "testsku"
 }
+
+const { variants, ...noVariantSuccessProduct } = successProduct
 const successOrderProductFilled: OrderProductFilled = {
-	PID: "abcedf",
-	quantity: 1,
-	product: successProduct
+	...successOrderProduct,
+	product: {
+		...noVariantSuccessProduct,
+		...successProduct.variants[0]
+	},
 }
-describe("Order Product Validation", ()=>{
-	it("Should validate Order Product", ()=>{
-		expect(validateOrderProduct(successOrderProduct)).toBe(true)
+describe("Order Product Validation", () => {
+	it("Should validate Order Product", () => {
 		expect(validateOrderProductError(successOrderProduct)).toBe(undefined)
+		expect(validateOrderProduct(successOrderProduct)).toBe(true)
 	})
-	it("Should validate PID is present", ()=>{
-		const badPIDOrderProduct = {...successOrderProduct, PID: undefined}
+	it("Should validate PID is present", () => {
+		const badPIDOrderProduct = { ...successOrderProduct, PID: undefined }
 		expect(validateOrderProduct(badPIDOrderProduct)).toBe(false)
 		expect(validateOrderProductError(badPIDOrderProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateOrderProductError(badPIDOrderProduct)?.message).toBe('"PID" is required')
 	})
-	it("Should validate PID is a string", ()=>{
-		const badPIDOrderProduct = {...successOrderProduct, PID: 1}
+	it("Should validate PID is a string", () => {
+		const badPIDOrderProduct = { ...successOrderProduct, PID: 1 }
 		expect(validateOrderProduct(badPIDOrderProduct)).toBe(false)
 		expect(validateOrderProductError(badPIDOrderProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateOrderProductError(badPIDOrderProduct)?.message).toBe('"PID" must be a string')
 	})
-	it("Should validate quantity is present", ()=>{
-		const badQuantityOrderProduct = {...successOrderProduct, quantity: undefined}
+	it("Should validate quantity is present", () => {
+		const badQuantityOrderProduct = { ...successOrderProduct, quantity: undefined }
 		expect(validateOrderProduct(badQuantityOrderProduct)).toBe(false)
 		expect(validateOrderProductError(badQuantityOrderProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateOrderProductError(badQuantityOrderProduct)?.message).toBe('"quantity" is required')
 	})
 
-	it("Should validate Order Product Filled", ()=>{
-		expect(validateOrderProductFilled(successOrderProductFilled)).toBe(true)
+	it("Should validate Order Product Filled", () => {
 		expect(validateOrderProductFilledError(successOrderProductFilled)).toBe(undefined)
+		expect(validateOrderProductFilled(successOrderProductFilled)).toBe(true)
 	})
-	it("Should contain a product", ()=>{
+	it("Should contain a product", () => {
 		const badOrderProductFilled = successOrderProduct
 		expect(validateOrderProductFilled(badOrderProductFilled)).toBe(false)
 		expect(validateOrderProductFilledError(badOrderProductFilled)).toBeInstanceOf(Joi.ValidationError)

@@ -1,43 +1,81 @@
 import Joi from "joi"
 import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
-type cm = number
-type kg = number
-
-export interface FirebaseProductInterface{
+export interface FirebaseProductInterface {
 	productName: string,
-	quantity: number,
-	price: number,
 	description: string,
 
 	commercial: boolean,
 	industrial: boolean,
 	residential: boolean,
 
-	length: cm,
-	width: cm,
-	height: cm,
-	weight: kg,
+	variants: ProductVariantListing[]
+}
+
+export interface ProductVariantListing {
+	sku: string,
+	label: string,
+
+	length: number,
+	width: number,
+	height: number,
+	weight: number,
+
+	quantity: number,
+	price: number,
 }
 export interface ProductInterface extends FirebaseProductInterface {
 	productImageURL: string, //for fetching from storage
 	firestoreID: string,
 }
 
-export const productSchema = Joi.object({
+export interface ProductVariantInterface extends Omit<ProductInterface & ProductVariantListing, "variants"> { }
+
+export const productVariantSchema = Joi.object({
 	productName: Joi.string().required(),
-	quantity: Joi.number().required().greater(0),
-	price: Joi.number().required().greater(0),
 	description: Joi.string().required(),
 
 	commercial: Joi.boolean(),
 	industrial: Joi.boolean(),
 	residential: Joi.boolean(),
 
+	productImageURL: Joi.string(),
+	firestoreID: Joi.string(),
+
+	sku: Joi.string().required(),
+	label: Joi.string().required(),
+
 	length: Joi.number().required().greater(0),
 	width: Joi.number().required().greater(0),
 	height: Joi.number().required().greater(0),
 	weight: Joi.number().required().greater(0),
+
+	quantity: Joi.number().required().greater(0),
+	price: Joi.number().required().greater(0),
+})
+
+
+const productVariantListingSchema = Joi.object({
+	sku: Joi.string().required(),
+	label: Joi.string().required(),
+
+	length: Joi.number().required().greater(0),
+	width: Joi.number().required().greater(0),
+	height: Joi.number().required().greater(0),
+	weight: Joi.number().required().greater(0),
+
+	quantity: Joi.number().required().greater(0),
+	price: Joi.number().required().greater(0),
+})
+export const productSchema = Joi.object({
+	productName: Joi.string().required(),
+	description: Joi.string().required(),
+
+	commercial: Joi.boolean(),
+	industrial: Joi.boolean(),
+	residential: Joi.boolean(),
+
+	variants: Joi.array().items(productVariantListingSchema).required().min(1),
 
 	productImageURL: Joi.string(),
 	firestoreID: Joi.string(),

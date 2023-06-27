@@ -10,7 +10,7 @@ import { FirebaseProductInterface, ProductInterface } from "types/product";
  * @param productDoc Document aquired from firestore
  * @returns The full product interface
  */
-export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<ProductInterface>=>{
+export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<ProductInterface> => {
 	const product = productDoc.data() as FirebaseProductInterface
 	return {
 		...product,
@@ -23,7 +23,7 @@ export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)
  * @param productID Product ID
  * @returns The product document from firebase
  */
-export const getFirebaseProductDocByID = async (productID: string)=>{
+export const getFirebaseProductDocByID = async (productID: string) => {
 	const productDoc = await getDoc(doc(db, "products", productID))
 	if (!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
 	return productDoc
@@ -33,7 +33,7 @@ export const getFirebaseProductDocByID = async (productID: string)=>{
  * @param productID Product ID
  * @returns The product object raw from firebase
  */
-export const getFirebaseProductByID = async (productID: string)=>{
+export const getFirebaseProductByID = async (productID: string) => {
 	const productDoc = await getFirebaseProductDocByID(productID)
 	return productDoc.data() as FirebaseProductInterface
 }
@@ -43,7 +43,7 @@ export const getFirebaseProductByID = async (productID: string)=>{
  * @param productID Product ID
  * @returns product object
  */
-export const getProductByID = async (productID: string)=>{
+export const getProductByID = async (productID: string) => {
 	const productDoc = await getFirebaseProductDocByID(productID)
 	return fillProductDoc(productDoc)
 }
@@ -53,14 +53,14 @@ export const getProductByID = async (productID: string)=>{
  * @param productList List of product IDs
  * @returns The products objects of the given IDs
  */
-export const getProductsByIDs = async(productList: string[])=>{
+export const getProductsByIDs = async (productList: string[]) => {
 	return await Promise.all(productList.map(async pid => getProductByID(pid)))
 }
 
 /**
  * @returns All products in the database
  */
-export const getAllProducts = async()=>{
+export const getAllProducts = async () => {
 	const productsQS = await getDocs(collection(db, "products"));
 	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
 	return products
@@ -75,3 +75,5 @@ export const sortProductsByName = (p: ProductInterface[]) => p.sort((a, b) => {
 	else if (a.productName.toUpperCase() > b.productName.toUpperCase()) return 1
 	else return 0
 })
+
+export const getProductVariant = (p: ProductInterface, variantID: string) => p.variants.find(v => v.sku === variantID)

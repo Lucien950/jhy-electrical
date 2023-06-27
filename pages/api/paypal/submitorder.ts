@@ -11,8 +11,8 @@ import { fillOrderProducts } from "util/orderUtil"
 // paypal
 import { getOrder } from "server/paypal/getOrderFetch"
 import { submitOrderFetch } from "server/paypal/submitOrderFetch"
-import { Timestamp } from "firebase-admin/firestore"
-import { FirestoreOrderInterface } from "types/order"
+import { Timestamp } from "firebase/firestore"
+import { EmptyOrderInterface } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"
 
@@ -34,21 +34,21 @@ async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 	if (!validateFinalCustomer(customerInfo)) { console.error("customer error"); throw validateFinalCustomerError(customerInfo) }
 	// this validates that p0 has been completed
 	if (!validateFinalPrice(priceInfo)) { console.error("price error"); throw validateFinalPriceError(priceInfo) }
-	
-	if (status === "COMPLETED"){
+
+	if (status === "COMPLETED") {
 		const existingOrderRef = db.collection("orders").where("paypalOrderID", "==", token)
 		const existingOrder = (await existingOrderRef.get()).docs[0]
-		if(existingOrder !== undefined) throw "Order has already been completed"
+		if (existingOrder !== undefined) throw "Order has already been completed"
 	}
 
 	// populate cart (fossilize the cart in case products change/are removed)
 	// also validate that all the products are still valid one last time
 	const cart = await fillOrderProducts(emptyProducts)
-	
+
 	if (status === "APPROVED") await submitOrderFetch(token)
 
 	// add order to firebase
-	const newOrder = {
+	const newOrder: EmptyOrderInterface = {
 		products: cart,
 		orderPrice: priceInfo,
 		completed: false,
@@ -58,7 +58,7 @@ async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 		payment_source: customerInfo.payment_source,
 		address: customerInfo.address,
 		paypalOrderID: token,
-	} as FirestoreOrderInterface
+	}
 
 	const { id: firebaseOrderID } = await db.collection("orders").add(newOrder)
 	// const { id: firebaseOrderID } = await addDoc(collection(db, "orders"), newOrder)
