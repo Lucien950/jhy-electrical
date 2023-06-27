@@ -15,6 +15,10 @@ import { Timestamp } from "firebase-admin/firestore"
 import { EmptyOrderInterface } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"
+import { FirebaseProductInterface } from "types/product"
+
+const isRejected = (input: PromiseSettledResult<unknown>): input is PromiseRejectedResult =>
+	input.status === 'rejected'
 
 export type submitOrderProps = { token: string }
 export type submitOrderRes = { firebaseOrderID: string }
@@ -36,9 +40,8 @@ async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 	if (!validateFinalPrice(priceInfo)) { console.error("price error"); throw validateFinalPriceError(priceInfo) }
 
 	if (status === "COMPLETED") {
-		const existingOrderRef = db.collection("orders").where("paypalOrderID", "==", token)
-		const existingOrder = (await existingOrderRef.get()).docs[0]
-		if (existingOrder !== undefined) throw "Order has already been completed"
+		const existingOrderRef = await db.collection("orders").where("paypalOrderID", "==", token).count().get()
+		if (existingOrderRef.data().count != 0) throw "Order has already been completed"
 	}
 
 	// populate cart (fossilize the cart in case products change/are removed)
@@ -62,6 +65,21 @@ async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 
 	const { id: firebaseOrderID } = await db.collection("orders").add(newOrder)
 	// const { id: firebaseOrderID } = await addDoc(collection(db, "orders"), newOrder)
+	const decreaseProductQuantity = await Promise.allSettled(cart.map(async p => {
+		const updateDoc = (await db.collection("products").doc(p.PID).get()).data() as FirebaseProductInterface
+		const updateVariant = updateDoc.variants.find(v => v.sku === p.variantSKU)
+		if (!updateVariant) throw "Variant not found"
+		updateVariant.quantity -= p.quantity
+		await db.collection("products").doc(p.PID).update({
+			variants: [...updateDoc.variants.filter(v => v.sku !== p.variantSKU), updateVariant]
+		})
+	}))
+
+	const failures = decreaseProductQuantity.filter(isRejected)
+	if (failures.length > 0) {
+		failures.forEach(p => console.error(p.reason))
+		throw "Failed to update product quantities"
+	}
 
 	return { firebaseOrderID } as submitOrderRes
 }

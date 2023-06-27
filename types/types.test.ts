@@ -265,13 +265,6 @@ describe("Product Validation", () => {
 		expect(validateProductError(badQuantityProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(badQuantityProduct)?.message).toBe('"variants[0].quantity" must be a number')
 	})
-	it("Should validate quantity too low", () => {
-		const lowQuantityProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], quantity: 0 }] }
-		expect(validateProduct(lowQuantityProduct)).toBe(false)
-		expect(validateProductError(lowQuantityProduct)).toBeInstanceOf(Joi.ValidationError)
-		expect(validateProductError(lowQuantityProduct)?.message).toBe('"variants[0].quantity" must be greater than 0')
-	})
-
 	it("Should validate price is a number", () => {
 		const badPriceProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], price: "bad" }] }
 		expect(validateProduct(badPriceProduct)).toBe(false)

@@ -101,3 +101,15 @@ describe("Price Tests", () => {
 		expect(mockCalculateShipping).toHaveBeenNthCalledWith(1, [{ id: "abc", quantity: 3 }, { id: "def", quantity: 4 }], "TESTPOSTALCODE")
 	})
 })
+
+import { generateNewSKU } from "./generateSKU"
+
+describe("Generate SKU Test", () => {
+	const generatedRandomSku = generateNewSKU()
+	it("Should generate a random SKU", () => {
+		expect(generatedRandomSku).toMatch(/[A-Za-z0-9+/]{16}/)
+	})
+	it("Should generate a unique SKU", () => {
+		expect(generateNewSKU()).not.toBe(generatedRandomSku)
+	})
+})

@@ -37,7 +37,7 @@ const productVariantListingSchema = Joi.object({
 	height: Joi.number().required().greater(0),
 	weight: Joi.number().required().greater(0),
 
-	quantity: Joi.number().required().greater(0),
+	quantity: Joi.number().required().min(0),
 	price: Joi.number().required().greater(0),
 	color: Joi.string().required(),
 })
