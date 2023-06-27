@@ -8,6 +8,7 @@ import { FirebaseProductInterface, ProductInterface, ProductVariantListing, vali
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
+import { generateNewSKU } from "util/generateSKU";
 import { toSentenceCase } from "util/string";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]
@@ -149,7 +150,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		...mp,
 		variants: [
 			...(mp.variants || []),
-			{ sku: Math.random().toString(36).substring(2, 15) } as ProductVariantListing
+			{ sku: generateNewSKU() } as ProductVariantListing
 		]
 	}))
 
@@ -162,19 +163,17 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		if (!hasImage) return toast.error("No image uploaded", { theme: "colored" })
 		if (!validateProduct(modalProduct)) {
 			const error = validateProductError(modalProduct)! //eslint-disable-line @typescript-eslint/no-non-null-assertion
-			console.error("Product Validation Error", error)
 			toast.error(error.message, { theme: "colored" })
-			return
+			return console.error("Product Validation Error", error)
 		}
-
-		// loading
-		setUploading(true)
 
 		// FIRESTORE Update
 		//eslint-disable-next-line @typescript-eslint/no-unused-vars, prefer-const
 		let { productImageURL: newProductImageURL, firestoreID: newFirestoreID, ...rest } = modalProduct
 		const firestoreAddProduct = rest as FirebaseProductInterface
+
 		try {
+			setUploading(true)
 			if (newFirestoreID) await setDoc(doc(db, "products", newFirestoreID), firestoreAddProduct) //updateDoc??
 			else {
 				const addedDoc = await addDoc(collection(db, "products"), firestoreAddProduct)
@@ -184,8 +183,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		catch (e) {
 			toast.error("Firestore write error", { theme: "colored" })
 			console.error("[Firestore Error] Firestore Write Error", e)
-			setUploading(false)
-			return
+			return setUploading(false)
 		}
 
 		// if uploading first, or existing photo, there will be url (from blob and firebase storage url respectively)
@@ -199,8 +197,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 			catch (e) {
 				console.error(...firebaseConsoleBadge, "Firebase Storage Error", e)
 				toast.error("Firebase Storage Error: Check console for more", { theme: "colored" })
-				setUploading(false)
-				return
+				return setUploading(false)
 			}
 		}
 
@@ -210,6 +207,8 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 			firestoreID: newFirestoreID,
 			productImageURL: newProductImageURL
 		} as ProductInterface)
+
+		setUploading(false)
 		closeModal()
 	}
 
