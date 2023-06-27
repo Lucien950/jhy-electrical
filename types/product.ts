@@ -22,6 +22,7 @@ export interface ProductVariantListing {
 
 	quantity: number,
 	price: number,
+	color: string,
 }
 export interface ProductInterface extends FirebaseProductInterface {
 	productImageURL: string, //for fetching from storage
@@ -38,6 +39,7 @@ const productVariantListingSchema = Joi.object({
 
 	quantity: Joi.number().required().greater(0),
 	price: Joi.number().required().greater(0),
+	color: Joi.string().required(),
 })
 export const productSchema = Joi.object({
 	productName: Joi.string().required(),
@@ -76,4 +78,5 @@ export const productVariantSchema = Joi.object({
 
 	quantity: Joi.number().required().greater(0),
 	price: Joi.number().required().greater(0),
+	color: Joi.string().required(),
 })

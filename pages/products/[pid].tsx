@@ -147,12 +147,14 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 		height: 0,
 		weight: 0,
 		price: 0,
-		quantity: 0
+		quantity: 0,
+		color: "NO COLOR"
 	}
 	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product, selectedProductVariant)
 
 
 	// Adding to cart or purchasing
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const { variants: _, ...productNoVariants } = product
 	const newOrderProduct: OrderProductFilled = {
 		PID: product.firestoreID,
@@ -194,7 +196,8 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 					<div className="p-4">
 						{/* Basic Information */}
 						<h1 className="font-bold text-4xl mb-1">{product.productName}</h1>
-						<p className="mb-4 text-lg">{product.description}</p>
+						<p className="mb-1 text-lg">{product.description}</p>
+						<p className="mb-4 text-lg">{selectedProductVariant.color}</p>
 						<p className="mb-1 text-lg">{selectedProductVariant.quantity} in stock, {availableToAdd > 0 ? availableToAdd : "No"} more to add</p>
 						<div className="mb-3">
 							<Price price={selectedProductVariant.price} large />

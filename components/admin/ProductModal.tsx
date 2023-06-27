@@ -282,10 +282,16 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 														<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
 													</svg>
 												</div>
-												<div className="flex flex-row justify-around gap-x-2">
+												<div className="flex flex-row gap-x-2 items-end">
 													<InputField label="Quantity" productKey="quantity" defaultValue={v.quantity} numberValue handleChange={handleVariantEdit} />
 													<InputField label="Price" unit="$CAD" productKey="price" defaultValue={v.price} numberValue handleChange={handleVariantEdit} />
-													<InputField label="Weight" unit="kg" productKey="weight" defaultValue={v.weight} numberValue handleChange={handleVariantEdit} />
+													<InputField label="Color" productKey="color" defaultValue={v.color} handleChange={handleVariantEdit} />
+												</div>
+												<div className="flex flex-row gap-x-2 items-end">
+													<svg className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+														<path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
+													</svg>
+													<InputField label="Weight" unit="kg" productKey="weight" defaultValue={v.weight} numberValue className="!w-16" handleChange={handleVariantEdit} />
 													<InputField label="Width" productKey="width" defaultValue={v.width} unit="cm" numberValue className="!w-16" handleChange={handleVariantEdit} />
 													<InputField label="Height" productKey="height" defaultValue={v.height} unit="cm" numberValue className="!w-16" handleChange={handleVariantEdit} />
 													<InputField label="Length" productKey="length" defaultValue={v.length} unit="cm" numberValue className="!w-16" handleChange={handleVariantEdit} />

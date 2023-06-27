@@ -237,7 +237,8 @@ const successProductWithoutImageAndID: FirebaseProductInterface = {
 		width: 1,
 		height: 1,
 		weight: 1,
-		label: "normal"
+		label: "normal",
+		color: "4000K"
 	}]
 }
 const successProduct = { ...successProductWithoutImageAndID, productImageURL: "test", firestoreID: "test" }
@@ -363,6 +364,12 @@ describe("Product Validation", () => {
 		expect(validateProduct(lowWeightProduct)).toBe(false)
 		expect(validateProductError(lowWeightProduct)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateProductError(lowWeightProduct)?.message).toBe('"variants[0].weight" must be greater than 0')
+	})
+	it("Should validate color is a string", () => {
+		const badWeightProduct = { ...successProduct, variants: [{ ...successProduct.variants[0], color: 1 }] }
+		expect(validateProduct(badWeightProduct)).toBe(false)
+		expect(validateProductError(badWeightProduct)).toBeInstanceOf(Joi.ValidationError)
+		expect(validateProductError(badWeightProduct)?.message).toBe('"variants[0].color" must be a string')
 	})
 })
 
