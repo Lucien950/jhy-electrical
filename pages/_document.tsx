@@ -1,4 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document'
+import { ibmFont, jostFont, bitterFont } from 'util/fonts'
 
 export default function Document() {
 	return (
@@ -15,7 +16,8 @@ export default function Document() {
 				<meta name="msapplication-config" content="/favicon/browserconfig.xml" />
 				<meta name="theme-color" content="#ffffff" />
 			</Head>
-			<body>
+			{/* this very hacky but no other solutions? raw loading without app loading is not ok? */}
+			<body className={`${ibmFont.variable} ${jostFont.variable} ${bitterFont.variable} font-sans`}>
 				<Main />
 				<NextScript />
 			</body>

@@ -26,7 +26,7 @@ import "util/firebase/emulator"
 import { DEVENV } from 'util/env'
 
 // dispatch here in order to be inside the provider
-const CartInitialFiller = ()=>{
+const CartInitialFiller = () => {
 	const dispatch = useDispatch()
 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const [initialFilled, setInitialFilled] = useState(false)
@@ -39,7 +39,7 @@ const CartInitialFiller = ()=>{
 			product: await getProductByID(p.PID).catch(() => null)
 		}))
 		Promise.all(newProductsPromise)
-			.then(newProducts =>{ dispatch(cartFillProducts(newProducts)) })
+			.then(newProducts => { dispatch(cartFillProducts(newProducts)) })
 	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
 	return <></>
 }
@@ -51,28 +51,29 @@ export default function App({ Component, pageProps }: AppProps) {
 	const transition = { duration: 0.3 }
 
 	return (
-	<main className={`${ibmFont.variable} ${jostFont.variable} ${bitterFont.variable} font-sans`}>
-	<Provider store={store}>
-	<PersistGate persistor={persistor}>
-	<CartInitialFiller />
-	<NavBar />
-	<ToastContainer autoClose={DEVENV ? 2000 : 4000} transition={Slide}/>
-	<AnimatePresence
-		initial={false}
-		mode = "wait"
-	>
-		<motion.div
-			variants={variants}
-			transition={transition}
-			animate="in"
-			initial="out"
-			exit="out"
-			key={pathname}
-		>
-			<Component {...pageProps} />
-		</motion.div>
-	</AnimatePresence>
-	</PersistGate>
-	</Provider>
-	</main>
-)}
+		<main className={`${ibmFont.variable} ${jostFont.variable} ${bitterFont.variable}`}>
+			<Provider store={store}>
+				<PersistGate persistor={persistor}>
+					<CartInitialFiller />
+					<NavBar />
+					<ToastContainer autoClose={DEVENV ? 2000 : 4000} transition={Slide} />
+					<AnimatePresence
+						initial={false}
+						mode="wait"
+					>
+						<motion.div
+							variants={variants}
+							transition={transition}
+							animate="in"
+							initial="out"
+							exit="out"
+							key={pathname}
+						>
+							<Component {...pageProps} />
+						</motion.div>
+					</AnimatePresence>
+				</PersistGate>
+			</Provider>
+		</main>
+	)
+}
