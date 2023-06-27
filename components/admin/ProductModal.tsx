@@ -132,7 +132,7 @@ type ProductModalType = {
 }
 const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProduct }: ProductModalType) => {
 	// data state
-	const [modalMode, _] = useState(defaultMode) //just for latching i believe
+	const [modalMode,] = useState(defaultMode) //just for latching i believe
 	const [modalProduct, setModalProduct] = useState(defaultModalProduct)
 	const [productImageFile, setProductImageFile] = useState<File | undefined>()
 	// ui state
@@ -250,6 +250,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 							<div className="col-span-2 flex flex-col gap-y-4">
 								{
 									modalProduct.variants?.map((v) => {
+										// eslint-disable-next-line @typescript-eslint/no-explicit-any
 										const handleVariantEdit = (id: string, val: any) => {
 											setModalProduct(mp => {
 												//eslint-disable-next-line @typescript-eslint/no-explicit-any

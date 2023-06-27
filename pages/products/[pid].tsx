@@ -123,8 +123,7 @@ const useProductQuantity = (product: ProductInterface, selectedProductVariant: P
 	const [availableToAdd, setAvailableToAdd] = useState(0)
 	const [selectedQuantity, setSelectedQuantity] = useState(0)
 	//eslint-disable-next-line react-hooks/exhaustive-deps
-	useEffect(() => setQuantity(cart.find(p => (p.PID == product.firestoreID) && (p.variantSKU === selectedProductVariant.sku))?.quantity || 0)
-		, [selectedProductVariant, cart])
+	useEffect(() => setQuantity(cart.find(p => (p.PID == product.firestoreID) && (p.variantSKU === selectedProductVariant.sku))?.quantity || 0), [selectedProductVariant, cart])
 	//eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => setAvailableToAdd(selectedProductVariant.quantity - quantityInCart), [selectedProductVariant, quantityInCart])
 	useEffect(() => setSelectedQuantity(s => {
@@ -140,7 +139,16 @@ const ProductID = ({ product }: { product: ProductInterface }) => {
 
 	// Quantity Adjuster
 	const [selectedVariant, setSelectedVariant] = useState(product.variants[0].sku)
-	const selectedProductVariant = getProductVariant(product, selectedVariant)!
+	const selectedProductVariant: ProductVariantListing = getProductVariant(product, selectedVariant) || {
+		sku: "default",
+		label: `INVALID VARIANT ${selectedVariant}`,
+		length: 0,
+		width: 0,
+		height: 0,
+		weight: 0,
+		price: 0,
+		quantity: 0
+	}
 	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product, selectedProductVariant)
 
 

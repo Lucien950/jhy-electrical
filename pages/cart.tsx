@@ -5,7 +5,7 @@ import Head from "next/head";
 import { useSelector, useDispatch } from "react-redux"
 import { removeFromCart, setQuantity } from "util/redux/cart.slice";
 // products
-import { OrderProduct, OrderProductFilled } from "types/order";
+import { OrderProductFilled } from "types/order";
 // ui
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/router";
