@@ -23,7 +23,7 @@ export type createOrderRes = {
 /**
  * Create Order API Endpoint
  */
-async function createOrderAPI (req: NextApiRequest, res: NextApiResponse){
+async function createOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 	// INPUTS
 	const { products: emptyProducts, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
 	// if (!vCreateOrderProps(req.body)) return apiRespond(res, "error", vCreateOrderPropsErr(req.body))
@@ -33,12 +33,12 @@ async function createOrderAPI (req: NextApiRequest, res: NextApiResponse){
 	const paymentInformation = await makePrice(products)
 	const order = await createOrderAPICall(paymentInformation, products, express)
 
-	return apiRespond<createOrderRes>(res, "response", {
+	return {
 		orderStatus: order.status,
 		orderID: order.id,
 		// this must be present
 		redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
-	})
+	} as createOrderRes
 }
 
 export default apiHandler({

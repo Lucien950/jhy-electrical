@@ -51,7 +51,7 @@ export function apiHandler(handler: { [method: string]: NextApiHandler }) {
 		// check handler supports HTTP method
 		if (!method) return res.status(405).end(`Method undefined`);
 		if (!handler[method]) return res.status(405).end(`Method ${req.method} Not Allowed`);
-		try { await handler[method](req, res); }
+		try { apiRespond(res, "response", await handler[method](req, res)) }
 		catch (err) { apiRespond(res, "error", err) }
 	}
 }

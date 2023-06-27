@@ -63,7 +63,7 @@ async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 	const { id: firebaseOrderID } = await db.collection("orders").add(newOrder)
 	// const { id: firebaseOrderID } = await addDoc(collection(db, "orders"), newOrder)
 
-	return apiRespond<submitOrderRes>(res, "response", { firebaseOrderID })
+	return { firebaseOrderID } as submitOrderRes
 }
 
 export default apiHandler({

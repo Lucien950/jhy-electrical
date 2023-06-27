@@ -59,7 +59,7 @@ const priceAPI: NextApiHandler = async (req, res) => {
 
 	const products = await fillOrderProducts(productIDs) //costs
 	const price = await makePrice(products, address)
-	return apiRespond(res, "response", { price } as priceAPIRes)
+	return { price } as priceAPIRes
 }
 
 export default apiHandler({ "POST": priceAPI })

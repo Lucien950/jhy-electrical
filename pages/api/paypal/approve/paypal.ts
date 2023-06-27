@@ -13,7 +13,7 @@ async function approvePayPalAPI(req: NextApiRequest, res: NextApiResponse) {
 	const order = await approvePayPalFetch(token)
 	const redirectObj = order.links.find(l => l.rel === "payer-action")
 	if (!redirectObj) return apiRespond(res, "error", "No redirect link found")
-	return apiRespond(res, "response", { redirect_link: redirectObj.href } as approvePayPalRes)
+	return { redirect_link: redirectObj.href } as approvePayPalRes
 }
 
 export default apiHandler({

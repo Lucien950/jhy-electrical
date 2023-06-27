@@ -15,11 +15,11 @@ const updateOrderAddressPropsSchema = Joi.object({
 	address: addressSchema.required(),
 	fullName: Joi.string().required().min(1).max(300)
 })
-async function UpdateOrderAddressAPI (req: NextApiRequest, res: NextApiResponse) {
+async function UpdateOrderAddressAPI(req: NextApiRequest, res: NextApiResponse) {
 	const { token, address: newAddress, fullName } = validateSchema<updateOrderAddressProps>(req.body, updateOrderAddressPropsSchema)
 
 	const newPrice = await updateOrderAddress(token, newAddress, fullName)
-	return apiRespond<updateOrderAddressRes>(res, "response", { newPrice })
+	return { newPrice } as updateOrderAddressRes
 }
 
 export default apiHandler({
