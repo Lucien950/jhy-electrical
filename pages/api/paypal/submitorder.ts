@@ -1,6 +1,6 @@
 // api
-import { NextApiRequest, NextApiResponse } from "next"
-import { apiHandler, apiRespond } from "server/api"
+import { NextApiRequest } from "next"
+import { apiHandler } from "server/api"
 // types
 import Joi from "joi"
 import { validateSchema } from "util/typeValidate"
@@ -25,7 +25,7 @@ export type submitOrderRes = { firebaseOrderID: string }
 /**
  * Submitting Order API Endpoint
  */
-async function submitOrderAPI(req: NextApiRequest, res: NextApiResponse) {
+async function submitOrderAPI(req: NextApiRequest,) {
 	// INPUT VALIDATION
 	const { token } = validateSchema<submitOrderProps>(req.body, Joi.object({ token: Joi.string().required() }))
 
