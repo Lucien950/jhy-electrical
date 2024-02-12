@@ -1,8 +1,8 @@
-import { Address } from "@paypal/paypal-js"
 import { addressSchema } from "./address"
 import Joi from "joi"
 import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 import { PaymentSource } from "./paypal"
+import {Address} from "./address"
 
 export interface FinalCustomerInterface{
 	fullName: string,

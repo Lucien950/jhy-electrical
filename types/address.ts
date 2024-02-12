@@ -1,4 +1,4 @@
-import { Address } from "@paypal/paypal-js"
+import {components} from "@paypal/paypal-js/types/apis/openapi/checkout_orders_v2"
 import Joi from "joi"
 import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
@@ -24,6 +24,7 @@ export const PROVINCE_NAME_TO_CODE: { [key: string]: string } = {
 }
 export const PROVINCES = Object.keys(PROVINCE_NAME_TO_CODE)
 
+export type Address = components["schemas"]["address_portable-2"]
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"
 export const addressSchema = Joi.object({
 	address_line_1: Joi.string().max(300).required(),

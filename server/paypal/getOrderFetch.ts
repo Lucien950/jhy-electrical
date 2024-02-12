@@ -38,7 +38,7 @@ export const getOrder = async (orderID: string) => {
 	})
 	if (!response.ok) throw await response.json() as PayPalError
 
-	const data = await response.json() as OrderResponseBody
+	const data: OrderResponseBody = await response.json()
 
 	// shipping
 	const purchaseUnit0 = data.purchase_units![0]
@@ -52,16 +52,16 @@ export const getOrder = async (orderID: string) => {
 	if (shipping?.address?.country_code && shipping.address.country_code != "CA") throw new Error("Do not ship outside Canada")
 
 	// customerInfo.
-	if (["APPROVED", "COMPLETED"].includes(data.status)) {
+	if (["APPROVED", "COMPLETED"].includes(data.status ?? "")) {
 		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		customerInfo.paymentMethod = Object.keys(data.payment_source!)[0] as "card" | "paypal"
 		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		customerInfo.payment_source = data.payment_source!
+		customerInfo.payment_source = data.payment_source
 	}
 
 	// PAYMENT INFORMATION
 	const amount = purchaseUnit0.amount
-	const breakdown = amount.breakdown! //eslint-disable-line @typescript-eslint/no-non-null-assertion
+	const breakdown = amount?.breakdown! //eslint-disable-line @typescript-eslint/no-non-null-assertion
 	const taxTotal = breakdown.tax_total?.value
 	const shippingTotal = breakdown.shipping?.value
 	const finalcalculated = !!taxTotal && !!shippingTotal
@@ -69,12 +69,12 @@ export const getOrder = async (orderID: string) => {
 		subtotal: Number(breakdown.item_total!.value), 	//eslint-disable-line @typescript-eslint/no-non-null-assertion
 		tax: Number(taxTotal),
 		shipping: Number(shippingTotal),
-		total: Number(amount.value)
+		total: Number(amount?.value ?? 0)
 	} as FinalPriceInterface
 		:
 		{
 			subtotal: Number(breakdown.item_total!.value), 	//eslint-disable-line @typescript-eslint/no-non-null-assertion
-			total: Number(amount.value)
+			total: Number(amount?.value ?? 0)
 		} as PriceInterface
 
 	// products
@@ -88,7 +88,7 @@ export const getOrder = async (orderID: string) => {
 	})
 
 	// redirect link
-	const redirect_link = data.links.find(v => v.rel == "approve")?.href || null
+	const redirect_link = data.links?.find(v => v.rel == "approve")?.href || null
 
 	const status = data.status
 

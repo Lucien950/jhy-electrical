@@ -1,6 +1,6 @@
 import { JSX, MouseEventHandler, SVGProps, useEffect, useRef, useState } from "react";
-import { Card } from "types/paypal";
 import seedRandom from "seedrandom";
+import { PaymentSource } from "types/paypal";
 
 const CardSVG = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
 	<svg
@@ -57,7 +57,7 @@ const CardSVG = (props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) => (
 	</svg>
 )
 
-export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInformation: Card, seed?: string, dead?:boolean }) => {
+export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInformation: PaymentSource["card"], seed?: string, dead?:boolean }) => {
 	const [chosenColour, setChosenColour] = useState<string>()
 
 	const cardColorID = Math.round(seedRandom(seed)() * 3) + 1
@@ -91,7 +91,7 @@ export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInfo
 			<div className="text-white fill-white flex flex-row items-end justify-between absolute inset-0 px-4 py-4 select-none">
 				{/* digits and dots */}
 				<div>
-					{cardInformation.expiry && <p className="font-semibold mb-1 text-sm">{`Exp ${cardInformation.expiry}`}</p> }
+					{cardInformation?.expiry && <p className="font-semibold mb-1 text-sm">{`Exp ${cardInformation.expiry}`}</p> }
 					<div className="flex flex-row items-center gap-x-3">
 						<div className="flex flex-row gap-x-[4px]">
 							<svg className="h-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" /></svg>
@@ -100,14 +100,14 @@ export const CardElement = ({ cardInformation, seed="", dead=false }: { cardInfo
 							<svg className="h-2" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" /></svg>
 						</div>
 						<p className="text-2xl font-bold leading-none">
-							{cardInformation.last_digits}
+							{cardInformation?.last_digits}
 						</p>
 					</div>
 				</div>
 				{/* name and type */}
 				<div className="flex flex-col items-end justify-between h-full">
-					<p className="font-semibold text-lg leading-none">{cardInformation.type}</p>
-					<p className="font-bold text-2xl leading-none">{cardInformation.brand}</p>
+					<p className="font-semibold text-lg leading-none">{cardInformation?.type}</p>
+					<p className="font-bold text-2xl leading-none">{cardInformation?.brand}</p>
 				</div>
 			</div>
 		</div>

@@ -1,4 +1,4 @@
-import { Address } from "@paypal/paypal-js"
+import { Address } from "types/address"
 import { updateOrderAddressProps, updateOrderAddressRes } from "pages/api/paypal/updateorder/address"
 import { apiResponse } from "server/api"
 import { clientErrorFactory } from "util/paypal/clientErrorFactory"

@@ -9,8 +9,7 @@ import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
 // types
 import { CustomerInterface } from 'types/customer';
-import { postalCodePattern } from "types/address";
-import { Address } from "@paypal/paypal-js"
+import { Address, postalCodePattern } from "types/address";
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
 import { ValidationError } from "joi";

@@ -1,7 +1,7 @@
 import { OrderProductFilled } from "types/order"
 import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
 import { FinalPriceInterface, PriceInterface } from "types/price"
-import { Address } from "@paypal/paypal-js"
+import { Address } from "types/address";
 import { Decimal } from 'decimal.js';
 import { PROVINCE_NAME_TO_CODE } from "types/address";
 

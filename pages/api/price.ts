@@ -3,7 +3,7 @@ import { NextApiHandler } from "next";
 import { OrderProduct, orderProductSchema } from "types/order";
 import { FinalPriceInterface } from "types/price";
 import { fillOrderProducts } from "util/orderUtil";
-import { apiHandler, apiRespond } from "server/api";
+import { apiHandler } from "server/api";
 import { makePrice, subAddr } from "server/priceUtil";
 import { validateSchema } from "util/typeValidate";
 import { getClientIp } from "request-ip"
@@ -42,7 +42,7 @@ export type priceAPIProps = { productIDs: OrderProduct[] }
 const priceAPIPropsSchema = Joi.object({ productIDs: Joi.array().items(orderProductSchema).required(), })
 export type priceAPIRes = { price: FinalPriceInterface }
 
-const priceAPI: NextApiHandler = async (req, res) => {
+const priceAPI: NextApiHandler = async (req, ) => {
 	const { productIDs } = validateSchema<priceAPIProps>(req.body, priceAPIPropsSchema)
 
 	const clientIP = getClientIp(req)
