@@ -4,7 +4,7 @@ import { apiHandler, apiRespond } from 'server/api';
 // types
 import { OrderProduct, orderProductSchema } from 'types/order';
 import { makePrice } from 'server/priceUtil';
-import { OrderResponseBodyMinimal } from "@paypal/paypal-js"
+import { OrderResponseBody } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/orderUtil';
 import { createOrderAPICall } from 'server/paypal/createOrderFetch';
 import Joi from 'joi';
@@ -16,7 +16,7 @@ const createOrderPropsSchema = Joi.object({
 	express: Joi.boolean().optional()
 })
 export type createOrderRes = {
-	orderStatus: OrderResponseBodyMinimal["status"],
+	orderStatus: OrderResponseBody["status"],
 	orderID: string,
 	redirect_link: string | null,
 }
@@ -37,7 +37,7 @@ async function createOrderAPI(req: NextApiRequest, res: NextApiResponse) {
 		orderStatus: order.status,
 		orderID: order.id,
 		// this must be present
-		redirect_link: order.links.find(l => l.rel == "approve")?.href || null,
+		redirect_link: order.links?.find(l => l.rel == "approve")?.href || null,
 	} as createOrderRes
 }
 

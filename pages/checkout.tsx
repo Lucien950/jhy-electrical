@@ -14,6 +14,7 @@ import { validateAddress, validateAddressError } from 'types/address'
 // types
 import { OrderProduct, OrderProductFilled } from 'types/order'
 import { validateName, CustomerInterface, validateNameError, FinalCustomerInterface } from 'types/customer'
+import { Address } from 'types/address'
 import { PriceInterface } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
@@ -61,7 +62,7 @@ type ErrorCheckoutProps = {
 	paypal_error?: string,
 }
 type CheckoutProps = {
-	paypalCustomerInfo: CustomerInterface,
+	paypalCustomerInfo: Partial<CustomerInterface>,
 	paypalPriceInfo: PriceInterface,
 	emptyOrderProducts: OrderProduct[],
 	orderID: string,
@@ -223,7 +224,7 @@ export default function Checkout({ paypalCustomerInfo: paypalCustomerInformation
 
 import { updateOrderAddress } from 'server/paypal/updateOrderFetch'
 import { fillOrderProducts } from 'util/orderUtil'
-import { Address } from '@paypal/paypal-js'
+// import { Address } from '@paypal/paypal-js'
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
 	const token = ctx.query.token as string
@@ -248,7 +249,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
 		if (status == "COMPLETED") return { props: { paypal_error: "Order has already been completed", ...EMPTYRET } as CheckoutProps }
 
 		// base address 
-		if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" }
+		if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" } as Address
 
 		const p0Done = validateP0FormData(paypalCustomerInfo.fullName, paypalCustomerInfo.address)
 		const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)

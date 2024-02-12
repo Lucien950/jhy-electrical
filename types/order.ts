@@ -1,7 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 import { Timestamp as TimestampAdmin } from "firebase-admin/firestore";
 import { ProductVariantInterface, productVariantSchema } from "./product";
-import { Address } from "@paypal/paypal-js"
+import { Address } from "./address";
 import { FinalPriceInterface } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
