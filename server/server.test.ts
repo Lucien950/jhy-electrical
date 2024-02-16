@@ -1,5 +1,5 @@
 describe("server test", ()=>{
 	it("should be true", ()=>{
-			expect(true).toBe(true);
+		expect(true).toBe(true);
 	})
 })
