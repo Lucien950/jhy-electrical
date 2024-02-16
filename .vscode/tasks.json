@@ -12,13 +12,6 @@
 		},
 		{
 			"type": "npm",
-			"script": "deploy",
-			"problemMatcher": [],
-			"label": "Deploy to Firebase",
-			"detail": "firebase deploy"
-		},
-		{
-			"type": "npm",
 			"script": "lint",
 			"problemMatcher": [
 				"$eslint-stylish"
