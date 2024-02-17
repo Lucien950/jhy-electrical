@@ -36,14 +36,6 @@ const useStage = (initialStage: number, customerInfo: FormCustomer) => {
 	return { stage, goToStage, p0DataValid, p1DataValid }
 }
 
-type CheckoutProps = {
-	CheckoutPayPalCustomer: FormCustomer,
-	CheckoutPayPalPrice: FormPrice,
-	CheckoutOrderProducts: OrderProduct[],
-	CheckoutOrderID: string,
-	initialStage: number
-}
-
 export const metadata: Metadata = {
 	title: "Checkout",
 	description: "Checkout page for JHY Electrical",
@@ -51,7 +43,11 @@ export const metadata: Metadata = {
 export default function CheckoutRoot({
 	CheckoutPayPalCustomer: init_CheckoutPayPalCustomer, CheckoutPayPalPrice: init_CheckoutPayPalPrice,
 	CheckoutOrderProducts: init_CheckoutOrderProducts, CheckoutOrderID, initialStage
-}: CheckoutProps) {
+}: {
+	CheckoutPayPalCustomer: FormCustomer, CheckoutPayPalPrice: FormPrice,
+	CheckoutOrderProducts: OrderProduct[], CheckoutOrderID: string,
+	initialStage: number
+}) {
 	useEffect(() => {
 		if (!init_CheckoutOrderProducts) return //just for types
 		logEvent(analytics(), "begin_checkout"); logEvent(analytics(), "checkout_progress", { checkout_step: initialStage });
