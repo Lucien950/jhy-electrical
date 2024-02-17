@@ -27,19 +27,19 @@ import { updateOrderAddress } from "app/checkout/paypalClient";
 // STAGE TECHNOLOGY
 const useStage = (initialStage: number, customerInfo: FormCustomer) => {
 	const [stage, setStage] = useState(initialStage)
-	const [p0CusUpdated, setP0CusUpdated] = useState(false)
-	const [p1CusUpdated, setP1CusUpdated] = useState(false)
+	const [p0DataValid, setP0DataValid] = useState(false)
+	const [p1DataValid, setP1DataValid] = useState(false)
 
-	useEffect(() => setP0CusUpdated(customerInfo !== null && validateP0FormData(customerInfo.fullName, customerInfo.address)),
+	useEffect(() => setP0DataValid(validateP0FormData(customerInfo.fullName, customerInfo.address)),
 	[customerInfo?.address, customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
-	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)),
+	useEffect(() => setP1DataValid(validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)),
 	[customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
 	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
-	return { stage, goToStage, p0CusUpdated, p1CusUpdated }
+	return { stage, goToStage, p0DataValid, p1DataValid }
 }
 
 type CheckoutProps = {
-	CheckoutPayPalCustomer: Partial<FormCustomer>,
+	CheckoutPayPalCustomer: FormCustomer,
 	CheckoutPayPalPrice: FormPrice,
 	CheckoutOrderProducts: OrderProduct[],
 	CheckoutOrderID: string,
@@ -55,14 +55,12 @@ export default function CheckoutRoot({
 		// update displayed cart
 		fillOrderProducts(init_CheckoutOrderProducts).then(newCart => setCheckoutOrderCart(newCart))
 	}, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-	// IMPORTANT GLOBAL STATE
 	const [checkoutPayPalCustomer, setCheckoutPayPalCustomer] = useState<FormCustomer>(init_CheckoutPayPalCustomer)
 	const [checkoutPayPalPrice, setCheckoutPayPalPrice] = useState<FormPrice>(init_CheckoutPayPalPrice)
 	const [checkoutOrderCart, setCheckoutOrderCart] = useState<OrderProduct[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
-	const { stage, goToStage, p0CusUpdated, p1CusUpdated } = useStage(initialStage, checkoutPayPalCustomer)
+	const { stage, goToStage, p0DataValid, p1DataValid } = useStage(initialStage, checkoutPayPalCustomer)
 
 	// Variables for PriceComponent
 	const [calculatingShipping, setCalculatingShipping] = useState(false)
@@ -135,10 +133,10 @@ export default function CheckoutRoot({
 							{/* shipping */}<button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(0)} disabled={!true}>Shipping</button>
 							{/* arrow */}   <svg className="h-4 w-4 stroke-black fill-none transition-colors data-[disabled=true]:stroke-gray-300" strokeWidth={6} data-disabled={!true} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
 
-							{/* payment */} <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(1)} disabled={!p0CusUpdated}>Payment</button>
-							{/* arrow */}   <svg className="h-4 w-4 stroke-black fill-none transition-colors data-[disabled=true]:stroke-gray-300" strokeWidth={6} data-disabled={!p0CusUpdated} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+							{/* payment */} <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(1)} disabled={!p0DataValid}>Payment</button>
+							{/* arrow */}   <svg className="h-4 w-4 stroke-black fill-none transition-colors data-[disabled=true]:stroke-gray-300" strokeWidth={6} data-disabled={!p0DataValid} viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8.25 4.5l7.5 7.5-7.5 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
 
-							{/* review */}  <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(2)} disabled={!(p0CusUpdated && p1CusUpdated)} >Review</button>
+							{/* review */}  <button className="text-black hover:underline disabled:hover:no-underline transition-colors disabled:text-gray-300" onClick={goToStage(2)} disabled={!(p0DataValid && p1DataValid)} >Review</button>
 						</div>
 					</div>
 
