@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Oval } from "react-loader-spinner";
 //state
 import { useEffect, useState } from "react";
-import { getAllProducts } from "util/product/productUtil";
+import { getAllProducts } from "util/product";
 // types
 import { ProductInterface } from "types/product";
 

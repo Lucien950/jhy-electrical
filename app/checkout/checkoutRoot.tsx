@@ -21,7 +21,7 @@ import CheckoutStageZero from "./p0"
 import CheckoutStageOne from "./p1"
 import CheckoutStageTwo from "./p2"
 
-import { fillOrderProducts } from 'util/order/orderUtil'
+import { fillOrderProducts } from 'util/order'
 import { validateP0FormData, validateP0FormError, validateP1FormData } from './validateStage'
 
 // STAGE TECHNOLOGY

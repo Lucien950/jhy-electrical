@@ -1,4 +1,4 @@
-import { fillOrderProducts } from "util/order/orderUtil";
+import { fillOrderProducts } from "util/order";
 import { makePrice } from "server/priceUtil";
 import { validateSchema } from "util/typeValidate";
 import { headers } from "next/headers";

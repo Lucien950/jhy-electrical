@@ -4,7 +4,7 @@ import { validateSchema } from "util/typeValidate"
 import { FinalCustomerInterface, validateFinalCustomer } from "types/customer"
 import { FinalPriceInterface, validateFinalPrice } from "types/price"
 // util
-import { fillOrderProducts } from "util/order/orderUtil"
+import { fillOrderProducts } from "util/order"
 // paypal
 import { getOrder } from "server/paypal/getOrderFetch"
 import { submitPayPalOrder } from "server/paypal/submitOrderFetch"

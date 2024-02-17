@@ -1,7 +1,7 @@
 // next
 import { useRouter } from 'next/navigation';
 import ProductListing from './listing';
-import {getProductByID} from 'util/product/productUtil';
+import {getProductByID} from 'util/product';
 
 export default async function ProductID({params}: {params: {pid?: string}}) {
   const router = useRouter()

@@ -2,7 +2,7 @@
 import { OrderProduct, orderProductSchema } from 'types/order';
 import { makePrice } from 'server/priceUtil';
 import { OrderResponseBody } from "@paypal/paypal-js"
-import { fillOrderProducts } from 'util/order/orderUtil';
+import { fillOrderProducts } from 'util/order';
 import { createOrderAPICall } from 'server/paypal/createOrderFetch';
 import Joi from 'joi';
 import { validateSchema } from 'util/typeValidate';

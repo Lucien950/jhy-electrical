@@ -1,5 +1,5 @@
 import { BaseOrderInterface, FirebaseOrderInterface, OrderInterface, OrderProduct, OrderProductFilled, SerializedOrderInterface } from "types/order"
-import { getProductByID } from "../product/productUtil"
+import { getProductByID } from "../product"
 
 export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): Promise<OrderInterface> => ({
 	...UnserializeOrder(preOrder, orderID),

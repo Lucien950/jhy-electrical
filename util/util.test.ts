@@ -98,7 +98,7 @@ describe("Price Tests", () => {
 	})
 })
 
-import { generateNewSKU } from "./product/generateSKU"
+import { generateNewSKU } from "./product"
 
 describe("Generate SKU Test", () => {
 	const generatedRandomSku = generateNewSKU()

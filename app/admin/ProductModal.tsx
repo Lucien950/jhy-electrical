@@ -8,7 +8,7 @@ import { FirebaseProductInterface, ProductInterface, ProductVariantListing, vali
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
-import { generateNewSKU } from "util/product/generateSKU";
+import { generateNewSKU } from "util/product";
 import { toSentenceCase } from "util/string";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]

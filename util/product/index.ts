@@ -77,3 +77,9 @@ export const sortProductsByName = (p: ProductInterface[]) => p.sort((a, b) => {
 })
 
 export const getProductVariant = (p: ProductInterface, variantID: string) => p.variants.find(v => v.sku === variantID)
+
+export const generateNewSKU = () =>
+	Array.from({ length: 16 })
+		.map(() => Math.floor(Math.random() * 64))
+		.map(i => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".charAt(i))
+		.join("")

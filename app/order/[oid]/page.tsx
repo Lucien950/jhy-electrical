@@ -8,7 +8,7 @@ import { FirebaseOrderInterface } from "types/order";
 import Price from "components/price";
 import seedRandom from "seedrandom";
 import { CardElement } from "components/cardElement";
-import { UnserializeOrder } from "util/order/orderUtil";
+import { UnserializeOrder } from "util/order";
 import { encodePayPalSKU } from "server/paypal/sku";
 
 const OrderNotFound = () => (

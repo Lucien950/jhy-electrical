@@ -12,7 +12,7 @@ import { OrderProduct, OrderProductFilled } from 'types/order';
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
 // util
-import { getProductVariant } from 'util/product/productUtil'
+import { getProductVariant } from 'util/product'
 import { createPayPalOrder } from 'app/checkout/createOrder_client';
 // ui
 import Price from 'components/price'

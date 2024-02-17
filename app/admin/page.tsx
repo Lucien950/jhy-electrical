@@ -19,7 +19,7 @@ import { OrdersComponent } from 'app/admin/OrdersComponent';
 import AnalyticsComponent from 'app/admin/AnalyticsComponent';
 import { firebaseConsoleBadge } from 'util/firebase/console';
 import { toast } from 'react-toastify';
-import { UnserializeOrder } from 'util/order/orderUtil';
+import { UnserializeOrder } from 'util/order';
 
 interface SidebarButtonProps {
 	name: "Orders" | "Products" | "Analytics",
