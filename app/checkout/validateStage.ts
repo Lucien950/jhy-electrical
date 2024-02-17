@@ -28,4 +28,5 @@ export const validateP0FormError = (name: CustomerInterface["fullName"], address
  * @returns Stage 2.1 If payment has been approved
  * @param ci customer object
  */
+// TODO make this a bit more firm
 export const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)

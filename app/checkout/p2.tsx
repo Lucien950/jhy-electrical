@@ -22,13 +22,13 @@ import { encodePayPalSKU } from "server/paypal/sku";
 
 type ReviewViewProps = {
 	customerInfo: CustomerInterface,
-	priceInfo: PriceInterface,
-	orderCart: OrderProductFilled[] | null,
+	price: PriceInterface,
+	checkoutOrderCart: OrderProductFilled[] | null,
 	setStage: Dispatch<SetStateAction<number>>,
-	orderID: string
+	CheckoutOrderID: string
 }
 
-const ReviewView = ({ customerInfo, priceInfo, orderCart, orderID, setStage }: ReviewViewProps) => {
+const ReviewView = ({ customerInfo, price: priceInfo, checkoutOrderCart: orderCart, CheckoutOrderID: orderID, setStage }: ReviewViewProps) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)

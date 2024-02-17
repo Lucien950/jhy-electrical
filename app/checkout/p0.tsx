@@ -64,13 +64,17 @@ type p0Input = {
 
 	validateP0Form: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => boolean,
 	validateP0FormError: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => Error | undefined,
-	orderID: string,
+	CheckoutOrderID: string,
 	setCalculatingShipping: Dispatch<SetStateAction<boolean>>,
 	// display variables
 	orderCart: OrderProduct[] | null,
 	calculatingShipping: boolean,
 }
-const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo, validateP0Form, validateP0FormError, orderID, orderCart, calculatingShipping, setCalculatingShipping }: p0Input) => {
+const ShippingForm = ({
+	setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
+	validateP0Form, validateP0FormError, CheckoutOrderID, orderCart,
+	calculatingShipping, setCalculatingShipping
+}: p0Input) => {
 	// INPUT HANDLERS
 	const [fullName, setFullName] = useState<CustomerInterface["fullName"]>(customerInfo.fullName)
 	const [address, setAddress] = useState<CustomerInterface["address"]>(customerInfo.address)
@@ -90,7 +94,7 @@ const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
 
 		setCalculatingShipping(true)
 		try {
-			const { newPrice } = await updateOrderAddress(orderID, address, fullName)
+			const { newPrice } = await updateOrderAddress(CheckoutOrderID, address, fullName)
 			addP0CustomerInfo(fullName, address)
 			setPriceInfo(newPrice)
 			setStage(1)

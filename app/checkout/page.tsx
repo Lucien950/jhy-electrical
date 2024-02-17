@@ -17,24 +17,24 @@ const HandlePayPalError = ({ paypal_error }: { paypal_error: unknown }) => (
 )
 
 export default async function Checkout({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }}) {
-  const token = searchParams['token']
-  if (!token || Array.isArray(token)) permanentRedirect("/cart")
+  const CheckoutOrderID = searchParams['token']
+  if (!CheckoutOrderID || Array.isArray(CheckoutOrderID)) permanentRedirect("/cart")
   // coming back from paypal ordering
   try {
-    const { customerInfo: paypalCustomerInfo, priceInfo, products: emptyOrderProducts, status } = await getPayPalOrder(token)
-    let paypalPriceInfo = priceInfo
+    const { customerInfo: CheckoutPayPalCustomer, priceInfo, products: CheckoutOrderProducts, status } = await getPayPalOrder(CheckoutOrderID)
+    let CheckoutPayPalPrice = priceInfo
 
     if (status == "COMPLETED") return <HandlePayPalError paypal_error={"Order has already been completed"} />
 
     // base address 
-    if (!paypalCustomerInfo.address) paypalCustomerInfo.address = { country_code: "CA" } as Address
+    if (!CheckoutPayPalCustomer.address) CheckoutPayPalCustomer.address = { country_code: "CA" } as Address
 
-    const p0Done = validateP0FormData(paypalCustomerInfo.fullName, paypalCustomerInfo.address)
-    const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)
+    const p0Done = validateP0FormData(CheckoutPayPalCustomer.fullName, CheckoutPayPalCustomer.address)
+    const p1Done = validateP1FormData(CheckoutPayPalCustomer.paymentMethod, CheckoutPayPalCustomer.payment_source)
     // paymentInfo shipping update
-    if (p0Done && !paypalPriceInfo.shipping) {
-      const newPrice = await updatePayPalOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
-      paypalPriceInfo = newPrice
+    if (p0Done && !CheckoutPayPalPrice.shipping) {
+      const newPrice = await updatePayPalOrderAddress(CheckoutOrderID, CheckoutPayPalCustomer.address!, CheckoutPayPalCustomer.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
+      CheckoutPayPalPrice = newPrice
     }
 
     // determining initial checkout stage
@@ -42,10 +42,10 @@ export default async function Checkout({searchParams}: {searchParams: { [key: st
     // variables we get now!
     return (
       <CheckoutRoot
-        paypalCustomerInfo={paypalCustomerInfo}
-        emptyOrderProducts={emptyOrderProducts}
-        orderID={token}
-        paypalPriceInfo={paypalPriceInfo}
+        CheckoutPayPalCustomer={CheckoutPayPalCustomer}
+        CheckoutOrderProducts={CheckoutOrderProducts}
+        CheckoutPayPalPrice={CheckoutPayPalPrice}
+        CheckoutOrderID={CheckoutOrderID}
         initialStage={initialStage}
       />
     )
