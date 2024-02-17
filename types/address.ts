@@ -7,7 +7,7 @@ export const postalCodeSchema = Joi.string().regex(new RegExp(postalCodePattern)
 export const validatePostalCodeError = (candidate?: string) => postalCodeSchema.validate(candidate).error
 export const validatePostalCode = (candidate?: string) => (candidate !== undefined) && (validatePostalCodeError(candidate) === undefined)
 
-export const PROVINCE_NAME_TO_CODE: { [key: string]: string } = {
+export const PROVINCE_NAME_TO_CODE = new Map(Object.entries({
 	"alberta": "AB",
 	"british columbia": "BC",
 	"manitoba": "MB",
@@ -21,8 +21,8 @@ export const PROVINCE_NAME_TO_CODE: { [key: string]: string } = {
 	"quebec": "QC",
 	"saskatchewan": "SK",
 	"yukon": "YT"
-}
-export const PROVINCES = Object.keys(PROVINCE_NAME_TO_CODE)
+}))
+export const PROVINCES = Array.from(PROVINCE_NAME_TO_CODE.keys())
 
 export type Address = components["schemas"]["address_portable-2"]
 export type addressFields = "address_line_1" | "address_line_2" | "admin_area_1" | "admin_area_2" | "postal_code" | "country_code"

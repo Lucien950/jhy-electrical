@@ -4,8 +4,9 @@ import { FinalPriceInterface, PriceInterface } from "types/price"
 import { Address } from "types/address";
 import { Decimal } from 'decimal.js';
 import { PROVINCE_NAME_TO_CODE } from "types/address";
+import { add } from "lodash";
 
-const TAX_RATE_BY_PROVINCE: {[key: string]: number} = {
+const TAX_RATE_BY_PROVINCE = new Map(Object.entries({
 	"AB": 0.05,
 	"BC": 0.12,
 	"MB": 0.12,
@@ -19,6 +20,14 @@ const TAX_RATE_BY_PROVINCE: {[key: string]: number} = {
 	"QC": 0.14975,
 	"SK": 0.11,
 	"YT": 0.05
+}))
+
+const getTaxRate = (province: string) => {
+	const provinceCode = PROVINCE_NAME_TO_CODE.get(province.toLowerCase())
+	if(!provinceCode) {
+		throw new Error("Province not found")
+	}
+	return TAX_RATE_BY_PROVINCE.get(provinceCode)!
 }
 
 export type subAddr = Pick<Required<Address>, "postal_code" | "admin_area_1">
@@ -44,6 +53,7 @@ async function makePrice(products: OrderProductFilled[], address: Address): Prom
  * @param products Products in the order, MUST HAVE product field filled in
  * @param postal_code Postal Code of delievery
  * @returns Price of the order, subtotal, shipping, tax, total
+ * @throws If the province is not valid
  */
 async function makePrice(products: OrderProductFilled[], address?: subAddr | Address) {
 	if (!products.every(p => p.product)) throw "Some products have not been filled in"
@@ -53,18 +63,22 @@ async function makePrice(products: OrderProductFilled[], address?: subAddr | Add
 		return acc.add(pQuant.times(pPrice))
 	}, DECIMAL_ZERO)
 
-	const shipping = address?.postal_code
-		? await calculateShippingProducts(products.map(p => {
-				const { weight, length, height, width } = p.product!
-				return { weight, length, height, width, quantity: p.quantity, id: p.PID } as productPackageInfo
-			}), address.postal_code)
-		: undefined
-	const TAX_RATE = address?.admin_area_1
-		? new Decimal(TAX_RATE_BY_PROVINCE[PROVINCE_NAME_TO_CODE[address.admin_area_1.toLowerCase()]])
-		: undefined
-	const tax = TAX_RATE ? TAX_RATE.times(subtotal.add(shipping || 0)).toDecimalPlaces(2) : undefined
+	let shipping: Decimal | undefined = undefined;
+	let tax: Decimal | undefined = undefined;
+	if(address) {
+		if(address.postal_code) {
+			shipping = await calculateShippingProducts(products.map(p => {
+						const { weight, length, height, width } = p.product!
+						return { weight, length, height, width, quantity: p.quantity, id: p.PID } as productPackageInfo
+					}), address.postal_code)
+		}
+		const province = address.admin_area_1
+		if(province) {
+			tax = new Decimal(getTaxRate(province)).times(subtotal.add(shipping || 0)).toDecimalPlaces(2)
+		}
+	}
+	
 	const total = subtotal.add(shipping || 0).add((tax || 0))
-
 	return {
 		subtotal: subtotal.toNumber(),
 		shipping: shipping && shipping.toNumber(),
