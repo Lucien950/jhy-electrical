@@ -1,5 +1,5 @@
 // next
-import { redirect, useRouter } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import ProductListing from './listing';
 import {getProductByID} from 'util/product';
 
