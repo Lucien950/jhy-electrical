@@ -34,4 +34,4 @@ export const addressSchema = Joi.object({
 	postal_code: postalCodeSchema,
 	country_code: Joi.string().valid("CA").required(),
 })
-export const [validateAddress, validateAddressError] = validateSchemaFunctionsGenerator<Address>(addressSchema)
+export const validateAddress = validateSchemaFunctionsGenerator<Address>(addressSchema)

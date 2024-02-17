@@ -1,6 +1,6 @@
 import CanadaPostClient from "canadapost-api"
 import { Decimal } from "decimal.js";
-import { DEVENV } from "util/env";
+import { DEVENV } from "types/env";
 
 const userID = DEVENV ? process.env.CANADAPOST_USERID_DEV : process.env.CANADAPOST_USERID
 const password = DEVENV ? process.env.CANADAPOST_PASSWORD_DEV : process.env.CANADAPOST_PASSWORD

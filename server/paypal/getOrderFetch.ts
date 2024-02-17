@@ -7,7 +7,7 @@ import { PayPalError } from 'types/paypal';
 import { PAYPALDOMAIN } from 'server/paypal/domain';
 import { decodePayPalSKU } from './sku';
 
-const provinceConvert = {
+const provinceConvert = new Map(Object.entries({
 	"AB": "Alberta",
 	"BC": "British Columbia",
 	"MB": "Manitoba",
@@ -21,10 +21,10 @@ const provinceConvert = {
 	"QC": "Quebec",
 	"SK": "Saskatchewan",
 	"YT": "Yukon",
-} as { [key: string]: string }
+}))
 
 /**
- * Gets order of given orderID. THIS IS A SERVER SIDE FUNCTION.
+ * Gets order from paypal of the given orderID. MUST BE CALLED ON THE SERVER.
  * @param orderID ID of the order we are interested in
  * @returns Order we are interested in
  */
@@ -38,10 +38,10 @@ export const getOrder = async (orderID: string) => {
 	})
 	if (!response.ok) throw await response.json() as PayPalError
 
-	const data: OrderResponseBody = await response.json()
+	const order_data: OrderResponseBody = await response.json()
 
 	// shipping
-	const purchaseUnit0 = data.purchase_units![0]
+	const purchaseUnit0 = order_data.purchase_units![0]
 	const shipping = purchaseUnit0.shipping
 	// CUSTOMER INFORMATION
 	const customerInfo = {
@@ -52,11 +52,11 @@ export const getOrder = async (orderID: string) => {
 	if (shipping?.address?.country_code && shipping.address.country_code != "CA") throw new Error("Do not ship outside Canada")
 
 	// customerInfo.
-	if (["APPROVED", "COMPLETED"].includes(data.status ?? "")) {
+	if (["APPROVED", "COMPLETED"].includes(order_data.status ?? "")) {
 		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		customerInfo.paymentMethod = Object.keys(data.payment_source!)[0] as "card" | "paypal"
+		customerInfo.paymentMethod = Object.keys(order_data.payment_source!)[0] as "card" | "paypal"
 		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		customerInfo.payment_source = data.payment_source
+		customerInfo.payment_source = order_data.payment_source
 	}
 
 	// PAYMENT INFORMATION
@@ -88,9 +88,9 @@ export const getOrder = async (orderID: string) => {
 	})
 
 	// redirect link
-	const redirect_link = data.links?.find(v => v.rel == "approve")?.href || null
+	const redirect_link = order_data.links?.find(v => v.rel == "approve")?.href || null
 
-	const status = data.status
+	const status = order_data.status
 
 	return { customerInfo, priceInfo, products, redirect_link, status }
 }

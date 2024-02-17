@@ -14,5 +14,5 @@ export type Card = {
 	cardExpiry: string
 }
 
-export const [validateCard, validateCardError] = validateSchemaFunctionsGenerator<Card>(cardSchema)
+export const validateCard = validateSchemaFunctionsGenerator<Card>(cardSchema)
 export type CardInfoInterface = { cardName: string, cardNumber: string, cardExpiry: string, cardCVV: string }

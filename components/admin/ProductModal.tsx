@@ -4,11 +4,11 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { DragEventHandler, FormEvent, useRef, useState } from "react";
 import { Oval } from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { FirebaseProductInterface, ProductInterface, ProductVariantListing, validateProduct, validateProductError } from "types/product";
+import { FirebaseProductInterface, ProductInterface, ProductVariantListing, validateProduct } from "types/product";
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
-import { generateNewSKU } from "util/generateSKU";
+import { generateNewSKU } from "util/product/generateSKU";
 import { toSentenceCase } from "util/string";
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/bmp", "image/tiff"]
@@ -161,10 +161,12 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		// validation
 		const hasImage = modalProduct.productImageURL || productImageFile
 		if (!hasImage) return toast.error("No image uploaded", { theme: "colored" })
-		if (!validateProduct(modalProduct)) {
-			const error = validateProductError(modalProduct)! //eslint-disable-line @typescript-eslint/no-non-null-assertion
-			toast.error(error.message, { theme: "colored" })
-			return console.error("Product Validation Error", error)
+
+		try {
+			validateProduct(modalProduct)
+		} catch(e) {
+			toast.error("Product Validation Error", { theme: "colored" })
+			console.error(e)
 		}
 
 		// FIRESTORE Update

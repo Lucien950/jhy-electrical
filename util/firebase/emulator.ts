@@ -3,7 +3,7 @@ import { connectStorageEmulator } from "firebase/storage";
 import { db } from "./firestore";
 import { storage } from "./storage";
 import { firebaseConsoleBadge } from "./console";
-import { DEVENV } from "util/env";
+import { DEVENV } from "types/env";
 
 const EMULATORS_STARTED = 'EMULATORS_STARTED';
 function startEmulators() {

@@ -18,4 +18,4 @@ export const finalPriceSchema = Joi.object({
 	total: Joi.number().required().greater(0),
 })
 
-export const [validateFinalPrice, validateFinalPriceError] = validateSchemaFunctionsGenerator<FinalPriceInterface>(finalPriceSchema)
+export const validateFinalPrice = validateSchemaFunctionsGenerator<FinalPriceInterface>(finalPriceSchema)

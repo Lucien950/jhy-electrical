@@ -17,7 +17,6 @@ describe("String Tests", () => {
 
 import Joi from "joi"
 import { OrderProductFilled } from "types/order"
-import { ProductInterface } from "types/product"
 import { validateSchema, validateSchemaFunctionsGenerator } from "util/typeValidate"
 describe("Type Validation Tests", () => {
 	const objSchema = Joi.object({
@@ -28,13 +27,10 @@ describe("Type Validation Tests", () => {
 	})
 
 	it("Should Generate Validation and Error Functions for Joi", async () => {
-		const [validateObj, validateObjErr] = validateSchemaFunctionsGenerator(objSchema)
+		const validateObj = validateSchemaFunctionsGenerator(objSchema)
 		expect(validateObj({ a: "a", b: 1, c: true, d: ["a"] })).toBe(true)
-		expect(validateObjErr({ a: "a", b: 1, c: true, d: ["a"] })).toBe(undefined)
 		expect(validateObj({ a: "a", b: 1, c: true, d: ["a", 1] })).toBe(false)
-		expect(validateObjErr({ a: "a", b: 1, c: true, d: ["a", 1] })).toBeInstanceOf(Joi.ValidationError)
 		expect(validateObj({ a: "a", b: 1, c: true, d: ["a", "b"] })).toBe(true)
-		expect(validateObjErr({ a: "a", b: 1, c: true, d: ["a", "b"] })).toBe(undefined)
 	})
 
 	it("Should not throw errors, and return value when valid", async () => {
@@ -102,7 +98,7 @@ describe("Price Tests", () => {
 	})
 })
 
-import { generateNewSKU } from "./generateSKU"
+import { generateNewSKU } from "./product/generateSKU"
 
 describe("Generate SKU Test", () => {
 	const generatedRandomSku = generateNewSKU()

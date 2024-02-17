@@ -1,9 +1,10 @@
+"use client"
 // react
 import Link from "next/link";
 import { Fragment, useEffect, useState } from "react"
-import { useRouter } from "next/router";
+import { usePathname } from "next/navigation";
 // redux
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 // animations
 import { AnimatePresence, motion, useScroll } from "framer-motion"
 // types
@@ -18,8 +19,8 @@ import { useMenu } from "./useMenu";
 import { Transition } from "@headlessui/react";
 
 export const NavBar = () => {
-	const router = useRouter();
-	const cart = useSelector((state: { cart: OrderProductFilled[] }) => state.cart) as OrderProductFilled[]
+	const pathName = usePathname();
+	const cart: OrderProductFilled[] = [] //TODO replace with: useSelector((state: { cart: OrderProductFilled[] }) => state.cart) as OrderProductFilled[]
 	const cartSize = cart.reduce((a, p) => a + p.quantity, 0)
 	// cart and mobile menus
 	const [isMobileMenuOpen, toggleMobileMenuOpen, closeMobileMenu] = useMenu(["mobileMenu", "mobileMenuButton"]);
@@ -28,8 +29,8 @@ export const NavBar = () => {
 	const { scrollY } = useScroll();
 	const [scrolled, setScrolled] = useState(false)
 	useEffect(() => { return scrollY.on("change", (v) => setScrolled(v > 10)) }, [scrollY])
-	const inWhiteNavs = ["/", "/order/[pid]", "/products", "/services"].includes(router.pathname)
-	const inNoNavbar = ["/checkout", "/admin"].includes(router.pathname)
+	const inWhiteNavs = ["/", "/order/[pid]", "/products", "/services"].includes(pathName)
+	const inNoNavbar = ["/checkout", "/admin"].includes(pathName)
 
 	return (
 		<>

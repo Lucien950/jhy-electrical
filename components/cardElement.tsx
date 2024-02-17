@@ -1,3 +1,4 @@
+"use client"
 import { JSX, MouseEventHandler, SVGProps, useEffect, useRef, useState } from "react";
 import seedRandom from "seedrandom";
 import { PaymentSource } from "types/paypal";

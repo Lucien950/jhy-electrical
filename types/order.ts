@@ -7,19 +7,8 @@ import Joi from "joi";
 import { PaymentSource } from "./paypal";
 import { validateSchemaFunctionsGenerator } from "util/typeValidate";
 
-// ORDER PRODUCTS
-export interface OrderProduct {
-	PID: string,
-	quantity: number,
-	// variants
-	variantSKU: string,
-}
-export interface OrderProductFilled extends OrderProduct {
-	product: ProductVariantInterface
-}
-
 // ORDERS
-export interface EmptyOrderInterface {
+export interface BaseOrderInterface {
 	products: OrderProduct[],
 	completed: boolean,
 	dateTS: Timestamp | TimestampAdmin,
@@ -31,10 +20,10 @@ export interface EmptyOrderInterface {
 	paypalOrderID: string,
 	payment_source: PaymentSource,
 }
-export interface FirebaseOrderInterface extends EmptyOrderInterface {
+export interface FirebaseOrderInterface extends BaseOrderInterface {
 	products: OrderProductFilled[],
 }
-export interface SerializedOrderInterface extends Omit<EmptyOrderInterface, "dateTS"> {
+export interface SerializedOrderInterface extends Omit<BaseOrderInterface, "dateTS"> {
 	// because of serialization sadge
 	date: Date,
 	firebaseOrderID: string,
@@ -44,7 +33,15 @@ export interface OrderInterface extends SerializedOrderInterface {
 	products: OrderProductFilled[],
 }
 
-// VALIDATIONS
+// ORDER PRODUCTS
+export interface OrderProduct {
+	PID: string,
+	quantity: number,
+	variantSKU: string, // variants
+}
+export interface OrderProductFilled extends OrderProduct {
+	product: ProductVariantInterface
+}
 export const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
@@ -57,6 +54,6 @@ export const orderProductFilledSchema = Joi.object({
 	product: productVariantSchema.required(),
 })
 
-export const [validateOrderProduct, validateOrderProductError] = validateSchemaFunctionsGenerator<OrderProduct>(orderProductSchema)
-export const [validateOrderProductFilled, validateOrderProductFilledError] = validateSchemaFunctionsGenerator<OrderProductFilled>(orderProductFilledSchema)
-export const [validateOrderProductFilledList, validateOrderProductFilledListError] = validateSchemaFunctionsGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))
+export const validateOrderProduct = validateSchemaFunctionsGenerator<OrderProduct>(orderProductSchema)
+export const validateOrderProductFilled = validateSchemaFunctionsGenerator<OrderProductFilled>(orderProductFilledSchema)
+export const validateOrderProductFilledList = validateSchemaFunctionsGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))

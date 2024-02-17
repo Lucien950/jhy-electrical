@@ -54,7 +54,7 @@ export const productSchema = Joi.object({
 	productImageURL: Joi.string(),
 	firestoreID: Joi.string(),
 })
-export const [validateProduct, validateProductError] = validateSchemaFunctionsGenerator<ProductInterface>(productSchema)
+export const validateProduct = validateSchemaFunctionsGenerator<ProductInterface>(productSchema)
 
 export interface ProductVariantInterface extends Omit<ProductInterface & ProductVariantListing, "variants"> { }
 export const productVariantSchema = Joi.object({

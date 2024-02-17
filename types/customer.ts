@@ -26,5 +26,5 @@ export const finalCustomerSchema = Joi.object({
 	address: addressSchema.required(),
 })
 
-export const [validateName, validateNameError] = validateSchemaFunctionsGenerator<string>(nameSchema)
-export const [validateFinalCustomer, validateFinalCustomerError] = validateSchemaFunctionsGenerator<FinalCustomerInterface>(finalCustomerSchema)
+export const validateName = validateSchemaFunctionsGenerator<string>(nameSchema)
+export const validateFinalCustomer = validateSchemaFunctionsGenerator<FinalCustomerInterface>(finalCustomerSchema)

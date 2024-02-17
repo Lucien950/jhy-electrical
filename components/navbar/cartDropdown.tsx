@@ -1,6 +1,6 @@
 // react
 import Link from "next/link"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 import { MouseEventHandler, useEffect, useState } from "react"
 // redux
 import { useDispatch } from "react-redux"
@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { toast } from "react-toastify"
 import { Oval } from "react-loader-spinner"
 // util
-import { createPayPalOrder } from "util/paypal/createOrder_client"
+import { createPayPalOrder } from "app/checkout/createOrder_client"
 // types
 import { OrderProductFilled } from "types/order"
 // components
@@ -68,10 +68,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], 
 		setCheckoutLoading(true)
 		try {
 			const { orderID } = await createPayPalOrder(cart, false)
-			router.push({
-				pathname: '/checkout',
-				query: { token: orderID },
-			})
+			router.push(`/checkout?token=${orderID}`)
 			closeCart()
 		}
 		catch (e) { toast.error((e as Error).message, { theme: "colored" }) }

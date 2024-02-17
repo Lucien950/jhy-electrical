@@ -1,4 +1,4 @@
-import { DEVENV, ENV } from "util/env"
+import { DEVENV, ENV } from "types/env"
 
 export const DOMAIN = ENV === "node_dev"
 	? "http://localhost:3000"
