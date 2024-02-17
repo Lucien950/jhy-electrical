@@ -6,8 +6,8 @@ import { FinalPriceInterface, validateFinalPrice } from "types/price"
 // util
 import { fillOrderProducts } from "util/order"
 // paypal
-import { getOrder } from "server/paypal/getOrderFetch"
-import { submitPayPalOrder } from "server/paypal/submitOrderFetch"
+import { getPayPalOrder } from 'server/paypal'
+import { submitPayPalOrder } from "app/api/paypal/order/submit/submitOrderFetch"
 import { Timestamp } from "firebase-admin/firestore"
 import { FirebaseOrderInterface, OrderProduct } from "types/order"
 // firebase
@@ -55,7 +55,7 @@ async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	// INPUT VALIDATION
 	const { token } = validateSchema<submitOrderProps>(req.body, Joi.object({ token: Joi.string().required() }))
 	// make sure order is well formed before authorizing the payment
-	const { products: orderProducts, priceInfo, customerInfo, status } = await getOrder(token)
+	const { products: orderProducts, priceInfo, customerInfo, status } = await getPayPalOrder(token)
 
 	if (!(status === "COMPLETED" || status === "APPROVED")) throw "Order is not Approved"
 

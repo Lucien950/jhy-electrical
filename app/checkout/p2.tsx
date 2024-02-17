@@ -5,7 +5,6 @@ import { PaypalSVG } from "components/paypalSVG";
 import { Oval } from "react-loader-spinner";
 // types
 import { CustomerInterface } from "types/customer";
-import { OrderProductFilled } from "types/order";
 import { PriceInterface, validateFinalPrice } from "types/price";
 // react
 import { Dispatch, MouseEventHandler, SetStateAction, useState } from "react";
@@ -14,7 +13,7 @@ import { useRouter } from "next/navigation"
 import { clearCart } from 'util/redux/cart.slice';
 // firebase to write order
 import { useDispatch } from "react-redux";
-import { submitOrder } from "app/checkout/submitOrder_client";
+import { submitOrder } from "app/checkout/paypalClient";
 import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";

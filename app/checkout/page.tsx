@@ -1,5 +1,5 @@
-import { updateOrderAddress } from 'server/paypal/updateOrderFetch'
-import { getOrder } from 'server/paypal/getOrderFetch'
+import { updatePayPalOrderAddress } from "server/paypal";
+import { getPayPalOrder } from 'server/paypal';
 import { permanentRedirect } from 'next/navigation'
 import Link from 'next/link';
 import CheckoutRoot from './checkoutRoot';
@@ -21,12 +21,8 @@ export default async function Checkout({searchParams}: {searchParams: { [key: st
   if (!token || Array.isArray(token)) permanentRedirect("/cart")
   // coming back from paypal ordering
   try {
-    const {
-      customerInfo: paypalCustomerInfo,
-      priceInfo,
-      products: emptyOrderProducts, status
-    } = await getOrder(token)
-    let paypalPriceInfo = priceInfo;
+    const { customerInfo: paypalCustomerInfo, priceInfo, products: emptyOrderProducts, status } = await getPayPalOrder(token)
+    let paypalPriceInfo = priceInfo
 
     if (status == "COMPLETED") return <HandlePayPalError paypal_error={"Order has already been completed"} />
 
@@ -37,16 +33,12 @@ export default async function Checkout({searchParams}: {searchParams: { [key: st
     const p1Done = validateP1FormData(paypalCustomerInfo.paymentMethod, paypalCustomerInfo.payment_source)
     // paymentInfo shipping update
     if (p0Done && !paypalPriceInfo.shipping) {
-      const newPrice = await updateOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
+      const newPrice = await updatePayPalOrderAddress(token, paypalCustomerInfo.address!, paypalCustomerInfo.fullName!) //eslint-disable-line @typescript-eslint/no-non-null-assertion 
       paypalPriceInfo = newPrice
     }
+
     // determining initial checkout stage
-    let initialStage: number;
-    if (p0Done && p1Done) initialStage = 2
-    else if (p0Done && !p1Done) initialStage = 1
-    else initialStage = 0
-
-
+    const initialStage: number = (p0Done && p1Done) ? 2 : (p0Done && !p1Done) ? 1 : 0;
     // variables we get now!
     return (
       <CheckoutRoot

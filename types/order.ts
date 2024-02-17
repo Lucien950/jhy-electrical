@@ -20,17 +20,24 @@ export interface BaseOrderInterface {
 	paypalOrderID: string,
 	payment_source: PaymentSource,
 }
+
+/**
+ * This is how it is stored in the firebase database
+ */
 export interface FirebaseOrderInterface extends BaseOrderInterface {
-	products: OrderProductFilled[],
+	products: _OrderProductFilled[],
 }
-export interface SerializedOrderInterface extends Omit<BaseOrderInterface, "dateTS"> {
+interface _OrderProductFilled extends OrderProduct {
+	product: ProductVariantInterface
+}
+
+/**
+ * This is the interface we use in the javascript. TODO consider changing this into a class.
+ */
+export interface OrderInterface extends Omit<BaseOrderInterface, "dateTS"> {
 	// because of serialization sadge
 	date: Date,
 	firebaseOrderID: string,
-}
-export interface OrderInterface extends SerializedOrderInterface {
-	// order metadata
-	products: OrderProductFilled[],
 }
 
 // ORDER PRODUCTS
@@ -39,21 +46,10 @@ export interface OrderProduct {
 	quantity: number,
 	variantSKU: string, // variants
 }
-export interface OrderProductFilled extends OrderProduct {
-	product: ProductVariantInterface
-}
 export const orderProductSchema = Joi.object({
 	PID: Joi.string().required(),
 	quantity: Joi.number().greater(0).required(),
 	variantSKU: Joi.string().required(),
 })
-export const orderProductFilledSchema = Joi.object({
-	PID: Joi.string().required(),
-	quantity: Joi.number().greater(0).required(),
-	variantSKU: Joi.string().required(),
-	product: productVariantSchema.required(),
-})
-
 export const validateOrderProduct = validateSchemaFunctionsGenerator<OrderProduct>(orderProductSchema)
-export const validateOrderProductFilled = validateSchemaFunctionsGenerator<OrderProductFilled>(orderProductFilledSchema)
-export const validateOrderProductFilledList = validateSchemaFunctionsGenerator<OrderProductFilled[]>(Joi.array().items(orderProductFilledSchema).required().min(1))
+export const validateOrderProductList = validateSchemaFunctionsGenerator<OrderProduct[]>(Joi.array().items(orderProductSchema).required().min(1))

@@ -1,5 +1,5 @@
 import { validateSchema } from "util/typeValidate";
-import { approvePayPalFetch } from "server/paypal/approveOrderFetch";
+import { approvePayPalFetch } from "app/api/paypal/approve/approveOrderFetch";
 import { Error400, apiHandler } from "server/api";
 import { approvePayPalProps, approvePayPalPropsSchema, approvePayPalRes } from ".";
 

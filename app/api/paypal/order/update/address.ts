@@ -2,7 +2,7 @@
 import Joi from "joi";
 import { PriceInterface } from "types/price";
 import { apiHandler } from "server/api";
-import { updateOrderAddress } from "server/paypal/updateOrderFetch";
+import { updatePayPalOrderAddress } from "server/paypal";
 import { addressSchema } from "types/address";
 import { validateSchema } from "util/typeValidate";
 import { Address } from "types/address";
@@ -17,7 +17,7 @@ const updateOrderAddressPropsSchema = Joi.object({
 async function updateOrderAddressHandler(req: Request) {
 	const { token, address: newAddress, fullName } = validateSchema<updateOrderAddressProps>(req.body, updateOrderAddressPropsSchema)
 
-	const newPrice = await updateOrderAddress(token, newAddress, fullName)
+	const newPrice = await updatePayPalOrderAddress(token, newAddress, fullName)
 	return { newPrice } as updateOrderAddressRes
 }
 

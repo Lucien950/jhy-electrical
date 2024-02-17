@@ -2,7 +2,7 @@ import Image from "next/image"
 import LinkBoxes from "components/linkBoxes"
 
 export const metadata = {
-	title: "JHY Electrical",
+	title: "Home",
 	description: "JHY Electrical is a family run business that has been providing electrical services to the local community for over 20 years. We pride ourselves on our high quality workmanship and excellent customer service.",
 }
 

@@ -7,8 +7,6 @@ import { usePathname } from "next/navigation";
 // import { useSelector } from "react-redux";
 // animations
 import { AnimatePresence, motion, useScroll } from "framer-motion"
-// types
-import { OrderProductFilled } from "types/order";
 // components
 import LinkBoxes from "components/linkBoxes"
 import { CartIcon } from "./cartIcon"
@@ -17,10 +15,12 @@ import { HamButton } from "./hamButton";
 // hooks
 import { useMenu } from "./useMenu";
 import { Transition } from "@headlessui/react";
+import { useAppSelector } from "util/redux/hooks";
+import { OrderProduct } from "types/order";
 
 export const NavBar = () => {
 	const pathName = usePathname();
-	const cart: OrderProductFilled[] = [] //TODO replace with: useSelector((state: { cart: OrderProductFilled[] }) => state.cart) as OrderProductFilled[]
+	const cart: OrderProduct[] = useAppSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const cartSize = cart.reduce((a, p) => a + p.quantity, 0)
 	// cart and mobile menus
 	const [isMobileMenuOpen, toggleMobileMenuOpen, closeMobileMenu] = useMenu(["mobileMenu", "mobileMenuButton"]);

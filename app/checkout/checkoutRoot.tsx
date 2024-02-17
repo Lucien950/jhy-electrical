@@ -9,7 +9,7 @@ import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
 // types
-import { OrderProduct, OrderProductFilled } from 'types/order'
+import { OrderProduct } from 'types/order'
 import { CustomerInterface, FinalCustomerInterface } from 'types/customer'
 import { Address } from 'types/address'
 import { PriceInterface } from 'types/price'

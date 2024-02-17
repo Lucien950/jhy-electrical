@@ -1,7 +1,7 @@
 // react
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MouseEventHandler, useEffect, useState } from "react"
+import { MouseEventHandler, useEffect, useMemo, useState } from "react"
 // redux
 import { useDispatch } from "react-redux"
 import { removeFromCart } from "util/redux/cart.slice"
@@ -11,55 +11,91 @@ import { motion } from "framer-motion"
 import { toast } from "react-toastify"
 import { Oval } from "react-loader-spinner"
 // util
-import { createPayPalOrder } from "app/checkout/createOrder_client"
-// types
-import { OrderProductFilled } from "types/order"
+import { createPayPalOrder } from "app/checkout/paypalClient"
+import { OrderProduct } from "types/order"
 // components
 import Price from "components/price"
 // analytics
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 import { encodePayPalSKU } from "server/paypal/sku"
+import { ProductVariantInterface } from "types/product"
+import { getProductVariant } from "util/product"
 
-const CartDropDownProductListing = ({ p }: { p: OrderProductFilled }) => {
+const useProduct = (op: OrderProduct) => {
+	const [product, setProduct] = useState<ProductVariantInterface>()
+	const [productLoading, setProductLoading] = useState(true)
+	const [productNotFound, setProductNotFound] = useState(false)
+	useMemo(() => {
+		setProductLoading(true)
+		setProductNotFound(false)
+		getProductVariant(op.PID, op.variantSKU)
+			.then(p => setProduct(p))
+			.catch(() => { setProductNotFound(true) })
+			.finally(() => { setProductLoading(false) })
+	}, [op.PID, op.variantSKU])
+	return { product, productLoading, productNotFound }
+}
+
+const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 	const dispatch = useDispatch()
 	const HandleRemoveFromCart: MouseEventHandler<HTMLSpanElement> = (e) => {
 		e.preventDefault()
 		e.stopPropagation()
 		dispatch(removeFromCart(p.PID))
 	}
+	const { product, productLoading, productNotFound } = useProduct(p)
+
+	if (productNotFound) {
+		return (
+			<div>
+				<p>
+					<code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> not found: <span className="link" onClick={HandleRemoveFromCart}>Remove?</span>
+				</p>
+			</div>
+		)
+	}
+
 	return (
-		<div>
-			{
-				!p.product
-					? <div> <p> <code className="bg-slate-300 p-1 rounded-sm text-sm">{p.PID}</code> 	not found: <span className="link" onClick={HandleRemoveFromCart}>Remove?</span> </p> </div>
-					:
-					<div className="flex flex-row items-center justify-between">
-						<div className="flex flex-row items-center gap-x-4">
-							<div className="h-10 w-12">
-								<img src={p.product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
-							</div>
-							<p>{p.product.productName}</p>
-						</div>
-						<div>
-							{
-								p.product.quantity > 0
-									? <span> <Price price={p.product.price} /> x {p.quantity} </span>
-									:
-									<span>Out of Stock,
-										<span className="underline text-blue-500 hover:cursor-pointer" onClick={HandleRemoveFromCart}>
-											remove
-										</span>
-									</span>
-							}
-						</div>
+		<div className="flex flex-row items-center justify-between">
+			<div className="flex flex-row items-center gap-x-4 flex-1">
+				<div className="h-10 w-12">
+					{
+						productLoading || !product
+						? <div className="h-full w-full bg-gray-200 animate-pulse" />
+						: <img src={product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
+					}
+				</div>
+				{
+					productLoading || !product
+					?
+					<div className="w-1/2 self-start">
+						<div className="h-3 bg-gray-200 animate-pulse mb-1" />
+						<div className="h-3 bg-gray-200 animate-pulse" />
 					</div>
+					: <p>{product.productName}</p>
+				}
+			</div>
+			{
+				!productLoading && product &&
+				<div>
+					{
+						product.quantity > 0
+							? <span> <Price price={product.price} /> x {p.quantity} </span>
+							:
+							<span>Out of Stock,
+								<span className="underline text-blue-500 hover:cursor-pointer" onClick={HandleRemoveFromCart}>
+									remove
+								</span>
+							</span>
+					}
+				</div>
 			}
 		</div>
 	)
 }
 
-export const CartDropdown = ({ cart, closeCart }: { cart: OrderProductFilled[], closeCart: () => void }) => {
+export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: () => void }) => {
 	const router = useRouter()
 	useEffect(() => { logEvent(analytics(), "view_item_list") }, [])
 

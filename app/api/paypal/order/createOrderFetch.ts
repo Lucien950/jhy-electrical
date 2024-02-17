@@ -1,13 +1,13 @@
 // util
-import { DOMAIN, PAYPALDOMAIN } from "server/paypal/domain"
+import { DOMAIN } from "types/domain"
+import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 // types
 import { PayPalError } from 'types/paypal';
-import { OrderProductFilled } from "types/order";
 import { PriceInterface } from "types/price";
 // paypal
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
-import { generateAccessToken } from "./auth";
-import { encodePayPalSKU } from "./sku";
+import { generateAccessToken } from "server/paypal";
+import { encodePayPalSKU } from "../../../../server/paypal/sku";
 
 export const createOrderAPICall = async (paymentInformation: PriceInterface, productIDS: OrderProductFilled[], express: boolean) => {
 	const orderInformation = {

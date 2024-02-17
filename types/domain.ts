@@ -1,4 +1,4 @@
-import { DEVENV, ENV } from "types/env"
+import { ENV } from "types/env"
 
 export const DOMAIN = ENV === "node_dev"
 	? "http://localhost:3000"
@@ -6,6 +6,3 @@ export const DOMAIN = ENV === "node_dev"
 			? "https://jhy-electrical-pre.vercel.app"
 			: "https://jhycanada.ca"
 
-export const PAYPALDOMAIN = DEVENV
-	? "https://api-m.sandbox.paypal.com"
-	: "https://api-m.paypal.com"

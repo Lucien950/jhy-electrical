@@ -1,6 +1,7 @@
 import { Card } from "types/card"
-import { DOMAIN, PAYPALDOMAIN } from "./domain"
-import { generateAccessToken } from "./auth"
+import { DOMAIN } from "../../../../types/domain"
+import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain"
+import { generateAccessToken } from "server/paypal"
 import { PayPalError } from "types/paypal"
 import { OrderResponseBody } from "@paypal/paypal-js"
 

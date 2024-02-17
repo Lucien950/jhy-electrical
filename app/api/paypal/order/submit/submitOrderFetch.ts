@@ -1,6 +1,6 @@
 // paypal
-import { PAYPALDOMAIN } from "server/paypal/domain";
-import { generateAccessToken } from "./auth";
+import { PAYPALDOMAIN } from "../../paypalDomain";
+import { generateAccessToken } from "server/paypal";
 import {components} from "@paypal/paypal-js/types/apis/openapi/checkout_orders_v2"
 
 

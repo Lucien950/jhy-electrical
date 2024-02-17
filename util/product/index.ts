@@ -3,15 +3,19 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { db } from "util/firebase/firestore"
 import { storage } from "util/firebase/storage";
 // type
-import { FirebaseProductInterface, ProductInterface } from "types/product";
+import { FirebaseProductInterface, ProductInterface, ProductVariantInterface } from "types/product";
 
 /**
  * Given a Document aquired from firestore, The full product interface
  * @param productDoc Document aquired from firestore
  * @returns The full product interface
+ * @throws Error if the product does not exist
  */
-export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<ProductInterface> => {
-	const product = productDoc.data() as FirebaseProductInterface
+const _fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<ProductInterface> => {
+	const product = productDoc.data() as FirebaseProductInterface | undefined
+	if(!product) {
+		throw new Error(`Product ${productDoc.id} does not exist`)
+	}
 	return {
 		...product,
 		firestoreID: productDoc.id,
@@ -22,47 +26,36 @@ export const fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>)
 /**
  * @param productID Product ID
  * @returns The product document from firebase
+ * @throws Error if the product does not exist
  */
-export const getFirebaseProductDocByID = async (productID: string) => {
+const _getFirebaseProductDocByID = async (productID: string) => {
 	const productDoc = await getDoc(doc(db, "products", productID))
 	if (!productDoc.exists()) throw new Error(`Product ${productID} does not exist`)
 	return productDoc
 }
 
 /**
- * @param productID Product ID
- * @returns The product object raw from firebase
- */
-export const getFirebaseProductByID = async (productID: string) => {
-	const productDoc = await getFirebaseProductDocByID(productID)
-	return productDoc.data() as FirebaseProductInterface
-}
-
-/**
  * Given a product ID, returns the product object
- * @param productID Product ID
+ * @param pid Product ID
  * @returns product object
+ * @throws Error if the product does not exist
  */
-export const getProductByID = async (productID: string) => {
-	const productDoc = await getFirebaseProductDocByID(productID)
-	return fillProductDoc(productDoc)
-}
+export const getProductByID = async (pid: string) => _fillProductDoc(await _getFirebaseProductDocByID(pid))
 
 /**
  * Given a list of product IDs, returns the product objects
- * @param productList List of product IDs
+ * @param pids List of product IDs
  * @returns The products objects of the given IDs
+ * @throws Error if any of the products do not exist
  */
-export const getProductsByIDs = async (productList: string[]) => {
-	return await Promise.all(productList.map(async pid => getProductByID(pid)))
-}
+export const getProductsByIDs = async (pids: string[]) => await Promise.all(pids.map(async pid => getProductByID(pid)))
 
 /**
  * @returns All products in the database
  */
 export const getAllProducts = async () => {
 	const productsQS = await getDocs(collection(db, "products"));
-	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
+	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => _fillProductDoc(doc)))
 	return products
 }
 
@@ -76,7 +69,19 @@ export const sortProductsByName = (p: ProductInterface[]) => p.sort((a, b) => {
 	else return 0
 })
 
-export const getProductVariant = (p: ProductInterface, variantID: string) => p.variants.find(v => v.sku === variantID)
+export const findProductVariant = (p: ProductInterface, variantID: string) => p.variants.find(v => v.sku === variantID)
+
+export const flattenProductVariant = async (p: ProductInterface, variantSKU: string): Promise<ProductVariantInterface> => {
+	const { variants, ...productData } = p
+		const selectedVariant = variants.find(v => v.sku == variantSKU)
+		if (!selectedVariant) throw new Error(`Variant ${variantSKU} does not exist`)
+		return {
+			...productData,
+			...selectedVariant,
+		}
+}
+
+export const getProductVariant = async (PID: string, SKU: string): Promise<ProductVariantInterface> => flattenProductVariant(await getProductByID(PID), SKU)
 
 export const generateNewSKU = () =>
 	Array.from({ length: 16 })

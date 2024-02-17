@@ -1,7 +1,7 @@
 // api
 import { PaymentSource } from "types/paypal";
 import { validateSchema } from "util/typeValidate";
-import { approveCardFetch } from "server/paypal/approveOrderFetch";
+import { approveCardFetch } from "app/api/paypal/approve/approveOrderFetch";
 import { approveCardProps, approveCardPropsSchema, approveCardRes } from ".";
 import { apiHandler } from "server/api";
 

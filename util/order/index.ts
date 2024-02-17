@@ -1,5 +1,5 @@
-import { BaseOrderInterface, FirebaseOrderInterface, OrderInterface, OrderProduct, OrderProductFilled, SerializedOrderInterface } from "types/order"
-import { getProductByID } from "../product"
+import { BaseOrderInterface, FirebaseOrderInterface, OrderInterface, OrderProduct } from "types/order"
+import { flattenProductVariant, getProductByID } from "../product"
 
 export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): Promise<OrderInterface> => ({
 	...UnserializeOrder(preOrder, orderID),
@@ -8,7 +8,7 @@ export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): 
 
 
 export function UnserializeOrder(preOrder: FirebaseOrderInterface, orderID: string): OrderInterface;
-export function UnserializeOrder(preOrder: BaseOrderInterface, orderID: string): SerializedOrderInterface;
+export function UnserializeOrder(preOrder: BaseOrderInterface, orderID: string): OrderInterface;
 export function UnserializeOrder(preOrder: any, orderID: string) {
 	const { dateTS, ...rest } = preOrder
 	return {
@@ -18,16 +18,8 @@ export function UnserializeOrder(preOrder: any, orderID: string) {
 	}
 }
 
-export const fillOrderProducts = async (emptyProducts: OrderProduct[]): Promise<OrderProductFilled[]> =>
-	await Promise.all(emptyProducts.map(async (emptyProduct: OrderProduct): Promise<OrderProductFilled> => {
-		const { variants, ...productData } = await getProductByID(emptyProduct.PID)
-		const selectedVariant = variants.find(v => v.sku == emptyProduct.variantSKU)
-		if (!selectedVariant) throw new Error(`Variant ${emptyProduct.variantSKU} does not exist`)
-		return {
-			...emptyProduct,
-			product: {
-				...productData,
-				...selectedVariant,
-			}
-		}
-	}))
+export const fillOrderProducts = async (orderProductList: OrderProduct[]) =>
+	await Promise.all(orderProductList.map(async (emptyProduct: OrderProduct) => ({
+		...emptyProduct,
+		products: await flattenProductVariant(await getProductByID(emptyProduct.PID), emptyProduct.variantSKU)
+	})))

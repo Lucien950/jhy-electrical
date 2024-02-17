@@ -35,6 +35,13 @@ import Redux from "./redux"
 // 	return <></>
 // }
 
+export const metadata = {
+	title: {
+		template: "%s | JHY Electrical",
+		default: "JHY Electrical"
+	}
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">

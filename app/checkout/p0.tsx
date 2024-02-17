@@ -12,11 +12,11 @@ import { CustomerInterface } from 'types/customer';
 import { Address, postalCodePattern } from "types/address";
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
-import { OrderProductFilled } from "types/order";
-import { updateOrderAddress } from "app/checkout/updateOrder_client";
+import { updateOrderAddress } from "app/checkout/paypalClient";
 import { PriceInterface } from "types/price";
 import { isEqual } from "lodash";
 import { encodePayPalSKU } from "server/paypal/sku";
+import { OrderProduct } from "types/order";
 
 const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
 	const [query, setQuery] = useState('')
@@ -67,7 +67,7 @@ type p0Input = {
 	orderID: string,
 	setCalculatingShipping: Dispatch<SetStateAction<boolean>>,
 	// display variables
-	orderCart: OrderProductFilled[] | null,
+	orderCart: OrderProduct[] | null,
 	calculatingShipping: boolean,
 }
 const ShippingForm = ({ setStage, customerInfo, addP0CustomerInfo, setPriceInfo, validateP0Form, validateP0FormError, orderID, orderCart, calculatingShipping, setCalculatingShipping }: p0Input) => {
