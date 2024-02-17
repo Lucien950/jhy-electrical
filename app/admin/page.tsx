@@ -14,9 +14,9 @@ import { AdminInterface } from 'types/admin';
 import { FirebaseOrderInterface, OrderInterface } from 'types/order';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
-import { ProductsComponent } from 'components/admin/ProductsComponents';
-import { OrdersComponent } from 'components/admin/OrdersComponent';
-import AnalyticsComponent from 'components/admin/AnalyticsComponent';
+import { ProductsComponent } from 'app/admin/ProductsComponents';
+import { OrdersComponent } from 'app/admin/OrdersComponent';
+import AnalyticsComponent from 'app/admin/AnalyticsComponent';
 import { firebaseConsoleBadge } from 'util/firebase/console';
 import { toast } from 'react-toastify';
 import { UnserializeOrder } from 'util/order/orderUtil';
