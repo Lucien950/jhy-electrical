@@ -3,13 +3,13 @@ import { DOMAIN } from "types/domain"
 import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 // types
 import { PayPalError } from 'types/paypal';
-import { PriceInterface } from "types/price";
+import { FormPrice } from "types/price";
 // paypal
 import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
 import { generateAccessToken } from "server/paypal";
 import { encodePayPalSKU } from "../../../../server/paypal/sku";
 
-export const createOrderAPICall = async (paymentInformation: PriceInterface, productIDS: OrderProductFilled[], express: boolean) => {
+export const createOrderAPICall = async (paymentInformation: FormPrice, productIDS: OrderProductFilled[], express: boolean) => {
 	const orderInformation = {
 		intent: "AUTHORIZE",
 		purchase_units: [{

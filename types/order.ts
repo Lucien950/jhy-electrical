@@ -2,7 +2,7 @@ import { Timestamp } from "firebase/firestore";
 import { Timestamp as TimestampAdmin } from "firebase-admin/firestore";
 import { ProductVariantInterface, productVariantSchema } from "./product";
 import { Address } from "./address";
-import { FinalPriceInterface } from "types/price";
+import { Price } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
 import { validateSchemaFunctionsGenerator } from "util/typeValidate";
@@ -13,7 +13,7 @@ export interface BaseOrderInterface {
 	completed: boolean,
 	dateTS: Timestamp | TimestampAdmin,
 	// price information
-	orderPrice: FinalPriceInterface,
+	orderPrice: Price,
 	// customer information
 	name: string,
 	address: Address,

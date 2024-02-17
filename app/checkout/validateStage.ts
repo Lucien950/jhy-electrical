@@ -1,13 +1,13 @@
 // util
 import { ValidationError } from 'joi'
 import { validateAddress } from 'types/address'
-import { validateName, CustomerInterface } from "types/customer"
+import { validateName, FormCustomer } from "types/customer"
 /**
  * @returns Stage 1.1 Verify that the name and address are valid
  * @param ci Customer object
  */
-export const validateP0FormData = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => validateP0FormError(name, address) === null
-export const validateP0FormError = (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => {
+export const validateP0FormData = (name: FormCustomer["fullName"], address: FormCustomer["address"]) => validateP0FormError(name, address) === null
+export const validateP0FormError = (name: FormCustomer["fullName"], address: FormCustomer["address"]) => {
   try {
     validateName(name)
     validateAddress(address)
@@ -29,4 +29,4 @@ export const validateP0FormError = (name: CustomerInterface["fullName"], address
  * @param ci customer object
  */
 // TODO make this a bit more firm
-export const validateP1FormData = (paymentMethod: CustomerInterface["paymentMethod"], PaymentSource: CustomerInterface["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)
+export const validateP1FormData = (paymentMethod: FormCustomer["paymentMethod"], PaymentSource: FormCustomer["payment_source"]) => (paymentMethod == "paypal" && !!PaymentSource?.paypal) || (paymentMethod == "card" && !!PaymentSource?.card)

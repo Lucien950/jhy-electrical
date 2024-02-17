@@ -3,9 +3,9 @@
 import PriceComponent from 'components/price'
 import { Oval } from 'react-loader-spinner'
 import Tippy from '@tippyjs/react'
-import { PriceInterface } from 'types/price'
+import { FormPrice } from 'types/price'
 
-export default function Price({checkoutPayPalPrice, calculatingShipping}: {checkoutPayPalPrice: PriceInterface, calculatingShipping: boolean}) {
+export default function Price({checkoutPayPalPrice, calculatingShipping}: {checkoutPayPalPrice: FormPrice, calculatingShipping: boolean}) {
   return (
     <div>
       <h1 className="text-3xl font-bold">Order Summary</h1>

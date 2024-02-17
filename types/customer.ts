@@ -4,7 +4,7 @@ import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 import { PaymentSource } from "./paypal"
 import {Address} from "./address"
 
-export interface FinalCustomerInterface{
+export interface Customer{
 	fullName: string,
 	paymentMethod: "card" | "paypal",
 	payment_source: PaymentSource,
@@ -12,10 +12,10 @@ export interface FinalCustomerInterface{
 	// only when moving around, not on UI?
 	address: Address
 }
-export type CustomerInterface = Partial<FinalCustomerInterface>
+export type FormCustomer = Partial<Customer>
 
 export const nameSchema = Joi.string().required().min(1).max(300)
-export const finalCustomerSchema = Joi.object({
+export const customerSchema = Joi.object({
 	fullName: nameSchema,
 	paymentMethod: Joi.string().valid("card", "paypal").required(),
 	// don't need to validate payment source because that is auto handled by the paypal api
@@ -27,4 +27,4 @@ export const finalCustomerSchema = Joi.object({
 })
 
 export const validateName = validateSchemaFunctionsGenerator<string>(nameSchema)
-export const validateFinalCustomer = validateSchemaFunctionsGenerator<FinalCustomerInterface>(finalCustomerSchema)
+export const validateCustomer = validateSchemaFunctionsGenerator<Customer>(customerSchema)

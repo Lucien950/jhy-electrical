@@ -1,7 +1,7 @@
 import Joi from "joi"
 import { Card } from "./card"
 import { validateCard, validateCardError } from "types/card"
-import { validateFinalCustomer, validateFinalCustomerError, FinalCustomerInterface } from "./customer"
+import { validateCustomer, validateFinalCustomerError, Customer } from "./customer"
 import { validateAddress, validateAddressError, validatePostalCode, validatePostalCodeError } from "types/address"
 // types
 import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "./product"
@@ -161,7 +161,7 @@ describe("Card Validation", () => {
 	})
 })
 
-const successCustomer: FinalCustomerInterface = {
+const successCustomer: Customer = {
 	fullName: "Test Customer",
 	paymentMethod: "card",
 	payment_source: {
@@ -181,41 +181,41 @@ const successCustomer: FinalCustomerInterface = {
 }
 describe("Final Customer Validation", () => {
 	it("Should Validate Successful Customer", () => {
-		expect(validateFinalCustomer(successCustomer)).toBe(true)
+		expect(validateCustomer(successCustomer)).toBe(true)
 		expect(validateFinalCustomerError(successCustomer)).toBe(undefined)
 	})
 
 	it("Should Validate Customer with no name", () => {
 		const shortNameErrorCustomer = { ...successCustomer, fullName: "" }
-		expect(validateFinalCustomer(shortNameErrorCustomer)).toBe(false)
+		expect(validateCustomer(shortNameErrorCustomer)).toBe(false)
 		expect(validateFinalCustomerError(shortNameErrorCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(shortNameErrorCustomer)?.message).toBe('"fullName" is not allowed to be empty')
 	})
 
 	it("Should Validate Customer with name too long", () => {
 		const longNameCustomer = { ...successCustomer, fullName: "a".repeat(301) }
-		expect(validateFinalCustomer(longNameCustomer)).toBe(false)
+		expect(validateCustomer(longNameCustomer)).toBe(false)
 		expect(validateFinalCustomerError(longNameCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(longNameCustomer)?.message).toBe('"fullName" length must be less than or equal to 300 characters long')
 	})
 
 	it("Should Validate Customer with bad payment method", () => {
 		const badPaymentMethodCustomer = { ...successCustomer, paymentMethod: "bad" }
-		expect(validateFinalCustomer(badPaymentMethodCustomer)).toBe(false)
+		expect(validateCustomer(badPaymentMethodCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badPaymentMethodCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(badPaymentMethodCustomer)?.message).toBe('"paymentMethod" must be one of [card, paypal]')
 	})
 
 	it("Should Validate Customer with bad payment source", () => {
 		const badPaymentSourceCustomer = { ...successCustomer, payment_source: { bad: {} } }
-		expect(validateFinalCustomer(badPaymentSourceCustomer)).toBe(false)
+		expect(validateCustomer(badPaymentSourceCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badPaymentSourceCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(badPaymentSourceCustomer)?.message).toBe('"payment_source.bad" is not allowed')
 	})
 
 	it("Should Validate Customer with bad address", () => {
 		const badAddressCustomer = { ...successCustomer, address: {} }
-		expect(validateFinalCustomer(badAddressCustomer)).toBe(false)
+		expect(validateCustomer(badAddressCustomer)).toBe(false)
 		expect(validateFinalCustomerError(badAddressCustomer)).toBeInstanceOf(Joi.ValidationError)
 		expect(validateFinalCustomerError(badAddressCustomer)?.message).toBe('"address.address_line_1" is required')
 	})

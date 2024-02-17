@@ -1,20 +1,16 @@
 // react
-import { Dispatch, FormEventHandler, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link"
 // ui
 import { Combobox, Transition } from '@headlessui/react'
 import { motion } from "framer-motion";
 import Tippy from "@tippyjs/react";
-import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
 // types
-import { CustomerInterface } from 'types/customer';
+import { FormCustomer } from 'types/customer';
 import { Address, postalCodePattern } from "types/address";
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
-import { updateOrderAddress } from "app/checkout/paypalClient";
-import { PriceInterface } from "types/price";
-import { isEqual } from "lodash";
 import { encodePayPalSKU } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
 
@@ -57,66 +53,36 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 }
 
 type p0Input = {
-	setStage: Dispatch<SetStateAction<number>>,
-	setPriceInfo: Dispatch<SetStateAction<PriceInterface>>,
-	customerInfo: CustomerInterface,
-	addP0CustomerInfo: (name: string, address: Address) => void,
-
-	validateP0Form: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => boolean,
-	validateP0FormError: (name: CustomerInterface["fullName"], address: CustomerInterface["address"]) => Error | undefined,
-	CheckoutOrderID: string,
-	setCalculatingShipping: Dispatch<SetStateAction<boolean>>,
+	checkoutPayPalCustomer: FormCustomer,
+	validateP0FormData: (name: FormCustomer["fullName"], address: FormCustomer["address"]) => boolean,
 	// display variables
-	orderCart: OrderProduct[] | null,
+	checkoutOrderCart: OrderProduct[] | null,
 	calculatingShipping: boolean,
+	formSubmit: (p0Done: boolean, fullName: FormCustomer["fullName"], address: FormCustomer["address"]) => void,
 }
-const ShippingForm = ({
-	setStage, customerInfo, addP0CustomerInfo, setPriceInfo,
-	validateP0Form, validateP0FormError, CheckoutOrderID, orderCart,
-	calculatingShipping, setCalculatingShipping
-}: p0Input) => {
+const ShippingForm = ({ checkoutPayPalCustomer, validateP0FormData, checkoutOrderCart, calculatingShipping, formSubmit }: p0Input) => {
 	// INPUT HANDLERS
-	const [fullName, setFullName] = useState<CustomerInterface["fullName"]>(customerInfo.fullName)
-	const [address, setAddress] = useState<CustomerInterface["address"]>(customerInfo.address)
+	const [fullName, setFullName] = useState<FormCustomer["fullName"]>(checkoutPayPalCustomer.fullName)
+	const [address, setAddress] = useState<FormCustomer["address"]>(checkoutPayPalCustomer.address)
 	const [p0Done, setP0Done] = useState(false)
-	useEffect(() => { setP0Done(validateP0Form(fullName, address)) }, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => { setP0Done(validateP0FormData(fullName, address)) }, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
 	const customerChange = (id: string, val: string) => setFullName(val)
 	const shippingChange = (id: string, val: string) => setAddress({ ...address, [id]: val } as Address)
 
-	// LEAVE HANDLER
-	const proceedPayment: FormEventHandler<HTMLFormElement> = async (e) => {
-		e.preventDefault()
-		// this is fine because `!p0Done` already implies there is an error
-		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		if (!p0Done) return toast.error(validateP0FormError(fullName, address)!.message, { theme: "colored" })
-		if (!address || !fullName) return //just for type narrowing, form validation already should catch this
-		if (fullName == customerInfo.fullName && isEqual(address, customerInfo.address)) return setStage(1)
-
-		setCalculatingShipping(true)
-		try {
-			const { newPrice } = await updateOrderAddress(CheckoutOrderID, address, fullName)
-			addP0CustomerInfo(fullName, address)
-			setPriceInfo(newPrice)
-			setStage(1)
-		}
-		catch (e) {
-			console.error(e)
-			toast.error("Update Product Server Side Error: check console for more details", { theme: "colored" }) 
-		}
-		finally { setCalculatingShipping(false) }
-	}
-
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="shippingForm">
-			<form onSubmit={proceedPayment}>
+			<form onSubmit={(e) => {
+				e.preventDefault()
+				formSubmit(p0Done, fullName, address)
+			}}>
 				{/* review */}
 				<div className="p-5 bg-zinc-200 mb-4">
 					<h1 className="text-xl mb-4 font-bold">Products</h1>
 					{/* product component */}
 					<div className="flex flex-col gap-y-2">
-						{orderCart
+						{checkoutOrderCart
 							?
-							orderCart.map(productInfo =>
+							checkoutOrderCart.map(productInfo =>
 								<div className="flex flex-row items-center gap-x-2 p-2" key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)}>
 									<img src={productInfo.product.productImageURL} alt="" className="h-10" />
 									<p> {productInfo.product.productName} </p>

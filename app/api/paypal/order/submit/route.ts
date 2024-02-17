@@ -1,8 +1,8 @@
 // types
 import Joi from "joi"
 import { validateSchema } from "util/typeValidate"
-import { FinalCustomerInterface, validateFinalCustomer } from "types/customer"
-import { FinalPriceInterface, validateFinalPrice } from "types/price"
+import { Customer, validateCustomer } from "types/customer"
+import { Price, validatePrice } from "types/price"
 // util
 import { fillOrderProducts } from "util/order"
 // paypal
@@ -16,7 +16,7 @@ import { FirebaseProductInterface } from "types/product"
 import { submitOrderProps, submitOrderRes } from "."
 import { apiHandler } from "server/api"
 
-const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: FinalPriceInterface, customerInfo: FinalCustomerInterface, paypalToken: string) => {
+const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price, customerInfo: Customer, paypalToken: string) => {
 	// TODO finish this
 	const id = await db.runTransaction(async (transaction) => {
 		// add order to firebase
@@ -59,10 +59,10 @@ async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 
 	if (!(status === "COMPLETED" || status === "APPROVED")) throw "Order is not Approved"
 
-	validateFinalCustomer(customerInfo) // validates p1 completion
-	validateFinalPrice(priceInfo) // this validates that p0 has been completed
-	const finalCustomerInfo = customerInfo as FinalCustomerInterface
-	const finalPriceInfo = priceInfo as FinalPriceInterface
+	validateCustomer(customerInfo) // validates p1 completion
+	validatePrice(priceInfo) // this validates that p0 has been completed
+	const finalCustomerInfo = customerInfo as Customer
+	const finalPriceInfo = priceInfo as Price
 
 	if (status === "COMPLETED") {
 		const existingOrderRef = await db.collection("orders").where("paypalOrderID", "==", token).count().get()

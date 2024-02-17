@@ -7,9 +7,8 @@ import Link from 'next/link'
 import { AnimatePresence } from 'framer-motion'
 // types
 import { OrderProduct } from 'types/order'
-import { CustomerInterface, FinalCustomerInterface } from 'types/customer'
-import { Address } from 'types/address'
-import { PriceInterface } from 'types/price'
+import { FormCustomer, Customer } from 'types/customer'
+import { FormPrice } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
@@ -21,9 +20,12 @@ import CheckoutStageTwo from "./p2"
 import { fillOrderProducts } from 'util/order'
 import { validateP0FormData, validateP0FormError, validateP1FormData } from './validateStage'
 import Price from './price'
+import { toast } from 'react-toastify'
+import { isEqual } from 'lodash'
+import { updateOrderAddress } from "app/checkout/paypalClient";
 
 // STAGE TECHNOLOGY
-const useStage = (initialStage: number, customerInfo: CustomerInterface) => {
+const useStage = (initialStage: number, customerInfo: FormCustomer) => {
 	const [stage, setStage] = useState(initialStage)
 	const [p0CusUpdated, setP0CusUpdated] = useState(false)
 	const [p1CusUpdated, setP1CusUpdated] = useState(false)
@@ -32,13 +34,13 @@ const useStage = (initialStage: number, customerInfo: CustomerInterface) => {
 	[customerInfo?.address, customerInfo?.fullName]) //eslint-disable-line react-hooks/exhaustive-deps
 	useEffect(() => setP1CusUpdated(customerInfo !== null && validateP1FormData(customerInfo.paymentMethod, customerInfo.payment_source)),
 	[customerInfo?.paymentMethod, customerInfo?.payment_source]) //eslint-disable-line react-hooks/exhaustive-deps
-
-	return { stage, setStage, p0CusUpdated, p1CusUpdated }
+	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
+	return { stage, goToStage, p0CusUpdated, p1CusUpdated }
 }
 
 type CheckoutProps = {
-	CheckoutPayPalCustomer: Partial<CustomerInterface>,
-	CheckoutPayPalPrice: PriceInterface,
+	CheckoutPayPalCustomer: Partial<FormCustomer>,
+	CheckoutPayPalPrice: FormPrice,
 	CheckoutOrderProducts: OrderProduct[],
 	CheckoutOrderID: string,
 	initialStage: number
@@ -47,65 +49,77 @@ export default function CheckoutRoot({
 	CheckoutPayPalCustomer: init_CheckoutPayPalCustomer, CheckoutPayPalPrice: init_CheckoutPayPalPrice,
 	CheckoutOrderProducts: init_CheckoutOrderProducts, CheckoutOrderID, initialStage
 }: CheckoutProps) {
+	useEffect(() => {
+		if (!init_CheckoutOrderProducts) return //just for types
+		logEvent(analytics(), "begin_checkout"); logEvent(analytics(), "checkout_progress", { checkout_step: initialStage });
+		// update displayed cart
+		fillOrderProducts(init_CheckoutOrderProducts).then(newCart => setCheckoutOrderCart(newCart))
+	}, []) // eslint-disable-line react-hooks/exhaustive-deps
+
 	// IMPORTANT GLOBAL STATE
-	const [checkoutPayPalCustomer, setCheckoutPayPalCustomer] = useState<CustomerInterface>(init_CheckoutPayPalCustomer)
-	const [checkoutPayPalPrice, setCheckoutPayPalPrice] = useState<PriceInterface>(init_CheckoutPayPalPrice)
+	const [checkoutPayPalCustomer, setCheckoutPayPalCustomer] = useState<FormCustomer>(init_CheckoutPayPalCustomer)
+	const [checkoutPayPalPrice, setCheckoutPayPalPrice] = useState<FormPrice>(init_CheckoutPayPalPrice)
 	const [checkoutOrderCart, setCheckoutOrderCart] = useState<OrderProduct[] | null>(null)
 
 	// P0/P1 done indicate when customerInfo state has been updated (MAKE SURE ONLY AFTER API CALLS HAVE BEEN MADE)
-	const { stage, setStage, p0CusUpdated, p1CusUpdated } = useStage(initialStage, checkoutPayPalCustomer)
-	const goToStage = (s: number) => (() => { logEvent(analytics(), "checkout_progress", { checkout_step: s }); setStage(s) })
+	const { stage, goToStage, p0CusUpdated, p1CusUpdated } = useStage(initialStage, checkoutPayPalCustomer)
+
+	// Variables for PriceComponent
+	const [calculatingShipping, setCalculatingShipping] = useState(false)
+	const proceedP0ToP1 = async (p0Done: boolean, fullName: FormCustomer["fullName"], address: FormCustomer["address"]) => {
+		// this is fine because `!p0Done` already implies there is an error
+		if (!p0Done) return toast.error(validateP0FormError(fullName, address)?.message || "Three catches failed, undefined error", { theme: "colored" })
+		if (!address || !fullName) return //just for type narrowing, form validation already should catch this
+		
+		//recalculating shipping
+		if (fullName == checkoutPayPalCustomer.fullName && isEqual(address, checkoutPayPalCustomer.address)) return goToStage(1)
+		setCalculatingShipping(true)
+		try {
+			const { newPrice } = await updateOrderAddress(CheckoutOrderID, address, fullName)
+			setCheckoutPayPalCustomer(ci => ({ ...ci, fullName, address }))
+			setCheckoutPayPalPrice(newPrice)
+			goToStage(1)
+		}
+		catch (e) {
+			console.error(e)
+			toast.error("Update Product Server Side Error: check console for more details", { theme: "colored" }) 
+		}
+		finally { setCalculatingShipping(false) }
+	}
 
 	const CheckoutStageView = () => {
 		if (checkoutPayPalCustomer === null || checkoutPayPalPrice === null || stage === null) return <></>
 		if (stage == 0)
 			return (
 				<CheckoutStageZero
-					setStage={setStage}
-					addP0CustomerInfo={(fullName: string, address: Address) => setCheckoutPayPalCustomer(ci => ({ ...ci, fullName, address }))}
-					setPriceInfo={setCheckoutPayPalPrice}
-					validateP0Form={validateP0FormData}
-					validateP0FormError={validateP0FormError}
-					setCalculatingShipping={setCalculatingShipping}
-					CheckoutOrderID={CheckoutOrderID}
-					customerInfo={checkoutPayPalCustomer}
-					orderCart={checkoutOrderCart}
+					formSubmit={proceedP0ToP1}
+					validateP0FormData={validateP0FormData}
+					checkoutPayPalCustomer={checkoutPayPalCustomer}
+					checkoutOrderCart={checkoutOrderCart}
 					calculatingShipping={calculatingShipping}
 				/>
 			)
 		else if (stage == 1)
 			return (
 				<CheckoutStageOne
+					addP1CustomerInfo={(paymentMethod: Customer["paymentMethod"], payment_source: Customer["payment_source"]) => setCheckoutPayPalCustomer(ci => ({ ...ci, paymentMethod, payment_source }))}
 					customerInfo={checkoutPayPalCustomer}
-					addP1CustomerInfo={(paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => setCheckoutPayPalCustomer(ci => ({ ...ci, paymentMethod, payment_source }))}
-					setStage={setStage}
-					orderID={CheckoutOrderID}
+					CheckoutOrderID={CheckoutOrderID}
+					goToStage={goToStage}
 				/>
 			)
 		else if (stage == 2)
 			return (
 				<CheckoutStageTwo
-					customerInfo={checkoutPayPalCustomer}
-					price={checkoutPayPalPrice}
+					checkoutPayPalCustomer={checkoutPayPalCustomer}
+					checkoutPayPalPrice={checkoutPayPalPrice}
 					checkoutOrderCart={checkoutOrderCart}
-					setStage={setStage}
 					CheckoutOrderID={CheckoutOrderID}
+					goToStage={goToStage}
 				/>
 			)
 		throw new Error("Current checkout stage is not a valid value")
 	}
-	
-	// Variables for PriceComponent
-	const [calculatingShipping, setCalculatingShipping] = useState(false)
-
-	useEffect(() => {
-		if (!init_CheckoutOrderProducts) return //just for types
-		logEvent(analytics(), "begin_checkout");
-		logEvent(analytics(), "checkout_progress", { checkout_step: initialStage })
-		// update displayed cart
-
-		fillOrderProducts(init_CheckoutOrderProducts).then(newCart => setCheckoutOrderCart(newCart))
-	}, []) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<>

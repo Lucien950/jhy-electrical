@@ -1,8 +1,8 @@
 import { OrderResponseBody } from "@paypal/paypal-js";
-import { CustomerInterface } from "types/customer";
+import { FormCustomer } from "types/customer";
 import { OrderProduct } from "types/order";
 import { PayPalAuth, PayPalError, PayPalSimpleError } from "types/paypal";
-import { FinalPriceInterface, PriceInterface } from "types/price";
+import { Price, FormPrice } from "types/price";
 import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 import { decodePayPalSKU } from "./sku";
 import { makePrice } from "server/priceUtil";
@@ -35,7 +35,7 @@ export const getPayPalOrder = async (orderID: string) => {
 	const customerInfo = {
 		fullName: shipping?.name?.full_name || null,
 		address: shipping?.address || null,
-	} as CustomerInterface;
+	} as FormCustomer;
 	// little validation
 	if (shipping?.address?.country_code && shipping.address.country_code != "CA") throw new Error("Do not ship outside Canada");
 
@@ -58,12 +58,12 @@ export const getPayPalOrder = async (orderID: string) => {
 		tax: Number(taxTotal),
 		shipping: Number(shippingTotal),
 		total: Number(amount?.value ?? 0)
-	} as FinalPriceInterface
+	} as Price
 		:
 		{
 			subtotal: Number(breakdown.item_total!.value), //eslint-disable-line @typescript-eslint/no-non-null-assertion
 			total: Number(amount?.value ?? 0)
-		} as PriceInterface;
+		} as FormPrice;
 
 	// products
 	const products: OrderProduct[] = purchaseUnit0.items!.map(i => {

@@ -8,7 +8,7 @@ import { Oval } from 'react-loader-spinner';
 import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
 // types
-import { CustomerInterface, FinalCustomerInterface } from "types/customer";
+import { FormCustomer, Customer } from "types/customer";
 import { CardInfoInterface, validateCard } from "types/card";
 // paypal hosted fields
 import { approveCard, approvePayPal } from "app/checkout/approvePayment_client";
@@ -58,16 +58,16 @@ const useOnlyRemove = <T,>(initialValue: T): [T, () => void] => {
 type PaymentFormProps = {
 	// prevCheckoutStage: () => Promise<void>, nextCheckoutStage: () => Promise<void>,
 	// setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
-	customerInfo: CustomerInterface,
-	addP1CustomerInfo: (paymentMethod: FinalCustomerInterface["paymentMethod"], payment_source: FinalCustomerInterface["payment_source"]) => void,
-	setStage: Dispatch<SetStateAction<number>>,
+	customerInfo: FormCustomer,
+	addP1CustomerInfo: (paymentMethod: Customer["paymentMethod"], payment_source: Customer["payment_source"]) => void,
+	goToStage: (s: number) => void,
 
-	orderID: string
+	CheckoutOrderID: string
 }
-const PaymentForm = ({ customerInfo, addP1CustomerInfo, setStage, orderID }: PaymentFormProps) => {
+const PaymentForm = ({ customerInfo, addP1CustomerInfo, goToStage, CheckoutOrderID: orderID }: PaymentFormProps) => {
 	const router = useRouter()
 
-	const [paymentMethod, setPaymentMethod] = useState<FinalCustomerInterface["paymentMethod"] | null>(customerInfo.paymentMethod || null)
+	const [paymentMethod, setPaymentMethod] = useState<Customer["paymentMethod"] | null>(customerInfo.paymentMethod || null)
 	// PayPal handling
 	const [paypalSource, removePayPal] = useOnlyRemove(customerInfo.payment_source?.paypal)
 	// Credit Card Handling
@@ -103,9 +103,9 @@ const PaymentForm = ({ customerInfo, addP1CustomerInfo, setStage, orderID }: Pay
 	const approvePayment: FormEventHandler<HTMLFormElement> = async (e) => {
 		e.preventDefault()
 		e.stopPropagation()
-		if (completeByPayPal || completeByCard) return setStage(2) // no need to approve payment
+		if (completeByPayPal || completeByCard) return goToStage(2) // no need to approve payment
 		if (!p1Done) return toast.error(validateP1FormError(), { theme: "colored" })
-		if ((paymentMethod == customerInfo.paymentMethod) && isEqual(cardInfo, customerInfo.payment_source?.card)) return setStage(2)
+		if ((paymentMethod == customerInfo.paymentMethod) && isEqual(cardInfo, customerInfo.payment_source?.card)) return goToStage(2)
 
 		setPaymentApproveLoading(true)
 		if (paymentMethod == "paypal") {
@@ -116,7 +116,7 @@ const PaymentForm = ({ customerInfo, addP1CustomerInfo, setStage, orderID }: Pay
 			try {
 				const { newPaymentSource: cardPaymentSource } = await approveCard(orderID, cardInfo)
 				addP1CustomerInfo("card", cardPaymentSource)
-				setStage(2)
+				goToStage(2)
 			}
 			catch (e) {
 				toast.error("Approve Card Server Side Error: Check Console for more details", { theme: "colored" })
@@ -207,7 +207,7 @@ const PaymentForm = ({ customerInfo, addP1CustomerInfo, setStage, orderID }: Pay
 				</motion.div>
 				{/* under button */}
 				<div className="flex flex-row justify-end gap-x-8 mt-8 items-center">
-					<button className="underline" onClick={() => setStage(1)}> Back to Shipping </button>
+					<button className="underline" onClick={() => goToStage(1)}> Back to Shipping </button>
 					<button
 						className={`transition-colors duration-300 bg-black ${PayPalApproveRequired && "bg-blue-400"} text-white py-4 w-64 group`}
 						type="submit" disabled={paymentSubmitLoading}

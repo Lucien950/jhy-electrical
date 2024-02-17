@@ -1,6 +1,6 @@
 // api
 import Joi from "joi";
-import { PriceInterface } from "types/price";
+import { FormPrice } from "types/price";
 import { apiHandler } from "server/api";
 import { updatePayPalOrderAddress } from "server/paypal";
 import { addressSchema } from "types/address";
@@ -8,7 +8,7 @@ import { validateSchema } from "util/typeValidate";
 import { Address } from "types/address";
 
 export type updateOrderAddressProps = { token: string, address: Address, fullName: string }
-export type updateOrderAddressRes = { newPrice: PriceInterface }
+export type updateOrderAddressRes = { newPrice: FormPrice }
 const updateOrderAddressPropsSchema = Joi.object({
 	token: Joi.string().required(),
 	address: addressSchema.required(),
