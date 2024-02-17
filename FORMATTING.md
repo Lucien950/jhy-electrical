@@ -3,13 +3,9 @@
 	- validating inputs
 	- catching errors
 # Error Handling
-1. Error objects can only be created with strings
-2. Objects can be thrown `throw {}`
+1. Anything outside of happy path will be thrown 
 ## Client side functions
-- helper functions -> `console.error(res)` and throw a descriptive error (for UI)
-- UI functions -> catch thrown error and toast it
+- Catch the error, console.error it
+- Display a toast to say that some error has been thrown
 ## Server side functions
-- API functions
-	- catch error, and `return res.status(500).send(err as apiObject)`
-- Util functions
-	- throw errors and objects
+- just throw error lmao it will be caught by apiHandler
