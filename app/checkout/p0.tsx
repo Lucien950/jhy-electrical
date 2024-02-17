@@ -6,6 +6,7 @@ import { Combobox, Transition } from '@headlessui/react'
 import { motion } from "framer-motion";
 import Tippy from "@tippyjs/react";
 import { displayVariants } from "./checkoutFormVariants";
+import { toast } from 'react-toastify'
 // types
 import { FormCustomer } from 'types/customer';
 import { Address, postalCodePattern } from "types/address";
@@ -13,6 +14,7 @@ import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
 import { encodePayPalSKU } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
+import { validateP0FormError } from "./validateStage";
 
 const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
 	const [query, setQuery] = useState('')
@@ -54,18 +56,16 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 
 type p0Input = {
 	checkoutPayPalCustomer: FormCustomer,
-	validateP0FormData: (name: FormCustomer["fullName"], address: FormCustomer["address"]) => boolean,
+	p0DataValid: boolean,
 	// display variables
 	checkoutOrderCart: OrderProduct[] | null,
 	calculatingShipping: boolean,
-	formSubmit: (p0Done: boolean, fullName: FormCustomer["fullName"], address: FormCustomer["address"]) => void,
+	formSubmit: (newFullName: FormCustomer["fullName"], newAddress: FormCustomer["address"]) => void,
 }
-const ShippingForm = ({ checkoutPayPalCustomer, validateP0FormData, checkoutOrderCart, calculatingShipping, formSubmit }: p0Input) => {
+const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, calculatingShipping, formSubmit }: p0Input) => {
 	// INPUT HANDLERS
 	const [fullName, setFullName] = useState<FormCustomer["fullName"]>(checkoutPayPalCustomer.fullName)
 	const [address, setAddress] = useState<FormCustomer["address"]>(checkoutPayPalCustomer.address)
-	const [p0Done, setP0Done] = useState(false)
-	useEffect(() => { setP0Done(validateP0FormData(fullName, address)) }, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
 	const customerChange = (id: string, val: string) => setFullName(val)
 	const shippingChange = (id: string, val: string) => setAddress({ ...address, [id]: val } as Address)
 
@@ -73,7 +73,10 @@ const ShippingForm = ({ checkoutPayPalCustomer, validateP0FormData, checkoutOrde
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="shippingForm">
 			<form onSubmit={(e) => {
 				e.preventDefault()
-				formSubmit(p0Done, fullName, address)
+				if(!p0DataValid) {
+					return toast.error(validateP0FormError(fullName, address)?.message || "Something is wrong with the current form", { theme: "colored" })
+				}
+				formSubmit(fullName, address)
 			}}>
 				{/* review */}
 				<div className="p-5 bg-zinc-200 mb-4">
