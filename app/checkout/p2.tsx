@@ -18,18 +18,37 @@ import { CardElement } from "components/cardElement";
 import { toast } from "react-toastify";
 import { logEvent } from "firebase/analytics";
 import { analytics } from "util/firebase/analytics";
-import { encodePayPalSKU } from "server/paypal/sku";
+import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
+import { useProduct } from "components/hooks/useProduct";
 
-type ReviewViewProps = {
+
+const ProductListing = ({op}: {op: OrderProduct}) => {
+	const {product, productLoading} = useProduct(op)
+	if(productLoading || !product) {
+		return (
+			<div>Loading</div> // todo
+		)
+	}
+	return (
+		<div className="flex flex-row gap-x-2 items-center" key={encodeProductVariantPayPalSku(op.PID, op.variantSKU)}>
+			<img src={product.productImageURL} alt="Product Image" className="h-16" />
+			<div className="flex-1 text-sm">
+				<h1 className="font-bold text-base">{product.productName}</h1>
+				<p>${product.price.toFixed(2)} x {op.quantity}</p>
+				<p>{product.description}</p>
+			</div>
+		</div>
+	)
+}
+
+const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrderCart, CheckoutOrderID, goToStage }: {
 	checkoutPayPalCustomer: FormCustomer,
 	checkoutPayPalPrice: FormPrice,
 	checkoutOrderCart: OrderProduct[] | null,
 	goToStage: (s: number) => void,
 	CheckoutOrderID: string
-}
-
-const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrderCart, CheckoutOrderID, goToStage }: ReviewViewProps) => {
+}) => {
 	const router = useRouter()
 	const dispatch = useDispatch()
 	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
@@ -39,13 +58,13 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 		try {
 			validatePrice(checkoutPayPalPrice)
 		} catch (e) {
-			if(e instanceof Error) {
+			if (e instanceof Error) {
 				toast.error(e.message)
 				return
 			}
 			throw e
 		}
-		if (!checkoutPayPalCustomer.payment_source) return toast.error("Payment Method Paypal does not have paypal information object")
+		if (!checkoutPayPalCustomer.paymentSource) return toast.error("Payment Method Paypal does not have paypal information object")
 
 		setSubmitOrderLoading(true)
 		let firebaseOrderID;
@@ -90,13 +109,13 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 						checkoutPayPalCustomer.paymentMethod == "paypal" &&
 						<div>
 							<PaypalSVG className="h-6" />
-							<p className="text-sm">Email: {checkoutPayPalCustomer.payment_source?.paypal?.email_address}</p>
+							<p className="text-sm">Email: {checkoutPayPalCustomer.paymentSource?.paypal?.email_address}</p>
 						</div>
 					}
 					{
-						(checkoutPayPalCustomer.paymentMethod == "card" && checkoutPayPalCustomer.payment_source?.card) &&
+						(checkoutPayPalCustomer.paymentMethod == "card" && checkoutPayPalCustomer.paymentSource?.card) &&
 						<div>
-							<CardElement cardInformation={checkoutPayPalCustomer.payment_source.card} />
+							<CardElement cardInformation={checkoutPayPalCustomer.paymentSource.card} />
 						</div>
 					}
 				</div>
@@ -107,16 +126,7 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 				<h1 className="mb-4 text-lg"> Items </h1>
 				<div className="grid grid-cols-2">
 					{checkoutOrderCart
-						? checkoutOrderCart.map(p =>
-							<div className="flex flex-row gap-x-2 items-center" key={encodePayPalSKU(p.PID, p.variantSKU)}>
-								<img src={p.product.productImageURL} alt="Product Image" className="h-16" />
-								<div className="flex-1 text-sm">
-									<h1 className="font-bold text-base">{p.product.productName}</h1>
-									<p>${p.product.price.toFixed(2)} x {p.quantity}</p>
-									<p>{p.product.description}</p>
-								</div>
-							</div>
-						)
+						? checkoutOrderCart.map(op => <ProductListing op={op} key={encodeProductVariantPayPalSku(op.PID, op.variantSKU)}/>)
 						: <div>
 							<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
 						</div>

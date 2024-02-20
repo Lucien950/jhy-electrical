@@ -23,11 +23,11 @@ export type createOrderRes = {
  */
 async function createOrderHandler(req: Request): Promise<createOrderRes> {
 	// INPUTS
-	const { products: emptyProducts, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
-	// if (!vCreateOrderProps(req.body)) return apiRespond(res, "error", vCreateOrderPropsErr(req.body))
+	const { products: orderProducts, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
 	// fill products
-	const products = await fillOrderProducts(emptyProducts) //this validates that all products are valid
-	if (!products.every(p => p.quantity <= p.product.quantity)) throw new Error("Not enough stock for one of the products")
+	const products = await fillOrderProducts(orderProducts) //this validates that all products are valid
+	if (!products.every(orderProduct => orderProduct.quantity <= orderProduct.product.quantity))
+		throw new Error("Not enough stock for one of the products")
 	const paymentInformation = await makePrice(products)
 	const order = await createOrderAPICall(paymentInformation, products, express)
 

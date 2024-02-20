@@ -4,10 +4,16 @@ import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 import { PaymentSource } from "./paypal"
 import {Address} from "./address"
 
+// TODO rethink where to put this?
+export enum PaymentMethods {
+	PayPal="paypal", Card="card"
+}
+export const isPaymentMethod = (x: any): x is PaymentMethods => x == "paypal" || x == "card"
+
 export interface Customer{
 	fullName: string,
-	paymentMethod: "card" | "paypal",
-	payment_source: PaymentSource,
+	paymentMethod: PaymentMethods,
+	paymentSource: PaymentSource,
 	
 	// only when moving around, not on UI?
 	address: Address

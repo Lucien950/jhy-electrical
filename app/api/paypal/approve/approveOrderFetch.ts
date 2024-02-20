@@ -1,11 +1,11 @@
-import { Card } from "types/card"
+import { FormCard } from "types/card"
 import { DOMAIN } from "../../../../types/domain"
 import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain"
 import { generateAccessToken } from "server/paypal"
 import { PayPalError } from "types/paypal"
 import { OrderResponseBody } from "@paypal/paypal-js"
 
-export const approveCardFetch = async (token: string, card: Card) => {
+export const approveCardFetch = async (token: string, card: FormCard) => {
 	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}/confirm-payment-source`, {
 		method: 'POST',
 		headers: {

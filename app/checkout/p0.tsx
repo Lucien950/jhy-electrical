@@ -12,17 +12,18 @@ import { FormCustomer } from 'types/customer';
 import { Address, postalCodePattern } from "types/address";
 import { Oval } from "react-loader-spinner";
 import { InputField } from "components/inputField";
-import { encodePayPalSKU } from "server/paypal/sku";
+import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
-import { validateP0FormError } from "./validateStage";
+import { validateP0FormData, validateP0FormError } from './stages';
+import { useProduct } from "components/hooks/useProduct";
 
-const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (id: string, val: string) => void }) => {
+const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (newProvince: string) => void }) => {
 	const [query, setQuery] = useState('')
 	const provinces = ["Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador", "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island", "Quebec", "Saskatchewan", "Yukon"]
 	const filteredProvinces = query === '' ? [] : provinces.filter((province) => province.toLowerCase().includes(query.toLowerCase()))
 
 	return (
-		<Combobox value={province || ""} onChange={(s) => setProvince("admin_area_1", s)} className="relative" as="div">
+		<Combobox value={province || ""} onChange={(s) => setProvince(s)} className="relative" as="div">
 			<Combobox.Input
 				required
 				onChange={(event) => setQuery(event.target.value)}
@@ -54,49 +55,54 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 	)
 }
 
-type p0Input = {
+
+const ProductListing = ({orderProduct}: {orderProduct: OrderProduct}) => {
+	const { product, productLoading } = useProduct(orderProduct)
+	if(productLoading || !product) return (<div></div>)
+	return (
+		<div className="flex flex-row items-center gap-x-2 p-2" key={encodeProductVariantPayPalSku(orderProduct.PID, orderProduct.variantSKU)}>
+			<img src={product.productImageURL} alt="" className="h-10" />
+			<p> {product.productName} </p>
+			<p> {product.price} x {product.quantity} </p>
+		</div>
+	)
+}
+
+const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, calculatingShipping, formSubmit, setP0DataValid }: {
 	checkoutPayPalCustomer: FormCustomer,
 	p0DataValid: boolean,
-	// display variables
-	checkoutOrderCart: OrderProduct[] | null,
+	checkoutOrderCart: OrderProduct[],
 	calculatingShipping: boolean,
-	formSubmit: (newFullName: FormCustomer["fullName"], newAddress: FormCustomer["address"]) => void,
-}
-const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, calculatingShipping, formSubmit }: p0Input) => {
+	formSubmit: (newFullName: string, newAddress: Address) => void,
+	setP0DataValid: (b: boolean) => void
+}) => {
 	// INPUT HANDLERS
-	const [fullName, setFullName] = useState<FormCustomer["fullName"]>(checkoutPayPalCustomer.fullName)
-	const [address, setAddress] = useState<FormCustomer["address"]>(checkoutPayPalCustomer.address)
-	const customerChange = (id: string, val: string) => setFullName(val)
-	const shippingChange = (id: string, val: string) => setAddress({ ...address, [id]: val } as Address)
+	const [fullName, setFullName] = useState<string>(checkoutPayPalCustomer.fullName || "")
+	const [address, setAddress] = useState<Partial<Address>>(checkoutPayPalCustomer.address || {})
+
+	useEffect(() => {
+		setP0DataValid(validateP0FormData(fullName, address));
+	}, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
+
+	// We do this (instead of inside the country selector) because it is an exceptional case
+	useEffect(() => { setAddress(ad => ({ ...ad, country_code: "CA" })) }, [])
 
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="shippingForm">
 			<form onSubmit={(e) => {
 				e.preventDefault()
-				if(!p0DataValid) {
+				if (!p0DataValid) {
 					return toast.error(validateP0FormError(fullName, address)?.message || "Something is wrong with the current form", { theme: "colored" })
 				}
-				formSubmit(fullName, address)
+				formSubmit(fullName, address as Address) // 
 			}}>
 				{/* review */}
 				<div className="p-5 bg-zinc-200 mb-4">
 					<h1 className="text-xl mb-4 font-bold">Products</h1>
 					{/* product component */}
-					<div className="flex flex-col gap-y-2">
-						{checkoutOrderCart
-							?
-							checkoutOrderCart.map(productInfo =>
-								<div className="flex flex-row items-center gap-x-2 p-2" key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)}>
-									<img src={productInfo.product.productImageURL} alt="" className="h-10" />
-									<p> {productInfo.product.productName} </p>
-									<p> {productInfo.product.price} x {productInfo.quantity} </p>
-								</div>
-							)
-							:
-							<div>
-								<Oval height={30} strokeWidth={10} strokeWidthSecondary={10} color="black" secondaryColor="black" />
-							</div>
-						}
+					<div className="flex flex-col gap-y-2"> 
+						{/* TODO investigate if maxheight and scroll would do this part good */}
+						{ checkoutOrderCart.map(op => <ProductListing orderProduct={op} key={encodeProductVariantPayPalSku(op.PID, op.variantSKU)}/>) }
 					</div>
 				</div>
 
@@ -104,12 +110,29 @@ const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, 
 				<div className="p-5 bg-zinc-200">
 					<h1 className="text-xl mb-4 font-bold">Shipping</h1>
 					<div className=" grid grid-cols-2 grid-rows-5 gap-x-2 gap-y-2 text-sm " >
-						<InputField required setField={customerChange} field_id="fullName" placeholder="Full Name" defaultValue={fullName || ""} className="col-span-2" />
-						<InputField required setField={shippingChange} field_id="address_line_1" placeholder="Address" defaultValue={address?.address_line_1} className="col-span-2" />
-						<InputField setField={shippingChange} field_id="address_line_2" placeholder="Apt/Suite (Optional)" defaultValue={address?.address_line_2} className="col-span-2" />
-						<InputField required setField={shippingChange} field_id="admin_area_2" placeholder="City" defaultValue={address?.admin_area_2} />
-						<ProvinceDropdown setProvince={shippingChange} province={address?.admin_area_1} />
-						<InputField required setField={shippingChange} field_id="postal_code" placeholder="Postal Code" defaultValue={address?.postal_code} pattern={postalCodePattern} />
+						<InputField required
+							field_id="fullName" placeholder="Full Name" defaultValue={fullName || ""}
+							setField={(s: string) => setFullName(s)}
+							className="col-span-2"
+						/>
+						<InputField required
+							field_id="address_line_1" placeholder="Address" defaultValue={address?.address_line_1}
+							setField={(s: string) => setAddress(ad => ({ ...ad, address_line_1: s }))}
+							className="col-span-2"
+						/>
+						<InputField
+							field_id="address_line_2" placeholder="Apt/Suite (Optional)" defaultValue={address?.address_line_2}
+							setField={(s: string) => setAddress(ad => ({ ...ad, address_line_2: s }))}
+							className="col-span-2"
+						/>
+						<InputField required
+							field_id="admin_area_2" placeholder="City" defaultValue={address?.admin_area_2}
+							setField={(s: string) => setAddress(ad => ({ ...ad, admin_area_2: s }))} />
+						<ProvinceDropdown province={address?.admin_area_1} setProvince={(val: string) => setAddress({ ...address, admin_area_1: val })} />
+						<InputField required pattern={postalCodePattern}
+							field_id="postal_code" placeholder="Postal Code" defaultValue={address?.postal_code}
+							setField={(s: string) => setAddress(ad => ({ ...ad, postal_code: s }))}
+						/>
 						<div className="relative">
 							<InputField field_id="country" disabled />
 							<div className="absolute inset-0 pl-4 flex flex-row items-center gap-x-1">
@@ -133,9 +156,7 @@ const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, 
 					<button type="submit" disabled={calculatingShipping}
 						className="grid place-items-center relative
 						bg-black text-white py-4 px-16 disabled:text-opacity-50 transition-[color]">
-						<Transition
-							show={calculatingShipping}
-							className="transition-[opacity] duration-200"
+						<Transition show={calculatingShipping} className="transition-[opacity] duration-200"
 							enterFrom="opacity-0" enterTo="opacity-100" leaveFrom="opacity-100" leaveTo="opacity-0"
 						>
 							<Oval height={20} strokeWidth={8} wrapperClass="absolute left-[5%]"

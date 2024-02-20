@@ -3,8 +3,6 @@
 import Link from "next/link";
 import { Fragment, useEffect, useState } from "react"
 import { usePathname } from "next/navigation";
-// redux
-// import { useSelector } from "react-redux";
 // animations
 import { AnimatePresence, motion, useScroll } from "framer-motion"
 // components

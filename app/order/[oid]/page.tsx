@@ -4,12 +4,12 @@ import Head from "next/head";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "util/firebase/firestore"
 
-import { FirebaseOrderInterface } from "types/order";
+import { CompletedOrderInterface } from "types/order";
 import Price from "components/price";
 import seedRandom from "seedrandom";
 import { CardElement } from "components/cardElement";
 import { UnserializeOrder } from "util/order";
-import { encodePayPalSKU } from "server/paypal/sku";
+import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 
 const OrderNotFound = () => (
 	<div className="grid place-items-center text-5xl h-screen">
@@ -23,7 +23,7 @@ export default async function Order({ params }: { params: { oid?: string } }) {
 	const orderDoc = await getDoc(doc(db, "orders", params.oid))
 	if (!orderDoc.exists()) return <OrderNotFound />
 
-	const stringOrder = UnserializeOrder(orderDoc.data() as FirebaseOrderInterface, params.oid)
+	const stringOrder = UnserializeOrder(orderDoc.data() as CompletedOrderInterface, params.oid)
 
 	const order = {
 		...stringOrder,
@@ -118,7 +118,7 @@ export default async function Order({ params }: { params: { oid?: string } }) {
 									const { product } = productInfo
 									if (!product) return (<div></div>)
 									return (
-										<div key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
+										<div key={encodeProductVariantPayPalSku(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
 											<div className="relative">
 												<img src={product.productImageURL} className="h-24 w-24 object-cover" alt="" />
 												<span className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] w-10 h-10 bg-blue-500 overflow-hidden rounded-full leading-none grid place-items-center text-white text-xl font-bold">{productInfo.quantity}</span>

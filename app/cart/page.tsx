@@ -3,10 +3,8 @@
 import { MouseEventHandler, useEffect, useState } from "react";
 import Head from "next/head";
 // redux
-import { useSelector, useDispatch } from "react-redux"
+import { useDispatch } from "react-redux"
 import { removeFromCart, setQuantity } from "util/redux/cart.slice";
-// products
-import { OrderProductFilled } from "types/order";
 // ui
 import Tippy from "@tippyjs/react";
 import { useRouter } from "next/navigation";
@@ -15,22 +13,31 @@ import { logEvent } from "firebase/analytics";
 import { toast } from "react-toastify";
 import Price from "components/price";
 import { PaypalSVG } from "components/paypalSVG";
-import { createPayPalOrder } from "app/checkout/createOrder_client";
+import { createPayPalOrder } from "app/checkout/paypalClient";
 import { analytics } from "util/firebase/analytics";
 // util price
 import { Transition } from "@headlessui/react";
 import { QuantitySelector } from "components/quantitySelector";
 import { clamp } from "lodash";
 import { estimatePrice } from "app/checkout/estimatePrice";
-import { encodePayPalSKU } from "server/paypal/sku";
+import { encodeProductVariantPayPalSku } from "server/paypal/sku";
+import { OrderProduct } from "types/order";
+import { useAppSelector } from "util/redux/hooks";
+import { useProduct } from "components/hooks/useProduct";
 
-const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) => {
-	const product = orderProduct.product
+const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
+	const {product, productLoading} = useProduct(orderProduct)
 
 	const dispatch = useDispatch()
 	const removeSelf = () => {
 		if (product) logEvent(analytics(), "remove_from_cart", { items: [{ item_id: product.productName, price: product.price, quantity: product.quantity }] })
 		dispatch(removeFromCart(orderProduct.PID))
+	}
+
+	if(productLoading) {
+		return (
+			<div></div> // TODO
+		)
 	}
 
 	if (!product) {
@@ -88,38 +95,30 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProductFilled }) 
 const CostLoader = () => <Oval height={18} width={18} strokeWidth={6} strokeWidthSecondary={6} color="#28a9fa" secondaryColor="#28a9fa" />
 
 
-const usePrice = (cart: OrderProductFilled[]) => {
-	const [subtotal, setSubtotal] = useState<number>()
-	const [tax, setTax] = useState<number>()
-	const [shipping, setShipping] = useState<number>()
-	const [total, setTotal] = useState<number>()
+const usePrice = (cart: OrderProduct[]) => {
+	const [subtotal, setSubtotal] = useState<number | null>(null)
+	const [tax, setTax] = useState<number | null>(null)
+	const [shipping, setShipping] = useState<number | null>(null)
+	const [total, setTotal] = useState<number | null>(null)
 	const [loadingPrice, setLoadingPrice] = useState(false)
 
 	useEffect(() => {
 		(async () => {
 			if (cart.length === 0) return
-
-			console.log("Update Price Estimation")
-
-			// pre subtotal calculation (just to display something)
-			const cartSubtotal = cart.reduce((a: number, p) => a + (p.product.price || 0) * p.quantity, 0)
-			setSubtotal(cartSubtotal)
-
 			setLoadingPrice(true)
-			const newPrice = await estimatePrice(cart.map(p => ({ ...p, product: undefined }))).catch(err => {
-				toast.error("Error calculating Price")
-				console.error(err)
-			})
-			if (newPrice) {
+			try {
+				const newPrice = await estimatePrice(cart.map(p => ({ ...p, product: undefined })))
 				setSubtotal(newPrice.subtotal)
 				setShipping(newPrice.shipping || 0)
 				setTax(newPrice.tax || 0)
 				setTotal(newPrice.total)
-			}
-			else {
-				setTax(cartSubtotal * 0.13)
-				setShipping(0)
-				setTotal(cartSubtotal * 1.13)
+			} catch (e) {
+				toast.error("Error calculating Price")
+				console.error(e)
+				setSubtotal(null)
+				setTax(null)
+				setShipping(null)
+				setTotal(null)
 			}
 			setLoadingPrice(false)
 		})()
@@ -130,7 +129,7 @@ const usePrice = (cart: OrderProductFilled[]) => {
 
 export default function Cart() {
 	const router = useRouter()
-	const cart: OrderProductFilled[] = useSelector((state: { cart: OrderProductFilled[] }) => state.cart)
+	const cart: OrderProduct[] = useAppSelector(state => state.cart)
 	const { subtotal, tax, shipping, total, loadingPrice } = usePrice(cart)
 
 	useEffect(() => logEvent(analytics(), "view_cart"), [])
@@ -185,7 +184,7 @@ export default function Cart() {
 										<div>Price</div>
 									</div>
 									<div className="flex flex-col gap-y-2">
-										{cart.map(productInfo => <ProductListing orderProduct={productInfo} key={encodePayPalSKU(productInfo.PID, productInfo.variantSKU)} />)}
+										{cart.map(productInfo => <ProductListing orderProduct={productInfo} key={encodeProductVariantPayPalSku(productInfo.PID, productInfo.variantSKU)} />)}
 									</div>
 								</>
 						}

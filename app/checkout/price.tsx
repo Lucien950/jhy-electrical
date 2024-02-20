@@ -30,7 +30,7 @@ export default function Price({checkoutPayPalPrice, calculatingShipping}: {check
         {
           calculatingShipping
             ? <Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-            : <PriceComponent price={checkoutPayPalPrice.shipping} />
+            : <PriceComponent price={checkoutPayPalPrice.shipping || null} />
         }
       </div>
       {/* Tax */}
@@ -43,7 +43,7 @@ export default function Price({checkoutPayPalPrice, calculatingShipping}: {check
             </svg>
           </Tippy>
         </div>
-        <PriceComponent price={checkoutPayPalPrice.tax} />
+        <PriceComponent price={checkoutPayPalPrice.tax || null} />
       </div>
       {/* Total */}
       <div className="flex flex-row justify-between mb-8">

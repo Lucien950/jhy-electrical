@@ -1,14 +1,13 @@
-import { BaseOrderInterface, FirebaseOrderInterface, OrderInterface, OrderProduct } from "types/order"
+import { CompletedOrderInterface, OrderInterface, OrderProduct } from "types/order"
 import { flattenProductVariant, getProductByID } from "../product"
 
-export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): Promise<OrderInterface> => ({
-	...UnserializeOrder(preOrder, orderID),
-	products: await fillOrderProducts(preOrder.products)
-})
+// export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): Promise<OrderInterface> => ({
+// 	...UnserializeOrder(preOrder, orderID),
+// 	products: await fillOrderProducts(preOrder.products)
+// })
 
 
-export function UnserializeOrder(preOrder: FirebaseOrderInterface, orderID: string): OrderInterface;
-export function UnserializeOrder(preOrder: BaseOrderInterface, orderID: string): OrderInterface;
+export function UnserializeOrder(preOrder: CompletedOrderInterface, orderID: string): OrderInterface;
 export function UnserializeOrder(preOrder: any, orderID: string) {
 	const { dateTS, ...rest } = preOrder
 	return {
@@ -21,5 +20,5 @@ export function UnserializeOrder(preOrder: any, orderID: string) {
 export const fillOrderProducts = async (orderProductList: OrderProduct[]) =>
 	await Promise.all(orderProductList.map(async (emptyProduct: OrderProduct) => ({
 		...emptyProduct,
-		products: await flattenProductVariant(await getProductByID(emptyProduct.PID), emptyProduct.variantSKU)
+		product: await flattenProductVariant(await getProductByID(emptyProduct.PID), emptyProduct.variantSKU)
 	})))

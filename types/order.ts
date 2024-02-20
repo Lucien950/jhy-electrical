@@ -1,15 +1,19 @@
 import { Timestamp } from "firebase/firestore";
 import { Timestamp as TimestampAdmin } from "firebase-admin/firestore";
-import { ProductVariantInterface, productVariantSchema } from "./product";
+import { ProductVariantInterface } from "./product";
 import { Address } from "./address";
 import { Price } from "types/price";
 import Joi from "joi";
 import { PaymentSource } from "./paypal";
 import { validateSchemaFunctionsGenerator } from "util/typeValidate";
 
-// ORDERS
-export interface BaseOrderInterface {
-	products: OrderProduct[],
+interface PRIVATE_filledOrderProduct extends OrderProduct {
+	product: ProductVariantInterface
+}
+/**
+ * This is how it is stored in the firebase database
+ */
+export interface CompletedOrderInterface {
 	completed: boolean,
 	dateTS: Timestamp | TimestampAdmin,
 	// price information
@@ -19,22 +23,13 @@ export interface BaseOrderInterface {
 	address: Address,
 	paypalOrderID: string,
 	payment_source: PaymentSource,
-}
-
-/**
- * This is how it is stored in the firebase database
- */
-export interface FirebaseOrderInterface extends BaseOrderInterface {
-	products: _OrderProductFilled[],
-}
-interface _OrderProductFilled extends OrderProduct {
-	product: ProductVariantInterface
+	products: PRIVATE_filledOrderProduct[],
 }
 
 /**
  * This is the interface we use in the javascript. TODO consider changing this into a class.
  */
-export interface OrderInterface extends Omit<BaseOrderInterface, "dateTS"> {
+export interface OrderInterface extends Omit<CompletedOrderInterface, "dateTS"> {
 	// because of serialization sadge
 	date: Date,
 	firebaseOrderID: string,

@@ -1,23 +1,21 @@
-import { Dispatch, FormEventHandler, SetStateAction, useEffect, useState } from "react";
-import { useRouter } from 'next/navigation';
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import Link from "next/link";
+import { useImmutable } from "components/hooks/useImmutable";
+import { validateP1FormData, validateP1FormError } from './stages';
 // UI
 import { RadioGroup } from '@headlessui/react'
 import { PaypalSVG, PayPalWhiteSVG } from 'components/paypalSVG';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Oval } from 'react-loader-spinner';
-import { toast } from "react-toastify";
 import { displayVariants } from "./checkoutFormVariants";
+import { toast } from "react-toastify";
 // types
-import { FormCustomer, Customer } from "types/customer";
-import { CardInfoInterface, validateCard } from "types/card";
+import { FormCustomer, Customer, PaymentMethods } from "types/customer";
+import { FormCard } from "types/card";
 // paypal hosted fields
-import { approveCard, approvePayPal } from "app/checkout/approvePayment_client";
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
-import { isEqual } from "lodash";
-import Link from "next/link";
-
-
+import { PaymentSource } from "types/paypal";
 
 const RadioOption = ({ children, value }: { children: (disabled: boolean) => JSX.Element, value: string }) => {
 	return (
@@ -35,213 +33,219 @@ const RadioOption = ({ children, value }: { children: (disabled: boolean) => JSX
 	)
 }
 
-const useCardInfo = () => {
-	const [realCardInfo, setRealCardInfo] = useState<Partial<CardInfoInterface>>({})
-	const [inputCardInfo, setInputCardInfo] = useState<Partial<CardInfoInterface>>({})
-	useEffect(() => {
-		setRealCardInfo({
-			...inputCardInfo,
-			cardNumber: inputCardInfo.cardNumber?.replaceAll(" ", ""),
-			cardExpiry: inputCardInfo.cardExpiry ? ("20" + inputCardInfo.cardExpiry.split("/").reverse().join("-")) : undefined
-		})
-	}, [inputCardInfo])
-
-	return { cardInfo: realCardInfo, setCardInfo: setInputCardInfo }
-}
-
-const useOnlyRemove = <T,>(initialValue: T): [T, () => void] => {
-	const [val, setVal] = useState(initialValue)
-	const removeVal = () => setVal(undefined as T)
-	return [val, removeVal]
-}
-
-type PaymentFormProps = {
-	// prevCheckoutStage: () => Promise<void>, nextCheckoutStage: () => Promise<void>,
-	// setPaymentMethod: (newPaymentMethod: "paypal" | "card") => void,
-	customerInfo: FormCustomer,
-	addP1CustomerInfo: (paymentMethod: Customer["paymentMethod"], payment_source: Customer["payment_source"]) => void,
-	goToStage: (s: number) => void,
-
-	CheckoutOrderID: string
-}
-const PaymentForm = ({ customerInfo, addP1CustomerInfo, goToStage, CheckoutOrderID: orderID }: PaymentFormProps) => {
-	const router = useRouter()
-
-	const [paymentMethod, setPaymentMethod] = useState<Customer["paymentMethod"] | null>(customerInfo.paymentMethod || null)
-	// PayPal handling
-	const [paypalSource, removePayPal] = useOnlyRemove(customerInfo.payment_source?.paypal)
-	// Credit Card Handling
-	const [cardSource, removeCard] = useOnlyRemove(customerInfo.payment_source?.card)
-	const { cardInfo, setCardInfo } = useCardInfo() //form info
-	const changeCardInfo = (id: string, val: string) => setCardInfo(oci => ({ ...oci, [id]: val }))
-
-	// Fun variables
-	const customerCompleteByPaypal = (customerInfo.paymentMethod == "paypal" && !!customerInfo.payment_source?.paypal)
-	const completeByPayPal = (paymentMethod == "paypal" && !!paypalSource)
-	const completeByCard = (paymentMethod == "card" && !!cardSource)
-
-	// P1 Form Validation
-	const validateP1FormError = () => {
-		if (!paymentMethod) return "Select a Payment Method"
-		if (completeByPayPal) return null
-		if (completeByCard) return null
-		if (paymentMethod == "card") {
-			try {
-				validateCard(cardInfo)
-				return null
-			} catch (e) {
-				if(e instanceof Error) {
-					return e.message
+const PaymentMethodSelector = ({ paymentMethod, setPaymentMethod, hasLockedInPayPal }: {
+	paymentMethod: PaymentMethods | null,
+	setPaymentMethod: (p: PaymentMethods) => void,
+	hasLockedInPayPal: boolean
+}) => (
+	<div className="bg-gray-200 p-6 mb-4">
+		<h1 className="text-xl mb-4"> Payment Method </h1>
+		<RadioGroup value={paymentMethod} onChange={setPaymentMethod} className="w-4/5" disabled={hasLockedInPayPal}>
+			<RadioOption value={PaymentMethods.PayPal}>
+				{(disabled) => <PaypalSVG className={`h-5 ${disabled ? "opacity-50" : ""}`} />}
+			</RadioOption>
+			<RadioOption value={PaymentMethods.Card}>
+				{(disabled) =>
+					<>
+						<svg className={`h-10 w-10 ${disabled ? "opacity-50" : ""}`} aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+							<path clipRule="evenodd" d="M2.5 4A1.5 1.5 0 001 5.5V6h18v-.5A1.5 1.5 0 0017.5 4h-15zM19 8.5H1v6A1.5 1.5 0 002.5 16h15a1.5 1.5 0 001.5-1.5v-6zM3 13.25a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zm4.75-.75a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" fillRule="evenodd" />
+						</svg>
+						<p className={disabled ? "opacity-50" : ""}> Card </p>
+					</>
 				}
-				throw e;
-			}
+			</RadioOption>
+		</RadioGroup>
+		{
+			hasLockedInPayPal &&
+			<p className="mt-4 text-sm"> PayPal Account Selected. If you would like to complete a guest checkout, please go back to <Link href="/cart" className="link">cart</Link> and start another order </p>
 		}
-		return null
-	}
-	const p1Done = validateP1FormError() === null
+	</div>
+)
 
-	const approvePayment: FormEventHandler<HTMLFormElement> = async (e) => {
-		e.preventDefault()
-		e.stopPropagation()
-		if (completeByPayPal || completeByCard) return goToStage(2) // no need to approve payment
-		if (!p1Done) return toast.error(validateP1FormError(), { theme: "colored" })
-		if ((paymentMethod == customerInfo.paymentMethod) && isEqual(cardInfo, customerInfo.payment_source?.card)) return goToStage(2)
+const CardForm = ({ setCardInfo }: {
+	setCardInfo: Dispatch<SetStateAction<Partial<FormCard>>>,
+}) => (
+	<>
+		<h1 className="mb-4 text-xl"> Enter Card Payment Information </h1>
+		<div className="grid grid-cols-[2fr_1fr] gap-x-2 gap-y-3">
+			<InputField field_id="cardNumber" required mask="9999 9999 9999 9999" label="Card Number" placeholder="4111 1111 1111 1111"
+				setField={(val: string) => setCardInfo(oci => ({ ...oci, cardNumber: val }))}
+			/>
+			<InputField field_id="cardCVV" required mask="999" label="CVV" placeholder="123"
+				setField={(val: string) => setCardInfo(oci => ({ ...oci, cardCVV: val }))}
+			/>
+			<InputField field_id="cardName" required label="Cardholder Name" placeholder="Cardholder Name"
+				setField={(val: string) => setCardInfo(oci => ({ ...oci, cardName: val }))}
+			/>
+			<InputField field_id="cardExpiry" required mask="99/99" label="Expiry" placeholder="MM/YY"
+				setField={(val: string) => setCardInfo(oci => ({ ...oci, cardExpiry: val }))}
+			/>
+		</div>
+	</>
+)
 
-		setPaymentApproveLoading(true)
-		if (paymentMethod == "paypal") {
-			const { redirect_link } = await approvePayPal(orderID)
-			router.push(redirect_link) //customer updating will be handled on SSR when it returns
-		}
-		else if (paymentMethod == "card") {
-			try {
-				const { newPaymentSource: cardPaymentSource } = await approveCard(orderID, cardInfo)
-				addP1CustomerInfo("card", cardPaymentSource)
-				goToStage(2)
-			}
-			catch (e) {
-				toast.error("Approve Card Server Side Error: Check Console for more details", { theme: "colored" })
-				console.error(e)
-			}
-			finally { setPaymentApproveLoading(false) }
-		}
-		else toast("Select a Valid Payment Method or fill in payment information") // SHOULD BE UNREACHABLE CODE 
-	}
+const CardDisplay = ({ cardSource, removeCard }: {
+	cardSource: Customer["paymentSource"]["card"],
+	removeCard: () => void,
+}) => (
+	<>
+		<h1 className="mb-4 text-xl"> Enter Card Payment Information </h1>
+		<div>
+			<div>
+				<CardElement cardInformation={cardSource} />
+			</div>
+			<button onClick={removeCard}>Use different card</button>
+		</div>
+	</>
+)
+
+const PayPalForm = () => (
+	<p>Enter PayPal information by clicking button below:</p>
+)
+
+const PayPalDisplay = ({ paypalSource, removePayPal }: {
+	paypalSource: NonNullable<PaymentSource["paypal"]>,
+	removePayPal: () => void
+}) => (
+	<>
+		<h1 className="text-xl">Paypal Information</h1>
+		<div>
+			<p>PayPal Email: {paypalSource.email_address || "[email not present]"}</p>
+			<button onClick={removePayPal}>Use Different PayPal Account</button>
+		</div>
+	</>
+)
 
 
-	// UI State
-	const [paymentSubmitLoading, setPaymentApproveLoading] = useState(false)
-	const [CardApproveRequired, PayPalApproveRequired] = [paymentMethod == "card" && !cardSource, paymentMethod == "paypal" && !paypalSource]
-
+const SubmitPaymentButton = ({ PaymentMethod: PaymentMethod, NeedsApproval, paymentSubmitLoading }: {
+	NeedsApproval: boolean,
+	PaymentMethod: PaymentMethods | null,
+	paymentSubmitLoading: boolean
+}) => {
 	const opacityVariants = {
-		hide: { opacity: 0, transition: {duration: 0.35} },
-		show: { opacity: 1, transition: {duration: 0.1} }
+		hide: { opacity: 0, transition: { duration: 0.35 } },
+		show: { opacity: 1, transition: { duration: 0.1 } }
 	}
 	return (
-		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="paymentForm">
-			<form onSubmit={approvePayment}>
-				{/* Payment Method Select */}
-				<div className="bg-gray-200 p-6 mb-4">
-					<h1 className="text-xl mb-4"> Payment Method </h1>
-					<RadioGroup value={paymentMethod} onChange={setPaymentMethod} className="w-4/5" disabled={customerCompleteByPaypal}>
-						<RadioOption value="paypal">
-							{(disabled) => <PaypalSVG className={`h-5 ${disabled ? "opacity-50" : ""}`} />}
-						</RadioOption>
-						<RadioOption value="card">
-							{(disabled) =>
-								<>
-									<svg className={`h-10 w-10 ${disabled ? "opacity-50" : ""}`} aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-										<path clipRule="evenodd" d="M2.5 4A1.5 1.5 0 001 5.5V6h18v-.5A1.5 1.5 0 0017.5 4h-15zM19 8.5H1v6A1.5 1.5 0 002.5 16h15a1.5 1.5 0 001.5-1.5v-6zM3 13.25a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zm4.75-.75a.75.75 0 000 1.5h3.5a.75.75 0 000-1.5h-3.5z" fillRule="evenodd" />
-									</svg>
-									<p className={disabled ? "opacity-50" : ""}> Card </p>
-								</>
-							}
-						</RadioOption>
-					</RadioGroup>
-					{
-						customerCompleteByPaypal && <p className="mt-4 text-sm"> PayPal Account Selected. If you would like to complete a guest checkout, please go back to <Link href="/cart" className="link">cart</Link> and start another order </p>
-					}
-				</div>
-				{/* hosted fields and paypal information */}
-				<motion.div className="bg-gray-200 p-6 mb-4" transition={{ duration: 0.1 }}>
+		<button type="submit" disabled={paymentSubmitLoading}
+			className={`transition-colors duration-300 bg-black ${PaymentMethod == PaymentMethods.PayPal && NeedsApproval && "bg-blue-400"} text-white py-4 w-64 group`}
+		>
+			<motion.div layoutRoot className="h-6 flex flex-row items-center justify-center gap-x-4">
+				{
+					paymentSubmitLoading &&
+					<motion.div layout>
+						<Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
+					</motion.div>
+				}
+				<motion.div layout className="group-disabled:opacity-75">
 					<AnimatePresence mode="wait">
 						{
-							paymentMethod == "paypal" &&
-							<motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} key="paypalPayment">
-								<h1 className="text-xl">Paypal Information</h1>
-								{
-									paypalSource?.email_address
-										?
-										<div>
-											<p>PayPal Email: {paypalSource.email_address}</p>
-											<button onClick={removePayPal}>Use Different PayPal Account</button>
-										</div>
-										: <p> No PayPal information Provided </p>
-								}
+							NeedsApproval && PaymentMethod == PaymentMethods.PayPal &&
+							<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className=" flex flex-row items-center justify-center gap-x-2" key={1}>
+								Proceed with <PayPalWhiteSVG className="h-5" />
 							</motion.div>
 						}
 						{
-							paymentMethod == "card" &&
-							<motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} key="cardPayment">
-								<h1 className="mb-4 text-xl"> Card Payment Information </h1>
-								{
-									cardSource
-										?
-										<div>
-											<div>
-												<CardElement cardInformation={cardSource} />
-											</div>
-											<button onClick={removeCard}>Use different card</button>
-										</div>
-										// Credit Card Form
-										:
-										<div className="grid grid-cols-[2fr_1fr] gap-x-2 gap-y-3">
-											<InputField field_id="cardNumber" setField={changeCardInfo} required mask="9999 9999 9999 9999" label="Card Number" 		placeholder="4111 1111 1111 1111"/>
-											<InputField field_id="cardCVV" 		setField={changeCardInfo} required mask="999" 								label="CVV" 						placeholder="123"								 />
-											<InputField field_id="cardName" 	setField={changeCardInfo} required 														label="Cardholder Name" placeholder="Cardholder Name"		 />
-											<InputField field_id="cardExpiry" setField={changeCardInfo} required mask="99/99" 							label="Expiry" 					placeholder="MM/YY" 						 />
-										</div>
-								}
+							NeedsApproval && PaymentMethod == PaymentMethods.Card &&
+							<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className="font-semibold" key={2}>
+								Approve Credit Card
+							</motion.div>
+						}
+						{
+							(!NeedsApproval || !PaymentMethod) &&
+							<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className="font-semibold" key={3}>
+								Review
 							</motion.div>
 						}
 					</AnimatePresence>
 				</motion.div>
+			</motion.div>
+		</button>
+	)
+}
+
+const useCardInfo = () => {
+	const [cardInfo, setCardInfo] = useState<Partial<FormCard>>({})
+	const [formCardInfo, setFormCardInfo] = useState<Partial<FormCard>>({})
+	useEffect(() => {
+		setCardInfo({
+			...formCardInfo,
+			cardNumber: formCardInfo.cardNumber?.replaceAll(" ", ""),
+			cardExpiry: formCardInfo.cardExpiry ? ("20" + formCardInfo.cardExpiry.split("/").reverse().join("-")) : undefined
+		})
+	}, [formCardInfo])
+
+	return { cardInfo: cardInfo, setCardInfo: setFormCardInfo }
+}
+
+export default function PaymentForm({ checkoutPayPalCustomer, paymentSubmitLoading, p1DataValid, returnP0, formSubmit, setP1DataValid }: {
+	checkoutPayPalCustomer: FormCustomer,
+	paymentSubmitLoading: boolean,
+	p1DataValid: boolean,
+	setP1DataValid: (s: boolean) => void,
+	returnP0: () => void,
+	formSubmit: (pm: PaymentMethods, ps: unknown) => void,
+}) {
+	const [paymentMethod, setPaymentMethod] = useState<PaymentMethods | null>(checkoutPayPalCustomer.paymentMethod || null)
+	
+	// NOTE ON THIS PIECE OF DATA: if it is not null, that means it 
+	const [existingPaymentSource, removeExistingPaymentSource] = useImmutable(checkoutPayPalCustomer.paymentSource || null)
+	// forms
+	// paypal omitted because there is no metadata
+	const { cardInfo: cardForm, setCardInfo } = useCardInfo() //form info
+
+	useEffect(() => {
+		if(paymentMethod == PaymentMethods.Card) setP1DataValid(validateP1FormData(existingPaymentSource, paymentMethod, cardForm));
+		else if(paymentMethod == PaymentMethods.PayPal) setP1DataValid(validateP1FormData(existingPaymentSource, paymentMethod, null));
+		else setP1DataValid(false)
+	}, [paymentMethod, cardForm]) // eslint-disable-line react-hooks/exhaustive-deps
+
+	// This exists because once an order is associated with a paypal account, you cannot unbind it
+	const hasLockedInPayPal = (checkoutPayPalCustomer.paymentMethod == PaymentMethods.PayPal && !!checkoutPayPalCustomer.paymentSource?.paypal)
+
+	// ui vars
+	return (
+		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="paymentForm">
+			<form onSubmit={(e) => {
+				e.preventDefault();e.stopPropagation()
+				if (!p1DataValid){
+					const usedForm = paymentMethod == PaymentMethods.Card ? cardForm : null
+					const message = validateP1FormError(existingPaymentSource, paymentMethod, usedForm)!
+					return toast.error(message, { theme: "colored" })
+				}
+				
+				if (paymentMethod == PaymentMethods.Card) {
+					formSubmit(PaymentMethods.Card, cardForm)
+				} else {
+					formSubmit(PaymentMethods.PayPal, null)
+				}
+			}}>
+				{/* Payment Method Select */}
+				<PaymentMethodSelector paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} hasLockedInPayPal={hasLockedInPayPal} />
+				{/* hosted fields and paypal information */}
+				<motion.div className="bg-gray-200 p-6 mb-4" transition={{ duration: 0.1 }}>
+					<AnimatePresence mode="wait">
+						<motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} key={`${paymentMethod}|${existingPaymentSource === null}`}>
+							{ existingPaymentSource !== null && paymentMethod == PaymentMethods.PayPal &&
+								<PayPalDisplay paypalSource={existingPaymentSource as NonNullable<PaymentSource['paypal']>} removePayPal={removeExistingPaymentSource} /> }
+							{ existingPaymentSource !== null && paymentMethod == PaymentMethods.Card &&
+								<CardDisplay cardSource={existingPaymentSource as PaymentSource['card']} removeCard={removeExistingPaymentSource} /> }
+							{ existingPaymentSource === null && paymentMethod == PaymentMethods.PayPal && <PayPalForm /> }
+							{ existingPaymentSource === null && paymentMethod == PaymentMethods.Card && <CardForm setCardInfo={setCardInfo} /> }
+						</motion.div>
+					</AnimatePresence>
+				</motion.div>
 				{/* under button */}
 				<div className="flex flex-row justify-end gap-x-8 mt-8 items-center">
-					<button className="underline" onClick={() => goToStage(1)}> Back to Shipping </button>
-					<button
-						className={`transition-colors duration-300 bg-black ${PayPalApproveRequired && "bg-blue-400"} text-white py-4 w-64 group`}
-						type="submit" disabled={paymentSubmitLoading}
-					>
-						<motion.div layoutRoot className="h-6 flex flex-row items-center justify-center gap-x-4">
-							{
-								paymentSubmitLoading &&
-								<motion.div layout>
-									<Oval height={20} width={20} strokeWidth={7} color="white" secondaryColor="white" />
-								</motion.div>
-							}
-							<motion.div layout className="group-disabled:opacity-75">
-								<AnimatePresence mode="wait">
-									{
-										PayPalApproveRequired
-											?
-											<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className=" flex flex-row items-center justify-center gap-x-2" key={1}>
-												Proceed with <PayPalWhiteSVG className="h-5" />
-											</motion.div>
-											:
-											CardApproveRequired
-												?
-												<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className="font-semibold" key={2}>Approve Credit Card</motion.div>
-												:
-												<motion.div initial="hide" animate="show" exit="hide" variants={opacityVariants} className="font-semibold" key={3}> Review </motion.div>
-									}
-								</AnimatePresence>
-							</motion.div>
-						</motion.div>
-					</button>
+					<button className="underline" onClick={returnP0}> Back to Shipping </button>
+					{/* Submit button */}
+					<SubmitPaymentButton
+						PaymentMethod={paymentMethod}
+						NeedsApproval={existingPaymentSource !== null}
+						paymentSubmitLoading={paymentSubmitLoading}
+					/>
 				</div>
 			</form>
 		</motion.div>
 	)
 }
-
-export default PaymentForm;

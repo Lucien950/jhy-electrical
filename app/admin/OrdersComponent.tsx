@@ -27,7 +27,7 @@ const TableRow = ({ order }: { order: OrderInterface }) => {
 			<td className="px-4 py-3 overflow-hidden relative">
 				<p className="whitespace-nowrap group-data-[completed=true]:opacity-25">
 					{
-						order.products.map(productInfo => productInfo.product ? `${productInfo.product.productName} x ${productInfo.quantity}` : `INVALID PRODUCT ID ${productInfo.PID}`).join(", ")
+						order.products.map(orderProduct => orderProduct.product ? `${orderProduct.product.productName} x ${orderProduct.quantity}` : `INVALID PRODUCT ID ${orderProduct.PID}`).join(", ")
 					}
 				</p>
 				<div className="absolute h-full w-24 right-0 top-0 bg-gradient-to-r from-transparent group-odd:to-white group-even:to-gray-100"></div>

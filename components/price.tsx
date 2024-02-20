@@ -1,9 +1,11 @@
 import { JSX, ClassAttributes, HTMLAttributes } from "react"
 
 type spanAttributes = JSX.IntrinsicAttributes & ClassAttributes<HTMLSpanElement> & HTMLAttributes<HTMLSpanElement>
-const Price = ({ price, large = false, ...rest }: { price?: number, large?: boolean } & spanAttributes) => {
+const Price = ({ price, large = false, ...rest }: {
+	price: number | null, 
+	large?: boolean
+} & spanAttributes) => {
 	if (!price) return <p> - </p>
-
 	const [frontPrice, rearPrice] = price.toFixed(2).split(".")
 	return (
 		<span {...rest}>

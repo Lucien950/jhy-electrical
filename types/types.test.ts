@@ -1,5 +1,5 @@
 import Joi from "joi"
-import { Card } from "./card"
+import { FormCard } from "./card"
 import { validateCard, validateCardError } from "types/card"
 import { validateCustomer, validateFinalCustomerError, Customer } from "./customer"
 import { validateAddress, validateAddressError, validatePostalCode, validatePostalCodeError } from "types/address"
@@ -107,7 +107,7 @@ describe("Address Validation", () => {
 })
 
 describe("Card Validation", () => {
-	const successCard: Card = {
+	const successCard: FormCard = {
 		cardName: "Test Card",
 		cardNumber: "4214029346506481",
 		cardExpiry: "2025-03",
@@ -164,7 +164,7 @@ describe("Card Validation", () => {
 const successCustomer: Customer = {
 	fullName: "Test Customer",
 	paymentMethod: "card",
-	payment_source: {
+	paymentSource: {
 		paypal: {
 			email_address: "sb-5tjyr23952170@personal.example.com",
 			account_id: "CEPBDHWUALZTA",

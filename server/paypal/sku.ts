@@ -1,11 +1,11 @@
-const SKUDELIMIT = "<-|->"
+const SKU_DELIMIT = "<-|->"
 
-export const encodePayPalSKU = (productID: string, variantID: string) => {
-	return `${productID}${SKUDELIMIT}${variantID}`
+export const encodeProductVariantPayPalSku = (productID: string, variantID: string) => {
+	return `${productID}${SKU_DELIMIT}${variantID}`
 }
 
-export const decodePayPalSKU = (sku: string) => {
-	const arrSplit = sku.split(SKUDELIMIT)
+export const decodeProductVariantPayPalSku = (sku: string) => {
+	const arrSplit = sku.split(SKU_DELIMIT)
 	if (arrSplit.length != 2) throw new Error("Invalid SKU")
 	const [productID, variantID] = arrSplit
 	return {

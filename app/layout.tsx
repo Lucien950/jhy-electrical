@@ -9,32 +9,6 @@ import { DEVENV } from 'types/env'
 // redux
 import Redux from "./redux"
 
-// firebase
-// import { getProductByID } from "util/productUtil";
-// import { cartFillProducts } from "util/redux/cart.slice";
-// import { OrderProduct } from "types/order"
-// import { firebaseConsoleBadge } from 'util/firebase/console'
-
-// dispatch here in order to be inside the provider
-// const CartInitialFiller = () => {
-// 	const dispatch = useDispatch()
-// 	const cart = useSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
-// 	useEffect(() => {
-// 		const newProductsPromise = cart.map(cartItem => cartItem.PID)
-// 			.filter((value, index, array) => array.indexOf(value) === index) //filter unique PID (cause they have all the SKUs)
-// 			.map(async cartItemPID => ({
-// 				PID: cartItemPID,
-// 				product: await getProductByID(cartItemPID).catch(() => null)
-// 			}))
-// 		Promise.all(newProductsPromise)
-// 			.then(newProducts => {
-// 				console.log(...firebaseConsoleBadge, 'Cart Snapshot Update', newProducts);
-// 				dispatch(cartFillProducts(newProducts))
-// 			})
-// 	}, []) //eslint-disable-line react-hooks/exhaustive-deps
-// 	return <></>
-// }
-
 export const metadata = {
 	title: {
 		template: "%s | JHY Electrical",

@@ -11,7 +11,7 @@ import { auth } from "util/firebase/auth";
 import { db } from 'util/firebase/firestore';
 // types
 import { AdminInterface } from 'types/admin';
-import { FirebaseOrderInterface, OrderInterface } from 'types/order';
+import { CompletedOrderInterface, OrderInterface } from 'types/order';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
 import { ProductsComponent } from 'app/admin/ProductsComponents';
@@ -86,7 +86,7 @@ const useOrders = () => {
 			(querySnapshot) => {
 				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
 				// setAllOrders(querySnapshot.docs.map(d => d.data()) as OrderInterface[])
-				const newOrders = querySnapshot.docs.map(d => UnserializeOrder(d.data() as FirebaseOrderInterface, d.id))
+				const newOrders = querySnapshot.docs.map(d => UnserializeOrder(d.data() as CompletedOrderInterface, d.id))
 				setAllOrders(newOrders)
 			},
 			(error) => {

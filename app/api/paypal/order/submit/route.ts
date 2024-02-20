@@ -9,7 +9,7 @@ import { fillOrderProducts } from "util/order"
 import { getPayPalOrder } from 'server/paypal'
 import { submitPayPalOrder } from "app/api/paypal/order/submit/submitOrderFetch"
 import { Timestamp } from "firebase-admin/firestore"
-import { FirebaseOrderInterface, OrderProduct } from "types/order"
+import { CompletedOrderInterface, OrderProduct } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"
 import { FirebaseProductInterface } from "types/product"
@@ -21,14 +21,14 @@ const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price,
 	const id = await db.runTransaction(async (transaction) => {
 		// add order to firebase
 		const cart = await fillOrderProducts(orderProducts)
-		const newOrder: FirebaseOrderInterface = {
+		const newOrder: CompletedOrderInterface = {
 			products: cart,
 			orderPrice: priceInfo,
 			completed: false,
 			dateTS: Timestamp.now(),
 
 			name: customerInfo.fullName,
-			payment_source: customerInfo.payment_source,
+			payment_source: customerInfo.paymentSource,
 			address: customerInfo.address,
 			paypalOrderID: paypalToken,
 		}
@@ -55,7 +55,7 @@ async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	// INPUT VALIDATION
 	const { token } = validateSchema<submitOrderProps>(req.body, Joi.object({ token: Joi.string().required() }))
 	// make sure order is well formed before authorizing the payment
-	const { products: orderProducts, priceInfo, customerInfo, status } = await getPayPalOrder(token)
+	const { products: orderProducts, orderPrice: priceInfo, PayPalCustomer: customerInfo, status } = await getPayPalOrder(token)
 
 	if (!(status === "COMPLETED" || status === "APPROVED")) throw "Order is not Approved"
 

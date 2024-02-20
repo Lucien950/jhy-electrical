@@ -2,8 +2,8 @@ import { ChangeEventHandler, FormEventHandler, JSX, useState } from "react"
 import InputMask, { Props } from "react-input-mask";
 
 interface InputFieldProps {
-	field_id?: string,
-	setField?: (id: string, value: string) => void,
+	field_id: string,
+	setField?: (value: string) => void,
 	label?: string,
 	mask?: string,
 }
@@ -15,7 +15,7 @@ export const InputField = ({ field_id, setField, label, className: moreClassName
 		setSelfInvalid(true)
 	}
 	const onChangeEvent: ChangeEventHandler<HTMLInputElement> = (e) => {
-		if(setField && field_id) setField(field_id, e.target.value)
+		if(setField) setField(e.target.value)
 		if (e.target.checkValidity()) setSelfInvalid(false)
 	}
 

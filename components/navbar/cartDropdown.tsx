@@ -18,7 +18,7 @@ import Price from "components/price"
 // analytics
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
-import { encodePayPalSKU } from "server/paypal/sku"
+import { encodeProductVariantPayPalSku } from "server/paypal/sku"
 import { ProductVariantInterface } from "types/product"
 import { getProductVariant } from "util/product"
 
@@ -128,7 +128,7 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 				? <div className="text-gray-400 text-center">Cart Empty</div>
 				:
 				<>
-					{cart.map(p => <CartDropDownProductListing p={p} key={encodePayPalSKU(p.PID, p.variantSKU)} />)}
+					{cart.map(p => <CartDropDownProductListing p={p} key={encodeProductVariantPayPalSku(p.PID, p.variantSKU)} />)}
 					{/* bottom buttons */}
 					<div className="flex flex-row w-full justify-around bg-slate-100 select-none">
 						<Link href="/cart" onClick={closeCart}>

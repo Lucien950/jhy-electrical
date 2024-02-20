@@ -1,22 +1,47 @@
+// types
 import { OrderResponseBody } from "@paypal/paypal-js";
-import { FormCustomer } from "types/customer";
+import { FormCustomer, isPaymentMethod } from "types/customer";
 import { OrderProduct } from "types/order";
 import { PayPalAuth, PayPalError, PayPalSimpleError } from "types/paypal";
-import { Price, FormPrice } from "types/price";
-import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
-import { decodePayPalSKU } from "./sku";
-import { makePrice } from "server/priceUtil";
+import { FormPrice } from "types/price";
 import { Address } from "types/address";
+// utils
+import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 import { DEVENV } from "types/env";
+import { decodeProductVariantPayPalSku } from "./sku";
+import { makePrice } from "server/priceUtil";
 import { toB64 } from "util/string";
+import { ArrayElement } from "types/util";
+import { fillOrderProducts } from "util/order";
 
+
+const calculateOrderPrice = (orderPurchaseUnit: ArrayElement<NonNullable<OrderResponseBody["purchase_units"]>>): FormPrice => {
+	const amount = orderPurchaseUnit.amount;
+	const breakdown = (amount?.breakdown)!; //eslint-disable-line @typescript-eslint/no-non-null-assertion
+	const taxTotal = breakdown.tax_total?.value;
+	const shippingTotal = breakdown.shipping?.value;
+	const finalcalculated = taxTotal !== undefined && shippingTotal !== undefined;
+	return finalcalculated ? {
+		subtotal: Number(breakdown.item_total!.value), //eslint-disable-line @typescript-eslint/no-non-null-assertion
+		tax: Number(taxTotal),
+		shipping: Number(shippingTotal),
+		total: Number(amount?.value ?? 0)
+	}
+		:
+		{
+			subtotal: Number(breakdown.item_total!.value), //eslint-disable-line @typescript-eslint/no-non-null-assertion
+			total: Number(amount?.value ?? 0)
+		};
+}
 /**
  * Gets order from paypal of the given orderID. MUST BE CALLED ON THE SERVER.
  * @param orderID ID of the order we are interested in
  * @returns Order we are interested in
+ * @throws Error if paypal throws an error
+ * @throws Error if the order does not have a purchase unit
+ * @throws Error if the payment method is not supported
  */
-
-export const getPayPalOrder = async (orderID: string) => {
+export async function getPayPalOrder (orderID: string) {
 	const accessToken = await generateAccessToken();
 	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${orderID}`, {
 		method: 'GET',
@@ -29,8 +54,9 @@ export const getPayPalOrder = async (orderID: string) => {
 	const order_data: OrderResponseBody = await response.json();
 
 	// shipping
-	const purchaseUnit0 = order_data.purchase_units![0];
-	const shipping = purchaseUnit0.shipping;
+	if(!order_data.purchase_units) throw new Error("No purchase units found in order, thus we have an invalid order");
+	const orderPurchaseUnit = order_data.purchase_units[0];
+	const shipping = orderPurchaseUnit.shipping;
 	// CUSTOMER INFORMATION
 	const customerInfo = {
 		fullName: shipping?.name?.full_name || null,
@@ -41,33 +67,15 @@ export const getPayPalOrder = async (orderID: string) => {
 
 	// customerInfo.
 	if (["APPROVED", "COMPLETED"].includes(order_data.status ?? "")) {
-		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		customerInfo.paymentMethod = Object.keys(order_data.payment_source!)[0] as "card" | "paypal";
-		//eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		customerInfo.payment_source = order_data.payment_source;
+		const paymentMethod = order_data.payment_source ? Object.keys(order_data.payment_source)[0] : null;
+		if(!isPaymentMethod(paymentMethod)) throw new Error("Payment method not given or supported");
+		customerInfo.paymentMethod = paymentMethod;
+		customerInfo.paymentSource = order_data.payment_source;
 	}
 
-	// PAYMENT INFORMATION
-	const amount = purchaseUnit0.amount;
-	const breakdown = (amount?.breakdown)!; //eslint-disable-line @typescript-eslint/no-non-null-assertion
-	const taxTotal = breakdown.tax_total?.value;
-	const shippingTotal = breakdown.shipping?.value;
-	const finalcalculated = !!taxTotal && !!shippingTotal;
-	const priceInfo = finalcalculated ? {
-		subtotal: Number(breakdown.item_total!.value), //eslint-disable-line @typescript-eslint/no-non-null-assertion
-		tax: Number(taxTotal),
-		shipping: Number(shippingTotal),
-		total: Number(amount?.value ?? 0)
-	} as Price
-		:
-		{
-			subtotal: Number(breakdown.item_total!.value), //eslint-disable-line @typescript-eslint/no-non-null-assertion
-			total: Number(amount?.value ?? 0)
-		} as FormPrice;
-
 	// products
-	const products: OrderProduct[] = purchaseUnit0.items!.map(i => {
-		const { productID, variantID } = decodePayPalSKU(i.sku!);
+	const products: OrderProduct[] = orderPurchaseUnit.items!.map(i => {
+		const { productID, variantID } = decodeProductVariantPayPalSku(i.sku!);
 		return {
 			PID: productID,
 			quantity: Number(i.quantity),
@@ -75,19 +83,20 @@ export const getPayPalOrder = async (orderID: string) => {
 		};
 	});
 
-	// redirect link
-	const redirect_link = order_data.links?.find(v => v.rel == "approve")?.href || null;
-
-	const status = order_data.status;
-
-	return { customerInfo, priceInfo, products, redirect_link, status };
+	return {
+		PayPalCustomer: customerInfo,
+		orderPrice: calculateOrderPrice(orderPurchaseUnit),
+		products,
+		redirect_link: order_data.links?.find(v => v.rel == "approve")?.href || null,
+		status: order_data.status
+	};
 };
 
 
 
 export const updatePayPalOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getPayPalOrder(token);
-	const newPrice = await makePrice(orders.products, newAddress);
+	const newPrice = await makePrice(await fillOrderProducts(orders.products), newAddress);
 	const patchOrderBody = [
 		{
 			op: "add",
