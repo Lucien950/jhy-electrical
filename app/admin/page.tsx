@@ -11,7 +11,7 @@ import { auth } from "util/firebase/auth";
 import { db } from 'util/firebase/firestore';
 // types
 import { AdminInterface } from 'types/admin';
-import { CompletedOrderInterface, OrderInterface } from 'types/order';
+import { CompletedOrder, Order } from 'types/order';
 // UI
 import LoadingFullPage from 'components/loadingFullPage';
 import { ProductsComponent } from 'app/admin/ProductsComponents';
@@ -77,7 +77,7 @@ const useGoogleAuth = () => {
 	return { authLoading, admin, signout }
 }
 const useOrders = () => {
-	const [allOrders, setAllOrders] = useState<OrderInterface[]>([])
+	const [allOrders, setAllOrders] = useState<Order[]>([])
 	useEffect(() => {
 		const unsubOrders = onSnapshot(
 			query(collection(db, "orders"),
@@ -86,7 +86,7 @@ const useOrders = () => {
 			(querySnapshot) => {
 				console.log(...firebaseConsoleBadge, 'Admin Orders Listing Snapshot Updated');
 				// setAllOrders(querySnapshot.docs.map(d => d.data()) as OrderInterface[])
-				const newOrders = querySnapshot.docs.map(d => UnserializeOrder(d.data() as CompletedOrderInterface, d.id))
+				const newOrders = querySnapshot.docs.map(d => UnserializeOrder(d.data() as CompletedOrder, d.id))
 				setAllOrders(newOrders)
 			},
 			(error) => {

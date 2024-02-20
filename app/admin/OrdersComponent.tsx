@@ -2,7 +2,7 @@
 import { Fragment, useState } from "react"
 import Link from "next/link"
 // firebase
-import { OrderInterface } from 'types/order'
+import { Order } from 'types/order'
 // UI
 import { AnimatePresence, motion } from "framer-motion"
 import { Tab } from "@headlessui/react"
@@ -10,7 +10,7 @@ import { doc, setDoc } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 
 
-const TableRow = ({ order }: { order: OrderInterface }) => {
+const TableRow = ({ order }: { order: Order }) => {
 	const toggleComplete = () => {
 		setDoc(doc(db, 'orders', order.firebaseOrderID), { completed: !order.completed }, { merge: true });
 	}
@@ -46,7 +46,7 @@ const TableRow = ({ order }: { order: OrderInterface }) => {
 	)
 }
 
-export const OrdersComponent = ({ allOrders }: { allOrders: OrderInterface[] }) => {
+export const OrdersComponent = ({ allOrders }: { allOrders: Order[] }) => {
 	const incompleteOrders = allOrders.filter(o => !o.completed)
 	const completeOrders = allOrders.filter(o => o.completed)
 

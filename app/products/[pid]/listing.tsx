@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 // types
-import { ProductInterface, ProductVariantListing } from 'types/product'
+import { Product, ProductVariantListing } from 'types/product'
 import { OrderProduct } from 'types/order';
 // util
 import { findProductVariant } from 'util/product'
@@ -23,7 +23,7 @@ import { analytics } from "util/firebase/analytics";
 import { addToCart } from 'util/redux/cart.slice';
 import { useAppDispatch, useAppSelector } from 'util/redux/hooks';
 
-const useProductQuantity = (product: ProductInterface, selectedProductVariant: ProductVariantListing) => {
+const useProductQuantity = (product: Product, selectedProductVariant: ProductVariantListing) => {
 	const cart = useAppSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
 	const [quantityInCart, setCartQuantity] = useState(0)
 	const [availableToAdd, setAvailableToAdd] = useState(0)
@@ -39,7 +39,7 @@ const useProductQuantity = (product: ProductInterface, selectedProductVariant: P
 	return { availableToAdd, selectedQuantity, setSelectedQuantity }
 }
 
-export default function ProductListing({ product }: { product: ProductInterface }) {
+export default function ProductListing({ product }: { product: Product }) {
 	const router = useRouter()
 	const dispatch = useAppDispatch()
 

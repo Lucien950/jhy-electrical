@@ -4,7 +4,7 @@ import { AnimatePresence, Variants, motion } from "framer-motion"
 import { Oval } from "react-loader-spinner"
 import ProductComponentsCSS from "./ProductsComponents.module.css"
 // firebase
-import { ProductInterface } from "types/product"
+import { Product } from "types/product"
 import { Transition } from "@headlessui/react"
 import ProductModal from "./ProductModal"
 import { useEffect, useState } from "react"
@@ -16,9 +16,9 @@ import { storage } from "util/firebase/storage"
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage"
 
 type ProductElement = {
-	product: ProductInterface,
+	product: Product,
 	deleteProduct: (id: string) => Promise<void>,
-	openEditModal: (p: ProductInterface) => void,
+	openEditModal: (p: Product) => void,
 	itemVariants: Variants
 }
 const ProductElement = ({ product, deleteProduct, openEditModal, itemVariants }: ProductElement) => {
@@ -78,7 +78,7 @@ const ProductElement = ({ product, deleteProduct, openEditModal, itemVariants }:
 }
 
 const useProducts = () => {
-	const [products, setProducts] = useState<ProductInterface[]>([])
+	const [products, setProducts] = useState<Product[]>([])
 	const [productsLoaded, setProductsLoaded] = useState(false)
 	useEffect(() => {
 		getAllProducts()
@@ -87,7 +87,7 @@ const useProducts = () => {
 				setProductsLoaded(true)
 			})
 	}, [])
-	const insertProduct = (newP: ProductInterface) => {
+	const insertProduct = (newP: Product) => {
 		setProducts(p => {
 			const removedP = p.filter(p => p.firestoreID !== newP.firestoreID)
 			const sortedProducts = sortProductsByName([...removedP, newP])
@@ -122,9 +122,9 @@ const useProducts = () => {
 }
 const useModal = () => {
 	// edit product modal
-	const [modalProduct, setModalProduct] = useState<Partial<ProductInterface> | null>(null)
+	const [modalProduct, setModalProduct] = useState<Partial<Product> | null>(null)
 	const [modalMode, setModalMode] = useState<string | null>(null)
-	const openEditModal = (defaultProduct: ProductInterface) => { setModalMode("edit"); setModalProduct(defaultProduct) }
+	const openEditModal = (defaultProduct: Product) => { setModalMode("edit"); setModalProduct(defaultProduct) }
 	const openNewModal = () => { setModalMode("new"); setModalProduct({}) }
 	const closeModal = () => { setModalMode(null); setModalProduct(null) }
 	return { modalProduct, modalMode, openEditModal, openNewModal, closeModal }

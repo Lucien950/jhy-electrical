@@ -9,10 +9,10 @@ import { fillOrderProducts } from "util/order"
 import { getPayPalOrder } from 'server/paypal'
 import { submitPayPalOrder } from "app/api/paypal/order/submit/submitOrderFetch"
 import { Timestamp } from "firebase-admin/firestore"
-import { CompletedOrderInterface, OrderProduct } from "types/order"
+import { CompletedOrder, OrderProduct } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"
-import { FirebaseProductInterface } from "types/product"
+import { FirebaseProduct } from "types/product"
 import { submitOrderProps, submitOrderRes } from "."
 import { apiHandler } from "server/api"
 
@@ -21,7 +21,7 @@ const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price,
 	const id = await db.runTransaction(async (transaction) => {
 		// add order to firebase
 		const cart = await fillOrderProducts(orderProducts)
-		const newOrder: CompletedOrderInterface = {
+		const newOrder: CompletedOrder = {
 			products: cart,
 			orderPrice: priceInfo,
 			completed: false,
@@ -36,7 +36,7 @@ const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price,
 		transaction.create(newOrderDoc, newOrder)
 	
 		await Promise.allSettled(cart.map(async p => {
-			const updateDoc = (await db.collection("products").doc(p.PID).get()).data() as FirebaseProductInterface
+			const updateDoc = (await db.collection("products").doc(p.PID).get()).data() as FirebaseProduct
 			const updateVariant = updateDoc.variants.find(v => v.sku === p.variantSKU)
 			if (!updateVariant) throw "Variant not found"
 			updateVariant.quantity -= p.quantity

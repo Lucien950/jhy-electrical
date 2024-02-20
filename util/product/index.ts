@@ -3,7 +3,7 @@ import { getDownloadURL, ref } from "firebase/storage";
 import { db } from "util/firebase/firestore"
 import { storage } from "util/firebase/storage";
 // type
-import { FirebaseProductInterface, ProductInterface, ProductVariantInterface } from "types/product";
+import { FirebaseProduct, Product, ProductWithVariant } from "types/product";
 
 /**
  * Given a Document aquired from firestore, The full product interface
@@ -11,8 +11,8 @@ import { FirebaseProductInterface, ProductInterface, ProductVariantInterface } f
  * @returns The full product interface
  * @throws Error if the product does not exist
  */
-const _fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<ProductInterface> => {
-	const product = productDoc.data() as FirebaseProductInterface | undefined
+const _fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<Product> => {
+	const product = productDoc.data() as FirebaseProduct | undefined
 	if(!product) {
 		throw new Error(`Product ${productDoc.id} does not exist`)
 	}
@@ -55,7 +55,7 @@ export const getProductsByIDs = async (pids: string[]) => await Promise.all(pids
  */
 export const getAllProducts = async () => {
 	const productsQS = await getDocs(collection(db, "products"));
-	const products: ProductInterface[] = await Promise.all(productsQS.docs.map(doc => _fillProductDoc(doc)))
+	const products: Product[] = await Promise.all(productsQS.docs.map(doc => _fillProductDoc(doc)))
 	return products
 }
 
@@ -63,15 +63,15 @@ export const getAllProducts = async () => {
  * @param p List of products to sort
  * @returns List of sorted products by name
  */
-export const sortProductsByName = (p: ProductInterface[]) => p.sort((a, b) => {
+export const sortProductsByName = (p: Product[]) => p.sort((a, b) => {
 	if (a.productName.toUpperCase() < b.productName.toUpperCase()) return -1
 	else if (a.productName.toUpperCase() > b.productName.toUpperCase()) return 1
 	else return 0
 })
 
-export const findProductVariant = (p: ProductInterface, variantID: string) => p.variants.find(v => v.sku === variantID)
+export const findProductVariant = (p: Product, variantID: string) => p.variants.find(v => v.sku === variantID)
 
-export const flattenProductVariant = async (p: ProductInterface, variantSKU: string): Promise<ProductVariantInterface> => {
+export const flattenProductVariant = async (p: Product, variantSKU: string): Promise<ProductWithVariant> => {
 	const { variants, ...productData } = p
 		const selectedVariant = variants.find(v => v.sku == variantSKU)
 		if (!selectedVariant) throw new Error(`Variant ${variantSKU} does not exist`)
@@ -81,7 +81,7 @@ export const flattenProductVariant = async (p: ProductInterface, variantSKU: str
 		}
 }
 
-export const getProductVariant = async (PID: string, SKU: string): Promise<ProductVariantInterface> => flattenProductVariant(await getProductByID(PID), SKU)
+export const getProductVariant = async (PID: string, SKU: string): Promise<ProductWithVariant> => flattenProductVariant(await getProductByID(PID), SKU)
 
 export const generateNewSKU = () =>
 	Array.from({ length: 16 })

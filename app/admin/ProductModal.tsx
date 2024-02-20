@@ -4,7 +4,7 @@ import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { DragEventHandler, FormEvent, useRef, useState } from "react";
 import { Oval } from "react-loader-spinner";
 import { toast } from "react-toastify";
-import { FirebaseProductInterface, ProductInterface, ProductVariantListing, validateProduct } from "types/product";
+import { FirebaseProduct, Product, ProductVariantListing, validateProduct } from "types/product";
 import { firebaseConsoleBadge } from "util/firebase/console";
 import { db } from "util/firebase/firestore";
 import { storage } from "util/firebase/storage";
@@ -127,9 +127,9 @@ const stopProp: DragEventHandler<HTMLDivElement> = (e) => { e.preventDefault(); 
 
 type ProductModalType = {
 	closeModal: () => void,
-	defaultModalProduct: Partial<ProductInterface>,
+	defaultModalProduct: Partial<Product>,
 	defaultMode: string | null,
-	insertProduct: (p: ProductInterface) => void
+	insertProduct: (p: Product) => void
 }
 const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProduct }: ProductModalType) => {
 	// data state
@@ -172,7 +172,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 		// FIRESTORE Update
 		//eslint-disable-next-line @typescript-eslint/no-unused-vars, prefer-const
 		let { productImageURL: newProductImageURL, firestoreID: newFirestoreID, ...rest } = modalProduct
-		const firestoreAddProduct = rest as FirebaseProductInterface
+		const firestoreAddProduct = rest as FirebaseProduct
 
 		try {
 			setUploading(true)
@@ -208,7 +208,7 @@ const ProductModal = ({ closeModal, defaultModalProduct, defaultMode, insertProd
 			...firestoreAddProduct,
 			firestoreID: newFirestoreID,
 			productImageURL: newProductImageURL
-		} as ProductInterface)
+		} as Product)
 
 		setUploading(false)
 		closeModal()

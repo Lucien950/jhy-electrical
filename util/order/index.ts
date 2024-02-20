@@ -1,13 +1,7 @@
-import { CompletedOrderInterface, OrderInterface, OrderProduct } from "types/order"
+import { CompletedOrder, Order, OrderProduct } from "types/order"
 import { flattenProductVariant, getProductByID } from "../product"
 
-// export const fillOrder = async (preOrder: BaseOrderInterface, orderID: string): Promise<OrderInterface> => ({
-// 	...UnserializeOrder(preOrder, orderID),
-// 	products: await fillOrderProducts(preOrder.products)
-// })
-
-
-export function UnserializeOrder(preOrder: CompletedOrderInterface, orderID: string): OrderInterface;
+export function UnserializeOrder(preOrder: CompletedOrder, orderID: string): Order;
 export function UnserializeOrder(preOrder: any, orderID: string) {
 	const { dateTS, ...rest } = preOrder
 	return {

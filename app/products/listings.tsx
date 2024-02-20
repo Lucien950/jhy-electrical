@@ -11,14 +11,14 @@ import { Oval } from "react-loader-spinner";
 import { useEffect, useState } from "react";
 import { getAllProducts } from "util/product";
 // types
-import { ProductInterface } from "types/product";
+import { Product } from "types/product";
 
 const opacityVariants = {
   hide: { opacity: 0 },
   show: { opacity: 1 }
 }
 
-const ProductItem = ({ product }: { product: ProductInterface }) => {
+const ProductItem = ({ product }: { product: Product }) => {
   // const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
   const backgroundColours = ["bg-slate-800"]
   const backgroundColour = backgroundColours[Math.round(seedRandom(product.firestoreID)() * (backgroundColours.length - 1))]
@@ -86,8 +86,8 @@ export default function Listings() {
     setFilter({ ...filter, [property]: !filter[property] })
   }
 
-  const [products, setProducts] = useState([] as ProductInterface[])
-  const [displayProducts, setDisplayProducts] = useState([] as ProductInterface[])
+  const [products, setProducts] = useState([] as Product[])
+  const [displayProducts, setDisplayProducts] = useState([] as Product[])
 
 
   useEffect(() => { getAllProducts().then(setProducts) }, [])

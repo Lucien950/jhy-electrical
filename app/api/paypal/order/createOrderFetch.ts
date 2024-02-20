@@ -9,9 +9,9 @@ import { CreateOrderRequestBody, OrderResponseBody } from "@paypal/paypal-js"
 import { generateAccessToken } from "server/paypal";
 import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
-import { ProductVariantInterface } from "types/product";
+import { ProductWithVariant } from "types/product";
 
-export async function createOrderAPICall(paymentInformation: FormPrice, productIDS: (OrderProduct & {product: ProductVariantInterface})[], express: boolean) {
+export async function createOrderAPICall(paymentInformation: FormPrice, productIDS: (OrderProduct & {product: ProductWithVariant})[], express: boolean) {
 	const orderInformation = {
 		intent: "AUTHORIZE",
 		purchase_units: [{

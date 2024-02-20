@@ -18,11 +18,11 @@ import Price from "components/price"
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 import { encodeProductVariantPayPalSku } from "server/paypal/sku"
-import { ProductVariantInterface } from "types/product"
+import { ProductWithVariant } from "types/product"
 import { getProductVariant } from "util/product"
 
 const useProduct = (op: OrderProduct) => {
-	const [product, setProduct] = useState<ProductVariantInterface>()
+	const [product, setProduct] = useState<ProductWithVariant>()
 	const [productLoading, setProductLoading] = useState(true)
 	const [productNotFound, setProductNotFound] = useState(false)
 	useMemo(() => {

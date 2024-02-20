@@ -4,7 +4,7 @@ import { Price, FormPrice } from "types/price"
 import { Address } from "types/address";
 import { Decimal } from 'decimal.js';
 import { PROVINCE_NAME_TO_CODE } from "types/address";
-import { ProductVariantInterface } from "types/product";
+import { ProductWithVariant } from "types/product";
 
 const TAX_RATE_BY_PROVINCE = new Map(Object.entries({
 	"AB": 0.05,
@@ -37,17 +37,17 @@ const DECIMAL_ZERO = new Decimal(0)
  * @param products Products in the order, MUST HAVE product field filled in
  * @param address Price of the order, subtotal, total (no shipping, no tax)
  */
-async function makePrice(products: (OrderProduct & {product: ProductVariantInterface})[]): Promise<FormPrice>;
+async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[]): Promise<FormPrice>;
 /**
  * @param products Products in the order, MUST HAVE product field filled in
  * @returns Price of the order, subtotal, shipping, tax, total
  */
-async function makePrice(products: (OrderProduct & {product: ProductVariantInterface})[], address: subAddr): Promise<Price>;
+async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: subAddr): Promise<Price>;
 /**
  * @param products Products in the order, MUST HAVE product field filled in
  * @returns Price of the order, subtotal, shipping, tax, total
  */
-async function makePrice(products: (OrderProduct & {product: ProductVariantInterface})[], address: Address): Promise<Price>;
+async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: Address): Promise<Price>;
 /**
  * Given products and a optional location, calculates the price of the order
  * @param products Products in the order, MUST HAVE product field filled in
@@ -55,7 +55,7 @@ async function makePrice(products: (OrderProduct & {product: ProductVariantInter
  * @returns Price of the order, subtotal, shipping, tax, total
  * @throws If the province is not valid
  */
-async function makePrice(products: (OrderProduct & {product: ProductVariantInterface})[], address?: subAddr | Address) {
+async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address?: subAddr | Address) {
 	const subtotal = products.reduce((acc, p) => {
 		const pQuant = new Decimal(p.quantity)
 		const pPrice = new Decimal(p.product!.price)

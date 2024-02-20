@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { OrderProduct } from "types/order"
-import { ProductVariantInterface } from "types/product"
+import { ProductWithVariant } from "types/product"
 import { getProductVariant } from "util/product"
 
 
@@ -11,7 +11,7 @@ import { getProductVariant } from "util/product"
  */
 export const useProduct = (orderProduct: OrderProduct) => {
 	const [productLoading, setProductLoading] = useState(true)
-	const [product, setProduct] = useState<ProductVariantInterface | null>(null)
+	const [product, setProduct] = useState<ProductWithVariant | null>(null)
 	useEffect(() => {
 		setProductLoading(true)
 		getProductVariant(orderProduct.PID, orderProduct.variantSKU).then(p=> {

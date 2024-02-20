@@ -1,7 +1,7 @@
 import Joi from "joi"
 import { validateSchemaFunctionsGenerator } from "util/typeValidate"
 
-export interface FirebaseProductInterface {
+export interface FirebaseProduct {
 	productName: string,
 	description: string,
 
@@ -24,7 +24,7 @@ export interface ProductVariantListing {
 	price: number,
 	color: string,
 }
-export interface ProductInterface extends FirebaseProductInterface {
+export interface Product extends FirebaseProduct {
 	productImageURL: string, //for fetching from storage
 	firestoreID: string,
 }
@@ -54,9 +54,9 @@ export const productSchema = Joi.object({
 	productImageURL: Joi.string(),
 	firestoreID: Joi.string(),
 })
-export const validateProduct = validateSchemaFunctionsGenerator<ProductInterface>(productSchema)
+export const validateProduct = validateSchemaFunctionsGenerator<Product>(productSchema)
 
-export interface ProductVariantInterface extends Omit<ProductInterface & ProductVariantListing, "variants"> { }
+export interface ProductWithVariant extends Omit<Product & ProductVariantListing, "variants"> { }
 export const productVariantSchema = Joi.object({
 	productName: Joi.string().required(),
 	description: Joi.string().required(),

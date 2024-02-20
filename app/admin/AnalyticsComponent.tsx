@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { OrderInterface } from 'types/order';
+import { Order } from 'types/order';
 
-const AnalyticsComponent = ({ allOrders }: { allOrders: OrderInterface[] }) => {
+const AnalyticsComponent = ({ allOrders }: { allOrders: Order[] }) => {
 	const [last48OrderCount, setLast48OrderCount] = useState<number>()
 	const [lastWeekOrderCount, setLastWeekOrderCount] = useState<number>()
 

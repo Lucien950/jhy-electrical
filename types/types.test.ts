@@ -4,7 +4,7 @@ import { validateCard, validateCardError } from "types/card"
 import { validateCustomer, validateFinalCustomerError, Customer } from "./customer"
 import { validateAddress, validateAddressError, validatePostalCode, validatePostalCodeError } from "types/address"
 // types
-import { FirebaseProductInterface, ProductInterface, validateProduct, validateProductError } from "./product"
+import { FirebaseProduct, Product, validateProduct, validateProductError } from "./product"
 import { OrderProduct, OrderProductFilled, validateOrderProduct, validateOrderProductError, validateOrderProductFilled, validateOrderProductFilledError } from "./order"
 import { Address } from "@paypal/paypal-js"
 
@@ -221,7 +221,7 @@ describe("Final Customer Validation", () => {
 	})
 })
 
-const successProductWithoutImageAndID: FirebaseProductInterface = {
+const successProductWithoutImageAndID: FirebaseProduct = {
 	productName: "Test Product",
 	description: "Test Description",
 

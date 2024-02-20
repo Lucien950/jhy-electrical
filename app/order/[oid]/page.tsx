@@ -4,7 +4,7 @@ import Head from "next/head";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "util/firebase/firestore"
 
-import { CompletedOrderInterface } from "types/order";
+import { CompletedOrder } from "types/order";
 import Price from "components/price";
 import seedRandom from "seedrandom";
 import { CardElement } from "components/cardElement";
@@ -23,7 +23,7 @@ export default async function Order({ params }: { params: { oid?: string } }) {
 	const orderDoc = await getDoc(doc(db, "orders", params.oid))
 	if (!orderDoc.exists()) return <OrderNotFound />
 
-	const stringOrder = UnserializeOrder(orderDoc.data() as CompletedOrderInterface, params.oid)
+	const stringOrder = UnserializeOrder(orderDoc.data() as CompletedOrder, params.oid)
 
 	const order = {
 		...stringOrder,
