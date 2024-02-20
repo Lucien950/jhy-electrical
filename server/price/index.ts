@@ -36,25 +36,25 @@ const getTaxRate = (province: string) => {
  * @param products Products in the order, MUST HAVE product field filled in
  * @param address Price of the order, subtotal, total (no shipping, no tax)
  */
-async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[]): Promise<FormPrice>;
+export async function calculatePrice(products: (OrderProduct & {product: ProductWithVariant})[]): Promise<FormPrice>;
 /**
  * @param products Products in the order, MUST HAVE product field filled in
  * @returns Price of the order, subtotal, shipping, tax, total
  */
-async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: subAddr): Promise<Price>;
+export async function calculatePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: subAddr): Promise<Price>;
 /**
  * @param products Products in the order, MUST HAVE product field filled in
  * @returns Price of the order, subtotal, shipping, tax, total
  */
-async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: Address): Promise<Price>;
+export async function calculatePrice(products: (OrderProduct & {product: ProductWithVariant})[], address: Address): Promise<Price>;
 /**
  * Given products and a optional location, calculates the price of the order
  * @param products Products in the order, MUST HAVE product field filled in
- * @param postal_code Postal Code of delievery
+ * @param address 
  * @returns Price of the order, subtotal, shipping, tax, total
  * @throws If the province is not valid
  */
-async function makePrice(products: (OrderProduct & {product: ProductWithVariant})[], address?: subAddr | Address) {
+export async function calculatePrice(products: (OrderProduct & {product: ProductWithVariant})[], address?: subAddr | Address) {
 	const subtotal = products.reduce((acc, p) => {
 		const pQuant = new Decimal(p.quantity)
 		const pPrice = new Decimal(p.product!.price)
@@ -84,5 +84,3 @@ async function makePrice(products: (OrderProduct & {product: ProductWithVariant}
 		total: total.toNumber()
 	}
 }
-
-export {makePrice}

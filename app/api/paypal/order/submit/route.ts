@@ -77,4 +77,4 @@ async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	return { firebaseOrderID }
 }
 
-export const POST = (req: Request): Response => apiHandler(req, submitOrderHandler)
+export const POST = (req: Request) => apiHandler(req, submitOrderHandler)

@@ -16,7 +16,7 @@ describe("String Tests", () => {
 })
 
 import Joi from "joi"
-import { OrderProductFilled } from "types/order"
+import { OrderProduct } from "types/order"
 import { validateSchema, validateSchemaFunctionsGenerator } from "util/typeValidate"
 describe("Type Validation Tests", () => {
 	const objSchema = Joi.object({
@@ -49,7 +49,7 @@ describe("Type Validation Tests", () => {
 })
 
 import * as calculateShippingModule from "../server/price/calculateShipping"
-import { makePrice } from "../server/price"
+import { calculatePrice } from "../server/price"
 import { Decimal } from "decimal.js"
 
 describe("Price Tests", () => {
@@ -77,7 +77,7 @@ describe("Price Tests", () => {
 
 
 	it("should add accurately", async () => {
-		const res = await makePrice(products)
+		const res = await calculatePrice(products)
 		expect(res.subtotal).toBe(0.07)
 		expect(res.total).toBe(0.07)
 		expect(res.shipping).toBe(undefined)
@@ -85,7 +85,7 @@ describe("Price Tests", () => {
 	})
 
 	it("should add accurately with shipping and taxes", async () => {
-		const res = await makePrice(products, {
+		const res = await calculatePrice(products, {
 			postal_code: "TESTPOSTALCODE",
 			admin_area_1: "Ontario"
 		})

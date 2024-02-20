@@ -1,6 +1,6 @@
 // types
 import { OrderProduct, orderProductSchema } from 'types/order';
-import { makePrice } from 'server/price';
+import { calculatePrice } from 'server/price';
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/order';
 import { createOrderAPICall } from 'app/api/paypal/order/createOrderFetch';
@@ -28,7 +28,7 @@ async function createOrderHandler(req: Request): Promise<createOrderRes> {
 	const products = await fillOrderProducts(orderProducts) //this validates that all products are valid
 	if (!products.every(orderProduct => orderProduct.quantity <= orderProduct.product.quantity))
 		throw new Error("Not enough stock for one of the products")
-	const paymentInformation = await makePrice(products)
+	const paymentInformation = await calculatePrice(products)
 	const order = await createOrderAPICall(paymentInformation, products, express)
 
 	return {
@@ -39,4 +39,4 @@ async function createOrderHandler(req: Request): Promise<createOrderRes> {
 	}
 }
 
-export const POST = (req: Request): Response => apiHandler(req, createOrderHandler)
+export const POST = (req: Request) => apiHandler(req, createOrderHandler)

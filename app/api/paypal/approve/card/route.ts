@@ -13,4 +13,4 @@ async function approveCardHandler(req: Request) {
 	return { newPaymentSource } as approveCardRes
 }
 
-export const PATCH = (req: Request): Response => apiHandler(req, approveCardHandler)
+export const PATCH = (req: Request) => apiHandler(req, approveCardHandler)

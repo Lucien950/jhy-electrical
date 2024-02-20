@@ -9,13 +9,13 @@ import { Address } from "types/address";
 import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 import { DEVENV } from "types/env";
 import { decodeProductVariantPayPalSku } from "./sku";
-import { makePrice } from "server/price";
+import { calculatePrice } from "server/price";
 import { toB64 } from "util/string";
 import { ArrayElement } from "types/util";
 import { fillOrderProducts } from "util/order";
 
 
-const calculateOrderPrice = (orderPurchaseUnit: ArrayElement<NonNullable<OrderResponseBody["purchase_units"]>>): FormPrice => {
+const makeFormPrice = (orderPurchaseUnit: ArrayElement<NonNullable<OrderResponseBody["purchase_units"]>>): FormPrice => {
 	const amount = orderPurchaseUnit.amount;
 	const breakdown = (amount?.breakdown)!; //eslint-disable-line @typescript-eslint/no-non-null-assertion
 	const taxTotal = breakdown.tax_total?.value;
@@ -85,7 +85,7 @@ export async function getPayPalOrder (orderID: string) {
 
 	return {
 		PayPalCustomer: customerInfo,
-		orderPrice: calculateOrderPrice(orderPurchaseUnit),
+		orderPrice: makeFormPrice(orderPurchaseUnit),
 		products,
 		redirect_link: order_data.links?.find(v => v.rel == "approve")?.href || null,
 		status: order_data.status
@@ -96,7 +96,7 @@ export async function getPayPalOrder (orderID: string) {
 
 export const updatePayPalOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
 	const orders = await getPayPalOrder(token);
-	const newPrice = await makePrice(await fillOrderProducts(orders.products), newAddress);
+	const newPrice = await calculatePrice(await fillOrderProducts(orders.products), newAddress);
 	const patchOrderBody = [
 		{
 			op: "add",

@@ -11,4 +11,4 @@ async function approvePayPalHandler(req: Request): Promise<approvePayPalRes> {
 	return { redirect_link: redirectObj.href }
 }
 
-export const PATCH = (req: Request): Response => apiHandler(req, approvePayPalHandler)
+export const PATCH = (req: Request) => apiHandler(req, approvePayPalHandler)
