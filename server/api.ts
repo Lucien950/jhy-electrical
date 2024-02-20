@@ -27,17 +27,16 @@ export class Error500 extends Error {
  * @param handler API Handler
  * @returns Response of API
  */
-export function apiHandler<T>(req: Request, handler: (req: Request) => T): Response {
+export async function apiHandler<T>(req: Request, handler: (req: Request) => T): Promise<Response> {
   try {
-    handler(req)
-    return new Response();
+    return new Response(JSON.stringify({res: await handler(req)}));
   } catch (e) {
     if(e instanceof Error400) {
-      return new Response(e.message, { status: e.code })
+      return new Response(JSON.stringify({err: e.message}), { status: e.code, headers: {"Content-Type": "application/json"} })
     } else if(e instanceof Error500) {
-      return new Response(e.message, { status: e.code })
+      return new Response(JSON.stringify({err: e.message}), { status: e.code, headers: {"Content-Type": "application/json"} })
     } else {
-      return new Response('Unknown error', { status: 500 })
+      return new Response(JSON.stringify({err: 'SERVER: Unknown error' + (e instanceof Error ? e.message : "")}), { status: 500 })
     }
   }
 }

@@ -15,7 +15,7 @@ const updateOrderAddressPropsSchema = Joi.object({
 	fullName: Joi.string().required().min(1).max(300)
 })
 async function updateOrderAddressHandler(req: Request) {
-	const { token, address: newAddress, fullName } = validateSchema<updateOrderAddressProps>(req.body, updateOrderAddressPropsSchema)
+	const { token, address: newAddress, fullName } = validateSchema<updateOrderAddressProps>(await req.json(), updateOrderAddressPropsSchema)
 
 	const newPrice = await updatePayPalOrderAddress(token, newAddress, fullName)
 	return { newPrice } as updateOrderAddressRes

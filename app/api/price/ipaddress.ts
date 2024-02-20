@@ -31,7 +31,7 @@ interface ipAPILocation {
 }
 
 export const getAddressFromIP = async (clientIP: string): Promise<subAddr> => {
-  const fetchURL = clientIP !== "::1" ? `https://ipapi.co/${clientIP}/json` : "https://ipapi.co/198.96.61.52/json"
+	const fetchURL = clientIP !== "::1" ? `https://ipapi.co/${clientIP}/json` : "https://ipapi.co/198.96.61.52/json"
   // address
   const ipRes = await fetch(fetchURL)
   if (!ipRes.ok) throw await ipRes.json()

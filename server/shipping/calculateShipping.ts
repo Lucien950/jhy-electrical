@@ -19,7 +19,7 @@ export const calculateShippingProduct = async (product: productPackageInfo, dest
 	if (product.id === "VuvgEZpucwwjiGrHrKEt") return new Decimal(0.01)
 	
 	const [height, width, length] = [product.width, product.height, product.length].sort()
-	const rates = await cpc.getRates({
+	const rates: {priceDetails: {due: number}}[] = await cpc.getRates({
 		parcelCharacteristics: {
 			weight: product.weight,
 			dimensions: { length, width, height }
@@ -32,7 +32,7 @@ export const calculateShippingProduct = async (product: productPackageInfo, dest
 		}
 	})
 	if (rates == undefined) throw new Error("Canada Post API cannot find rates for this package")
-	const minimumPrice = new Decimal(Math.min(...rates.map((r: any) => r.priceDetails.due)))
+	const minimumPrice = new Decimal(Math.min(...rates.map(r => r.priceDetails.due)))
 	return minimumPrice.times(new Decimal(product.quantity))
 }
 

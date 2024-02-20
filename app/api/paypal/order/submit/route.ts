@@ -53,7 +53,7 @@ const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price,
 
 async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	// INPUT VALIDATION
-	const { token } = validateSchema<submitOrderProps>(req.body, Joi.object({ token: Joi.string().required() }))
+	const { token } = validateSchema<submitOrderProps>(await req.json(), Joi.object({ token: Joi.string().required() }))
 	// make sure order is well formed before authorizing the payment
 	const { products: orderProducts, orderPrice: priceInfo, PayPalCustomer: customerInfo, status } = await getPayPalOrder(token)
 

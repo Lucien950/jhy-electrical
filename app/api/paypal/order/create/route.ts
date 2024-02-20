@@ -23,7 +23,7 @@ export type createOrderRes = {
  */
 async function createOrderHandler(req: Request): Promise<createOrderRes> {
 	// INPUTS
-	const { products: orderProducts, express = false } = validateSchema<createOrderProps>(req.body, createOrderPropsSchema)
+	const { products: orderProducts, express = false } = validateSchema<createOrderProps>(await req.json(), createOrderPropsSchema)
 	// fill products
 	const products = await fillOrderProducts(orderProducts) //this validates that all products are valid
 	if (!products.every(orderProduct => orderProduct.quantity <= orderProduct.product.quantity))
