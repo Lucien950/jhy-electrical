@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useEffect, useState } from "react"
 import { usePathname } from "next/navigation";
 // animations
-import { AnimatePresence, motion, useScroll } from "framer-motion"
+import { motion, useScroll } from "framer-motion"
 // components
 import LinkBoxes from "components/linkBoxes"
 import { CartIcon } from "./cartIcon"
