@@ -17,7 +17,7 @@
     "@tippyjs/react": "^4.2.6",
     "canadapost-api": "^1.2.0",
     "decimal.js": "^10.4.3",
-    "firebase": "^10.8.0",
+    "firebase": "^10.6.0",
     "firebase-admin": "^12.0.0",
     "framer-motion": "^11.0.3",
     "joi": "^17.12.1",
