@@ -72,10 +72,7 @@ export const NavBar = () => {
 								{cartSize}
 							</span>
 						</Transition>
-
-						<AnimatePresence>
-							{isCartOpen && <CartDropdown cart={cart} closeCart={closeCart} />}
-						</AnimatePresence>
+						<CartDropdown cart={cart} closeCart={closeCart} isCartOpen={isCartOpen} />
 					</div>
 				</div>
 			</nav>

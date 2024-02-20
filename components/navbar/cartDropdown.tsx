@@ -7,7 +7,6 @@ import { useDispatch } from "react-redux"
 import { removeFromCart } from "util/redux/cart.slice"
 // UI
 import { Transition } from "@headlessui/react"
-import { motion } from "framer-motion"
 import { toast } from "react-toastify"
 import { Oval } from "react-loader-spinner"
 // util
@@ -95,7 +94,9 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 	)
 }
 
-export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeCart: () => void }) => {
+export const CartDropdown = ({ cart, closeCart, isCartOpen }: {
+	cart: OrderProduct[], closeCart: () => void, isCartOpen: boolean
+}) => {
 	const router = useRouter()
 	useEffect(() => { logEvent(analytics(), "view_item_list") }, [])
 
@@ -112,12 +113,11 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 	}
 
 	return (
-		<motion.div
-			className="absolute right-0 top-[140%] min-h-[8rem] min-w-[22rem]
-			bg-white text-black drop-shadow-md rounded-md overflow-hidden select-text [&>*]:p-4"
-			initial="closed" animate="opened" exit="closed" variants={{ closed: { y: -5, opacity: 0 }, opened: { y: 0, opacity: 1 }, }}
-			transition={{ ease: "easeInOut", duration: 0.15 }}
-			id="cartDropDown"
+		<div
+			className={`absolute right-0 top-[140%] min-h-[8rem] min-w-[22rem]
+			invisible opacity-0 translate-y-2 data-[iscartopen=true]:visible data-[iscartopen=true]:translate-y-0 data-[iscartopen=true]:opacity-100
+			bg-white text-black drop-shadow-md rounded-md overflow-hidden select-text [&>*]:p-4 transition-all duration-200`}
+			id="cartDropDown" data-iscartopen={isCartOpen}
 		>
 			<div className="flex flex-row items-center gap-x-3">
 				<h1 className="text-xl font-medium">Cart</h1>
@@ -152,6 +152,6 @@ export const CartDropdown = ({ cart, closeCart }: { cart: OrderProduct[], closeC
 					</div>
 				</>
 			}
-		</motion.div>
+		</div>
 	)
 }
