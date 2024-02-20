@@ -13,11 +13,6 @@ import { getAllProducts } from "util/product";
 // types
 import { Product } from "types/product";
 
-const opacityVariants = {
-  hide: { opacity: 0 },
-  show: { opacity: 1 }
-}
-
 const ProductItem = ({ product }: { product: Product }) => {
   // const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
   const backgroundColours = ["bg-slate-800"]
@@ -63,12 +58,20 @@ const ProductItem = ({ product }: { product: Product }) => {
   )
 }
 
-const FilterButton = ({ isSelected, setFilterActive, children }: { children: (string | JSX.Element)[], isSelected: boolean, setFilterActive: () => void }) => {
+const FilterButton = ({ isSelected, setFilterActive, children }: {
+  children: (string | JSX.Element)[],
+  isSelected: boolean,
+  setFilterActive: () => void
+}) => {
   return (
-    <button className={`flex flex-row items-center gap-x-2 py-2 px-4 border-[3px] rounded-full leading-none
-			transition-colors duration-75 hover:bg-blue-200 hover:border-blue-300
-			outline-none focus:ring-4
-			${isSelected && "bg-blue-400 border-blue-500 text-white fill-white"}`}
+    <button className={`flex flex-row items-center gap-x-2 py-2 px-4 border-[2px] rounded-lg leading-none
+      transition-colors duration-75
+    data-[isselected="false"]:hover:bg-blue-200 data-[isselected="false"]:hover:border-blue-300
+    data-[isselected="false"]:border-slate-200 data-[isselected="false"]:text-slate-400 data-[isselected="false"]:fill-slate-400
+    data-[isselected="true"]:bg-blue-100 data-[isselected="true"]:border-blue-400 data-[isselected="true"]:text-slate-700 data-[isselected="true"]:fill-slate-700
+    data-[isselected="true"]:hover:bg-blue-200
+			outline-none focus:ring`}
+      data-isselected={isSelected}
       onClick={setFilterActive} id="residential"
     >
       {children}
@@ -106,15 +109,17 @@ export default function Listings() {
 						p-2 lg:p-4 sm:mb-6 mx-2 lg:mx-4 rounded-md bg-white sm:shadow-md"
         >
           {/* funnel */}
-          <svg className="w-8 h-8 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" /></svg>
+          <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
+          </svg>
           <FilterButton isSelected={filter.residential} setFilterActive={() => handleFilter("residential")}>
-            {<ResidentialIcon className="w-7 h-7" />} Residential
+            {<ResidentialIcon className="w-6 h-6" />} Residential
           </FilterButton>
           <FilterButton isSelected={filter.industrial} setFilterActive={() => handleFilter("industrial")}>
-            {<IndustrialIcon className="w-7 h-7" />} Industrial
+            {<IndustrialIcon className="w-6 h-6" />} Industrial
           </FilterButton>
           <FilterButton isSelected={filter.commercial} setFilterActive={() => handleFilter("commercial")}>
-            {<CommercialIcon className="w-7 h-7" />} Commercial
+            {<CommercialIcon className="w-6 h-6" />} Commercial
           </FilterButton>
         </div>
 
@@ -122,18 +127,19 @@ export default function Listings() {
           {
             products.length === 0
               ?
-              <motion.div className="grid place-items-center py-10" initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloading"}>
+              <motion.div className="grid place-items-center py-10" initial="hide" animate="show" exit="hide" variants={{
+                hide: { opacity: 0 }, show: { opacity: 1 }
+              }} key={"productsloading"}>
                 <Oval height={100} strokeWidth={8} />
               </motion.div>
               :
               <motion.div
-                className="
-									grid
-									grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
-									gap-x-2 2xl:gap-x-4 gap-y-6
-									px-2 lg:px-4
-								"
-                layout initial="hide" animate="show" exit="hide" variants={opacityVariants} key={"productsloaded"}
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5
+                gap-x-2 2xl:gap-x-4 gap-y-6
+                px-2 lg:px-4"
+                layout initial="hide" animate="show" exit="hide" variants={{
+                  hide: { opacity: 0 }, show: { opacity: 1 }
+                }} key={"productsloaded"}
               >
                 {displayProducts.map((product) =>
                   <ProductItem product={product} key={product.firestoreID} />

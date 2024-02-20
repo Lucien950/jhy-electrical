@@ -15,7 +15,7 @@ export default function Home() {
 					<Image src="/home_splash.webp" fill className="object-cover" alt="Splash Screen" priority />
 				</div>
 			</div>
-			<div className="max-w-7xl mx-auto px-2 py-4">
+			<div className="max-w-5xl mx-auto px-2 py-4">
 				<LinkBoxes />
 			</div>
 		</div>

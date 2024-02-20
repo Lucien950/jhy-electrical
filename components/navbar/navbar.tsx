@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Fragment, useEffect, useState } from "react"
 import { usePathname } from "next/navigation";
 // animations
-import { motion, useScroll } from "framer-motion"
+import { motion } from "framer-motion"
 // components
 import LinkBoxes from "components/linkBoxes"
 import { CartIcon } from "./cartIcon"
@@ -24,19 +24,22 @@ export const NavBar = () => {
 	const [isMobileMenuOpen, toggleMobileMenuOpen, closeMobileMenu] = useMenu(["mobileMenu", "mobileMenuButton"]);
 	const [isCartOpen, toggleCartOpen, closeCart] = useMenu(["cartDropDown", "cartButton"])
 	// styling
-	const { scrollY } = useScroll();
 	const [scrolled, setScrolled] = useState(false)
-	useEffect(() => { return scrollY.on("change", (v) => setScrolled(v > 10)) }, [scrollY])
-	const inWhiteNavs = ["/", "/order/[pid]", "/products", "/services"].includes(pathName)
-	const inNoNavbar = ["/checkout", "/admin"].includes(pathName)
+	useEffect(() => {
+		const scrollhandler = () => setScrolled(window.scrollY > 10)
+		document.addEventListener("scroll", scrollhandler)
+		return () => document.removeEventListener("scroll", scrollhandler)
+	}, [])
+	const shouldUseWhiteNav = ["/", "/order/[pid]", "/products", "/services"].includes(pathName)
+	const shouldHiveNavBar = ["/checkout", "/admin"].includes(pathName)
 
 	return (
 		<>
 			<nav
 				className={`fixed top-0 left-0 w-full z-20 select-none
 			transition-[background-color,color,translate,box-shadow] delay-[0s,0s,0.7s,0s] duration-200
-			${scrolled ? "bg-white shadow-md" : "bg-transparent"} ${!scrolled && inWhiteNavs ? "text-white" : "text-black"}`}
-				style={{ translate: `0 ${inNoNavbar ? "-100%" : "0%"}`, }}
+			${scrolled ? "bg-white bg-opacity-70 backdrop-blur-lg shadow-md" : "bg-transparent"} ${!scrolled && shouldUseWhiteNav ? "text-white" : "text-black"}`}
+				style={{ translate: `0 ${shouldHiveNavBar ? "-100%" : "0%"}`, }}
 			>
 				<div className="flex flex-row items-center place-content-between p-2 md:px-6">
 					{/* HAM BUTTON + IMAGE */}
