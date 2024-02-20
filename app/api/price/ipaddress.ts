@@ -1,4 +1,4 @@
-import { subAddr } from "server/priceUtil"
+import { subAddr } from "types/address";
 
 interface ipAPILocation {
 	ip: string;
@@ -30,8 +30,10 @@ interface ipAPILocation {
 	org: string;
 }
 
+const invalidIps = ["::1", "::ffff:127.0.0.1"]
+
 export const getAddressFromIP = async (clientIP: string): Promise<subAddr> => {
-	const fetchURL = clientIP !== "::1" ? `https://ipapi.co/${clientIP}/json` : "https://ipapi.co/198.96.61.52/json"
+	const fetchURL = !invalidIps.includes(clientIP) ? `https://ipapi.co/${clientIP}/json` : "https://ipapi.co/198.96.61.52/json"
   // address
   const ipRes = await fetch(fetchURL)
   if (!ipRes.ok) throw await ipRes.json()

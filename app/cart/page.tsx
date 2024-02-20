@@ -202,7 +202,7 @@ export default function Cart() {
 								{/* Subtotal */}
 								<div className="flex flex-row mb-4">
 									<p className="flex-1"> Subtotal </p>
-									<Price price={subtotal} className="place-self-end" />
+									{!loadingPrice ? <Price price={subtotal} className="place-self-end" /> : <CostLoader />}
 								</div>
 								<div className="flex flex-row mb-4">
 									<p className="flex-1"> Shipping </p>

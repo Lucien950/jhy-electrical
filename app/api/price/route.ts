@@ -1,5 +1,5 @@
 import { fillOrderProducts } from "util/order";
-import { makePrice } from "server/priceUtil";
+import { makePrice } from "server/price";
 import { validateSchema } from "util/typeValidate";
 import { headers } from "next/headers";
 import { getAddressFromIP } from "./ipaddress";

@@ -1,6 +1,6 @@
 // types
 import { OrderProduct, orderProductSchema } from 'types/order';
-import { makePrice } from 'server/priceUtil';
+import { makePrice } from 'server/price';
 import { OrderResponseBody } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/order';
 import { createOrderAPICall } from 'app/api/paypal/order/createOrderFetch';

@@ -9,7 +9,7 @@ import { Address } from "types/address";
 import { PAYPALDOMAIN } from "app/api/paypal/paypalDomain";
 import { DEVENV } from "types/env";
 import { decodeProductVariantPayPalSku } from "./sku";
-import { makePrice } from "server/priceUtil";
+import { makePrice } from "server/price";
 import { toB64 } from "util/string";
 import { ArrayElement } from "types/util";
 import { fillOrderProducts } from "util/order";

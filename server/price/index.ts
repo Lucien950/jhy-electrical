@@ -1,9 +1,11 @@
-import { OrderProduct } from "types/order"
-import { calculateShippingProducts, productPackageInfo } from "./shipping/calculateShipping"
-import { Price, FormPrice } from "types/price"
-import { Address } from "types/address";
+// util
 import { Decimal } from 'decimal.js';
-import { PROVINCE_NAME_TO_CODE } from "types/address";
+import { calculateShippingProducts } from "./calculateShipping"
+import { productPackageInfo } from "./canadapost";
+// types
+import { OrderProduct } from "types/order"
+import { Price, FormPrice } from "types/price"
+import { Address, PROVINCE_NAME_TO_CODE, subAddr } from "types/address";
 import { ProductWithVariant } from "types/product";
 
 const TAX_RATE_BY_PROVINCE = new Map(Object.entries({
@@ -29,9 +31,6 @@ const getTaxRate = (province: string) => {
 	}
 	return TAX_RATE_BY_PROVINCE.get(provinceCode)!
 }
-
-export type subAddr = Pick<Required<Address>, "postal_code" | "admin_area_1">
-const DECIMAL_ZERO = new Decimal(0)
 
 /**
  * @param products Products in the order, MUST HAVE product field filled in
@@ -60,15 +59,15 @@ async function makePrice(products: (OrderProduct & {product: ProductWithVariant}
 		const pQuant = new Decimal(p.quantity)
 		const pPrice = new Decimal(p.product!.price)
 		return acc.add(pQuant.times(pPrice))
-	}, DECIMAL_ZERO)
+	}, new Decimal(0))
 
 	let shipping: Decimal | undefined = undefined;
 	let tax: Decimal | undefined = undefined;
 	if(address) {
 		if(address.postal_code) {
-			shipping = await calculateShippingProducts(products.map(p => {
+			shipping = await calculateShippingProducts(products.map((p): productPackageInfo => {
 						const { weight, length, height, width } = p.product!
-						return { weight, length, height, width, quantity: p.quantity, id: p.PID } as productPackageInfo
+						return { weight, length, height, width, quantity: p.quantity, id: p.PID }
 					}), address.postal_code)
 		}
 		const province = address.admin_area_1
