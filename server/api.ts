@@ -36,7 +36,8 @@ export async function apiHandler<T>(req: Request, handler: (req: Request) => T):
     } else if(e instanceof Error500) {
       return new Response(JSON.stringify({err: e.message}), { status: e.code, headers: {"Content-Type": "application/json"} })
     } else {
-      return new Response(JSON.stringify({err: 'SERVER: Unknown error' + (e instanceof Error ? e.message : "")}), { status: 500 })
+      console.error(e)
+      return new Response(JSON.stringify({err: `SERVER: Unknown error ${JSON.stringify(e)}`}), { status: 500 })
     }
   }
 }
