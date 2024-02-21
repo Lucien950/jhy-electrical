@@ -23,6 +23,7 @@ export interface ProductVariantListing {
 	quantity: number,
 	price: number,
 	color: string,
+	images: string[],
 }
 export interface Product extends FirebaseProduct {
 	productImageURL: string, //for fetching from storage
