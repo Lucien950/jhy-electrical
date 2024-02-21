@@ -50,3 +50,4 @@ export interface PayPalSimpleError {
  * https://developer.paypal.com/docs/api/orders/v2/#definition-payment_source_response
  */
 export type PaymentSource = components["schemas"]["payment_source_response"]
+export type PayPalAuthorizePaymentSuccess = components["schemas"]["order_authorize_response"]

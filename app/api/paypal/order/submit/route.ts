@@ -6,8 +6,7 @@ import { Price, validatePrice } from "types/price"
 // util
 import { fillOrderProducts } from "util/order"
 // paypal
-import { getPayPalOrder } from 'server/paypal'
-import { submitPayPalOrder } from "app/api/paypal/order/submit/submitOrderFetch"
+import { generateAccessToken, getPayPalOrder } from 'server/paypal'
 import { Timestamp } from "firebase-admin/firestore"
 import { CompletedOrder, OrderProduct } from "types/order"
 // firebase
@@ -15,6 +14,8 @@ import { db } from "server/firebase/firestore"
 import { FirebaseProduct } from "types/product"
 import { submitOrderProps, submitOrderRes } from "."
 import { apiHandler } from "server/api"
+import { PAYPALDOMAIN } from "../../paypalDomain"
+import { PayPalAuthorizePaymentSuccess } from "types/paypal"
 
 const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price, customerInfo: Customer, paypalToken: string) => {
 	// TODO finish this
@@ -50,6 +51,15 @@ const firebaseLogOrder = async (orderProducts: OrderProduct[], priceInfo: Price,
 
 	return id
 }
+
+const submitPayPalOrder = async (token: string): Promise<PayPalAuthorizePaymentSuccess> => {
+	// authorize payment
+	const options = { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await generateAccessToken()}` }, };
+	const authResponse = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${token}/authorize`, options);
+	const data = await authResponse.json();
+	if (!authResponse.ok) throw data;
+	return data;
+};
 
 async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	// INPUT VALIDATION

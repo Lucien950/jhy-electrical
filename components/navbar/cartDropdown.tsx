@@ -1,7 +1,8 @@
+"use client"
 // react
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { MouseEventHandler, useEffect, useMemo, useState } from "react"
+import { Fragment, MouseEventHandler, useEffect, useMemo, useState } from "react"
 // redux
 import { useDispatch } from "react-redux"
 import { removeFromCart } from "util/redux/cart.slice"
@@ -18,23 +19,7 @@ import Price from "components/price"
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 import { encodeProductVariantPayPalSku } from "server/paypal/sku"
-import { ProductWithVariant } from "types/product"
-import { getProductVariant } from "util/product"
-
-const useProduct = (op: OrderProduct) => {
-	const [product, setProduct] = useState<ProductWithVariant>()
-	const [productLoading, setProductLoading] = useState(true)
-	const [productNotFound, setProductNotFound] = useState(false)
-	useMemo(() => {
-		setProductLoading(true)
-		setProductNotFound(false)
-		getProductVariant(op.PID, op.variantSKU)
-			.then(p => setProduct(p))
-			.catch(() => { setProductNotFound(true) })
-			.finally(() => { setProductLoading(false) })
-	}, [op.PID, op.variantSKU])
-	return { product, productLoading, productNotFound }
-}
+import { useProduct } from "components/hooks/useProduct"
 
 const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 	const dispatch = useDispatch()
@@ -54,25 +39,24 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 			</div>
 		)
 	}
-
 	return (
 		<div className="flex flex-row items-center justify-between">
 			<div className="flex flex-row items-center gap-x-4 flex-1">
 				<div className="h-10 w-12">
 					{
 						productLoading || !product
-						? <div className="h-full w-full bg-gray-200 animate-pulse" />
-						: <img src={product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
+							? <div className="h-full w-full bg-gray-200 animate-pulse" />
+							: <img src={product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
 					}
 				</div>
 				{
 					productLoading || !product
-					?
-					<div className="w-1/2 self-start">
-						<div className="h-3 bg-gray-200 animate-pulse mb-1" />
-						<div className="h-3 bg-gray-200 animate-pulse" />
-					</div>
-					: <p>{product.productName}</p>
+						?
+						<div className="w-1/2 self-start">
+							<div className="h-3 bg-gray-200 animate-pulse mb-1" />
+							<div className="h-3 bg-gray-200 animate-pulse" />
+						</div>
+						: <p>{product.productName}</p>
 				}
 			</div>
 			{
@@ -95,12 +79,14 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 }
 
 export const CartDropdown = ({ cart, closeCart, isCartOpen }: {
-	cart: OrderProduct[], closeCart: () => void, isCartOpen: boolean
+	cart: OrderProduct[],
+	closeCart: () => void,
+	isCartOpen: boolean
 }) => {
 	const router = useRouter()
 	useEffect(() => { logEvent(analytics(), "view_item_list") }, [])
 
-	const [checkoutLoading, setCheckoutLoading] = useState(false)
+	const [checkoutLoading, setCheckoutLoading] = useState(true)
 	const goToCheckout = async () => {
 		setCheckoutLoading(true)
 		try {
@@ -141,10 +127,11 @@ export const CartDropdown = ({ cart, closeCart, isCartOpen }: {
 								Checkout
 							</div>
 							<Transition
-								className="absolute left-[50%] translate-x-[-50%] transition-[transform,top]"
+								className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]"
 								show={checkoutLoading}
-								enterFrom="top-[100%] translate-y-0" enterTo="top-[50%] translate-y-[-50%]"
-								leaveFrom="top-[50%] translate-y-[-50%]" leaveTo="top-[100%] translate-y-0"
+								enter="transition-transform" leave="transition-transform"
+								enterFrom="translate-y-[120%]" enterTo="translate-y-[-50%]"
+								leaveFrom="translate-y-[-50%]" leaveTo="translate-y-[120%]"
 							>
 								<Oval height={20} strokeWidth={10} color="#28a9fa" secondaryColor="#28a9fa" />
 							</Transition>
