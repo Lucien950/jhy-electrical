@@ -24,6 +24,7 @@ import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
 import { useAppSelector } from "util/redux/hooks";
 import { useProduct } from "components/hooks/useProduct";
+import { useLazyEffect } from "util/useLazyEffect";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 	const { product, productLoading } = useProduct(orderProduct)
@@ -102,7 +103,7 @@ const usePrice = (cart: OrderProduct[]) => {
 	const [total, setTotal] = useState<number | null>(null)
 	const [loadingPrice, setLoadingPrice] = useState(false)
 
-	useEffect(() => {
+	useLazyEffect(() => {
 		(async () => {
 			if (cart.length === 0) return
 			setLoadingPrice(true)
@@ -122,7 +123,7 @@ const usePrice = (cart: OrderProduct[]) => {
 			}
 			setLoadingPrice(false)
 		})()
-	}, [cart]) //eslint-disable-line react-hooks/exhaustive-deps
+	}, [cart], 1000) //eslint-disable-line react-hooks/exhaustive-deps
 
 	return { subtotal, tax, shipping, total, loadingPrice }
 }
