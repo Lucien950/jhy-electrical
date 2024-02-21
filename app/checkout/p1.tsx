@@ -10,13 +10,12 @@ import { Oval } from 'react-loader-spinner';
 import { displayVariants } from "./checkoutFormVariants";
 import { toast } from "react-toastify";
 // types
-import { FormCustomer, Customer, PaymentMethods } from "types/customer";
+import { FormCustomer, PaymentMethods } from "types/customer";
 import { FormCard } from "types/card";
 // paypal hosted fields
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
 import { PaymentSource } from "types/paypal";
-import { WithRequired } from "types/util";
 
 const RadioOption = ({ children, value }: { children: (disabled: boolean) => JSX.Element, value: string }) => {
 	return (

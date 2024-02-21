@@ -2,7 +2,7 @@
 // react
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Fragment, MouseEventHandler, useEffect, useMemo, useState } from "react"
+import { MouseEventHandler, useEffect, useState } from "react"
 // redux
 import { useDispatch } from "react-redux"
 import { removeFromCart } from "util/redux/cart.slice"
