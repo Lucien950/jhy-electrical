@@ -1,7 +1,5 @@
 import { doc, DocumentData, getDoc, DocumentSnapshot, getDocs, collection } from "firebase/firestore";
-import { getDownloadURL, ref } from "firebase/storage";
 import { db } from "util/firebase/firestore"
-import { storage } from "util/firebase/storage";
 // type
 import { FirebaseProduct, Product, ProductWithVariant } from "types/product";
 
@@ -18,8 +16,7 @@ const _fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Prom
 	}
 	return {
 		...product,
-		firestoreID: productDoc.id,
-		productImageURL: await getDownloadURL(ref(storage, `products/${productDoc.id}`)),
+		firestoreID: productDoc.id
 	}
 }
 

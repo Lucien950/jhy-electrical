@@ -22,6 +22,8 @@ import { analytics } from "util/firebase/analytics";
 // redux
 import { addToCart } from 'util/redux/cart.slice';
 import { useAppDispatch, useAppSelector } from 'util/redux/hooks';
+import { getDownloadURL, ref } from 'firebase/storage';
+import { storage } from 'util/firebase/storage';
 
 const useProductQuantity = (product: Product, selectedProductVariant: ProductVariantListing) => {
 	const cart = useAppSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
@@ -44,40 +46,49 @@ export default function ProductListing({ product }: { product: Product }) {
 	const dispatch = useAppDispatch()
 
 	// Quantity Adjuster
-	const [selectedVariant, setSelectedVariant] = useState(product.variants[0].sku)
-	const selectedProductVariant: ProductVariantListing = findProductVariant(product, selectedVariant)!
+	const [selectedVariantSKU, setSelectedVariantSKU] = useState(product.variants[0].sku)
+	const selectedProductVariant: ProductVariantListing = findProductVariant(product, selectedVariantSKU)!
 	const { availableToAdd, selectedQuantity, setSelectedQuantity } = useProductQuantity(product, selectedProductVariant)
 
-
-	// BUTTON HANDLERS
+	// Add to cart handling
 	const newOrderProduct = {
 		PID: product.firestoreID,
-		variantSKU: selectedVariant,
+		variantSKU: selectedVariantSKU,
 		quantity: selectedQuantity
 	}
-	const handleAddToCart = () => {
-		if (availableToAdd <= 0) return toast.error("No more stock") // should be unreachable code, if button is acting right.
-		dispatch(addToCart(newOrderProduct))
-		logEvent(analytics(), "add_to_cart", { PID: product.firestoreID })
-	}
 	const [paypalProcessing, setPayPalProcessing] = useState(false)
-	const handlePayPalExpressCheckout = async () => {
-		setPayPalProcessing(true)
-		try {
-			const { redirect_link } = await createPayPalOrder([newOrderProduct], true)
-			router.push(redirect_link)
-		}
-		catch (e) {
-			toast.error((e as Error).message, { theme: "colored" })
-		} finally {
-			setPayPalProcessing(false)
-		}
-	}
+
+	// image selection
+	const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+	const [currentVariantAllImageURLs, setCurrentVariantAllImageURLs] = useState<string[] | null>([])
+	const [loadingImageURLs, setLoadingImageURLs] = useState(false)
+	useEffect(() => {
+		setLoadingImageURLs(true)
+		Promise.all(selectedProductVariant.images.map(url => getDownloadURL(ref(storage, `products/${url}`))))
+			.then(v => {
+				setCurrentVariantAllImageURLs(v)
+				setLoadingImageURLs(false)
+			})
+	}, [selectedVariantSKU])
 
 	return (
 		<div className="grid grid-cols-1 gap-y-4 lg:grid-cols-2 gap-x-24 mt-36 px-8 container mx-auto">
 			<div>
-				<img src={product.productImageURL} alt={`Product Image for ${product.productName}`} className="w-full" />
+				{
+					currentVariantAllImageURLs &&
+					<img src={currentVariantAllImageURLs[selectedImageIndex]} alt={`Product Image for ${product.productName}`} className="w-full h-[37rem] object-contain" />
+				}
+				<div className="flex flex-row gap-x-2">
+					{
+						currentVariantAllImageURLs &&
+						currentVariantAllImageURLs.map((url, i) => (
+							<img key={`variant-images-${selectedVariantSKU}-${i}`} src={url} alt={`Product Image for ${product.productName}`}
+								className="w-20 h-20 object-contain border-2 rounded-md hover:cursor-pointer hover:scale-105 transition-[transform,box-shadow] border-slate-200 shadow-sm hover:shadow-lg"
+								onClick={() => setSelectedImageIndex(i)}
+							/>
+						))
+					}
+				</div>
 			</div>
 			<div>
 				<div className="p-4">
@@ -93,8 +104,8 @@ export default function ProductListing({ product }: { product: Product }) {
 					{/* variant selector */}
 					<div className="flex flex-row gap-x-2">
 						{product.variants.map(v =>
-							<button key={v.sku} onClick={() => setSelectedVariant(v.sku)}
-								className="p-2 border-2 hover:bg-neutral-200 data-[selected='true']:font-bold data-[selected='true']:border-blue-500" data-selected={v.sku === selectedVariant}
+							<button key={v.sku} onClick={() => setSelectedVariantSKU(v.sku)}
+								className="p-2 border-2 hover:bg-neutral-200 data-[selected='true']:font-bold data-[selected='true']:border-blue-500" data-selected={v.sku === selectedVariantSKU}
 							>
 								{v.label || "Default"}
 							</button>
@@ -118,11 +129,26 @@ export default function ProductListing({ product }: { product: Product }) {
 					<AddCartButton
 						has_stock={availableToAdd > 0}
 						soldOut={selectedQuantity === 0}
-						handleAddToCart={handleAddToCart}
+						handleAddToCart={() => {
+							if (availableToAdd <= 0) return toast.error("No more stock") // should be unreachable code, if button is acting right.
+							dispatch(addToCart(newOrderProduct))
+							logEvent(analytics(), "add_to_cart", { PID: product.firestoreID })
+						}}
 					/>
 					<PayPalCartButton
 						has_stock={availableToAdd > 0}
-						handlePayPalExpressCheckout={handlePayPalExpressCheckout}
+						handlePayPalExpressCheckout={async () => {
+							setPayPalProcessing(true)
+							try {
+								const { redirect_link } = await createPayPalOrder([newOrderProduct], true)
+								router.push(redirect_link)
+							}
+							catch (e) {
+								toast.error((e as Error).message, { theme: "colored" })
+							} finally {
+								setPayPalProcessing(false)
+							}
+						}}
 						selectedQuantity={selectedQuantity}
 						paypalProcessing={paypalProcessing}
 					/>

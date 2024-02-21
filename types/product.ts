@@ -26,7 +26,7 @@ export interface ProductVariantListing {
 	images: string[],
 }
 export interface Product extends FirebaseProduct {
-	productImageURL: string, //for fetching from storage
+	// productImageURL: string, //for fetching from storage
 	firestoreID: string,
 }
 const productVariantListingSchema = Joi.object({
@@ -52,23 +52,12 @@ export const productSchema = Joi.object({
 
 	variants: Joi.array().items(productVariantListingSchema).required().min(1),
 
-	productImageURL: Joi.string(),
 	firestoreID: Joi.string(),
 })
 export const validateProduct = validateSchemaFunctionsGenerator<Product>(productSchema)
 
 export interface ProductWithVariant extends Omit<Product & ProductVariantListing, "variants"> { }
-export const productVariantSchema = Joi.object({
-	productName: Joi.string().required(),
-	description: Joi.string().required(),
-
-	commercial: Joi.boolean(),
-	industrial: Joi.boolean(),
-	residential: Joi.boolean(),
-
-	productImageURL: Joi.string(),
-	firestoreID: Joi.string(),
-
+export const productVariantSchema = productSchema.append({
 	sku: Joi.string().required(),
 	label: Joi.string().required(),
 
@@ -80,4 +69,5 @@ export const productVariantSchema = Joi.object({
 	quantity: Joi.number().required().greater(0),
 	price: Joi.number().required().greater(0),
 	color: Joi.string().required(),
+	images: Joi.array().items(Joi.string()).required(), // TODO make length ge than 1
 })

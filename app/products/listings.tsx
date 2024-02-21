@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { getAllProducts } from "util/product";
 // types
 import { Product } from "types/product";
+import { useProductImageURL } from "components/hooks/useProduct";
 
 const ProductItem = ({ product }: { product: Product }) => {
   // const backgroundColours = ["bg-blue-200", "bg-neutral-300", "bg-zinc-800", "bg-lime-900"]
@@ -20,11 +21,15 @@ const ProductItem = ({ product }: { product: Product }) => {
 
   const minPrice = Math.min(...product.variants.map(v => v.price)), maxPrice = Math.max(...product.variants.map(v => v.price))
   const onePrice = product.variants.length === 1 || product.variants.map(v => v.price).every((val, _, arr) => val === arr[0])
+  
+  const productImageURL = useProductImageURL(product.variants[0].images[0])
   return (
     <motion.div layout>
       <Link href={`products/${product.firestoreID}`} className="block focus:ring-8 focus:outline-none rounded-lg">
         <div className={`grid place-items-center py-10 lg:py-14 mb-2 lg:mb-6 group ${backgroundColour} rounded-lg`}>
-          <img src={product.productImageURL} alt="" className="h-24 md:h-32 group-hover:scale-105 transition-transform" />
+          <div className="h-24 md:h-32">
+            { productImageURL && <img src={productImageURL} alt="" className="w-full h-full group-hover:scale-105 transition-transform" />}
+          </div>
         </div>
       </Link>
 
