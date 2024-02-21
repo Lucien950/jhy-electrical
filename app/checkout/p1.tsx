@@ -16,6 +16,7 @@ import { FormCard } from "types/card";
 import { InputField } from "components/inputField";
 import { CardElement } from "components/cardElement";
 import { PaymentSource } from "types/paypal";
+import { WithRequired } from "types/util";
 
 const RadioOption = ({ children, value }: { children: (disabled: boolean) => JSX.Element, value: string }) => {
 	return (
@@ -85,7 +86,7 @@ const CardForm = ({ setCardInfo }: {
 )
 
 const CardDisplay = ({ cardSource, removeCard }: {
-	cardSource: Customer["paymentSource"]["card"],
+	cardSource: NonNullable<PaymentSource["card"]>,
 	removeCard: () => void,
 }) => (
 	<>
@@ -184,7 +185,7 @@ export default function PaymentForm({ checkoutPayPalCustomer, paymentSubmitLoadi
 	p1DataValid: boolean,
 	setP1DataValid: (s: boolean) => void,
 	returnP0: () => void,
-	formSubmit: (pm: PaymentMethods, ps: unknown) => void,
+	formSubmit: (ps: PaymentSource | null, pm: PaymentMethods, fd: unknown) => void,
 }) {
 	const [paymentMethod, setPaymentMethod] = useState<PaymentMethods | null>(checkoutPayPalCustomer.paymentMethod || null)
 	
@@ -215,9 +216,9 @@ export default function PaymentForm({ checkoutPayPalCustomer, paymentSubmitLoadi
 				}
 				
 				if (paymentMethod == PaymentMethods.Card) {
-					formSubmit(PaymentMethods.Card, cardForm)
+					formSubmit(existingPaymentSource, PaymentMethods.Card, cardForm)
 				} else {
-					formSubmit(PaymentMethods.PayPal, null)
+					formSubmit(existingPaymentSource, PaymentMethods.PayPal, null)
 				}
 			}}>
 				{/* Payment Method Select */}
@@ -227,9 +228,9 @@ export default function PaymentForm({ checkoutPayPalCustomer, paymentSubmitLoadi
 					<AnimatePresence mode="wait">
 						<motion.div initial="hidden" animate="visible" exit="hidden" variants={displayVariants} key={`${paymentMethod}|${existingPaymentSource === null}`}>
 							{ existingPaymentSource !== null && paymentMethod == PaymentMethods.PayPal &&
-								<PayPalDisplay paypalSource={existingPaymentSource as NonNullable<PaymentSource['paypal']>} removePayPal={removeExistingPaymentSource} /> }
+								<PayPalDisplay paypalSource={existingPaymentSource.paypal!} removePayPal={removeExistingPaymentSource} /> }
 							{ existingPaymentSource !== null && paymentMethod == PaymentMethods.Card &&
-								<CardDisplay cardSource={existingPaymentSource as PaymentSource['card']} removeCard={removeExistingPaymentSource} /> }
+								<CardDisplay cardSource={existingPaymentSource.card!} removeCard={removeExistingPaymentSource} /> }
 							{ existingPaymentSource === null && paymentMethod == PaymentMethods.PayPal && <PayPalForm /> }
 							{ existingPaymentSource === null && paymentMethod == PaymentMethods.Card && <CardForm setCardInfo={setCardInfo} /> }
 						</motion.div>
@@ -241,7 +242,7 @@ export default function PaymentForm({ checkoutPayPalCustomer, paymentSubmitLoadi
 					{/* Submit button */}
 					<SubmitPaymentButton
 						PaymentMethod={paymentMethod}
-						NeedsApproval={existingPaymentSource !== null}
+						NeedsApproval={existingPaymentSource === null}
 						paymentSubmitLoading={paymentSubmitLoading}
 					/>
 				</div>

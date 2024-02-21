@@ -26,7 +26,7 @@ import { useAppSelector } from "util/redux/hooks";
 import { useProduct } from "components/hooks/useProduct";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
-	const {product, productLoading} = useProduct(orderProduct)
+	const { product, productLoading } = useProduct(orderProduct)
 
 	const dispatch = useDispatch()
 	const removeSelf = () => {
@@ -34,7 +34,7 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 		dispatch(removeFromCart(orderProduct.PID))
 	}
 
-	if(productLoading) {
+	if (productLoading) {
 		return (
 			<div></div> // TODO
 		)
@@ -149,18 +149,6 @@ export default function Cart() {
 	}
 	// Form Checkout
 	const [checkoutLoading, setCheckoutLoading] = useState(false)
-	const goToCheckout: MouseEventHandler<HTMLButtonElement> = async (e) => {
-		e.stopPropagation()
-		e.preventDefault()
-		setCheckoutLoading(true)
-		try {
-			console.log(cart)
-			const { orderID } = await createPayPalOrder(cart, false)
-			router.push(`/checkout?token=${orderID}`)
-		}
-		catch (e) { toast.error((e as Error).message, { theme: "colored" }) }
-		finally { setCheckoutLoading(false) }
-	}
 
 	return (
 		<>
@@ -251,7 +239,20 @@ export default function Cart() {
 									</button>
 									{/* checkout */}
 									<button className="text-lg my-2 w-full h-[50px] bg-white grid place-items-center relative group"
-										disabled={(cart.length <= 0) || checkoutLoading} onClick={goToCheckout}>
+										disabled={(cart.length <= 0) || checkoutLoading} onClick={async (e) => {
+											e.stopPropagation(); e.preventDefault()
+											setCheckoutLoading(true)
+											try {
+												const { orderID } = await createPayPalOrder(cart, false)
+												router.push(`/checkout?token=${orderID}`)
+											}
+											catch (e) {
+												console.error(e)
+												toast.error("Checkout Error, check console for details.", { theme: "colored" })
+											}
+											finally { setCheckoutLoading(false) }
+										}}
+									>
 										<Transition
 											show={checkoutLoading}
 											enter="transition-opacity duration-200"

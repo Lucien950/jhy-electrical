@@ -2,13 +2,7 @@ import { OrderProduct } from "types/order"
 import { Address } from "types/address"
 import { apiResponse } from "server/api"
 
-/**
- * Function against local paypal API endpoint
- * @param amount Amount of money to pay
- * @returns object of type createOrderAPIReturn
- * @throws Error if the orderProducts is not valid
- */
-import { createOrderProps, createOrderRes } from "app/api/paypal/order/create/route"
+import { createOrderRes, createOrderProps } from 'app/api/paypal/order/create'
 export const createPayPalOrder = async (orderProducts: OrderProduct[], express = false) => {
   // check that the products are in stock
   await Promise.all(orderProducts.map(async (orderProduct) => {
@@ -17,13 +11,13 @@ export const createPayPalOrder = async (orderProducts: OrderProduct[], express =
       throw new Error(`Product ${p.productName} (${orderProduct.PID}) is out of stock, please remove it from the cart.`)
   }))
 
-	const response = await fetch(`/api/paypal/createorder`, {
+	const response = await fetch(`/api/paypal/order/create`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ products: orderProducts, express } as createOrderProps)
 	})
 
-	const { res, err } = await response.json() as apiResponse<createOrderRes, unknown>
+	const { res, err }: apiResponse<createOrderRes, unknown> = await response.json()
 	if (response.ok) {
 		if (!res) throw new Error("This code should not be reachable, since response.ok is true")
 		if (res.orderStatus == "COMPLETED") throw new Error("REQUEST ID HAS BEEN USED")
@@ -36,7 +30,7 @@ export const createPayPalOrder = async (orderProducts: OrderProduct[], express =
 import { submitOrderProps, submitOrderRes } from "app/api/paypal/order/submit"
 import { getProductByID } from "util/product"
 export const submitOrder = async (orderID: string) => {
-	const response = await fetch("/api/paypal/submitorder", {
+	const response = await fetch("/api/paypal/order/submit", {
 		method: "POST",
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ token: orderID } as submitOrderProps)
@@ -46,19 +40,9 @@ export const submitOrder = async (orderID: string) => {
 	else throw err
 }
 
-/**
- * Interface to update order address (consequently shipping price)
- * @param orderID ID of order in question
- * @param products products to be delivered
- * @param address to this address
- * @returns 
-*/
-import { updateOrderAddressProps, updateOrderAddressRes } from "app/api/paypal/order/update/address"
-import { approveCardProps, approveCardRes } from "app/api/paypal/approve/card"
-import { FormCard, validateCard } from "types/card"
-import { approvePayPalRes } from "app/api/paypal/approve/paypal"
+import { updateOrderAddressRes, updateOrderAddressProps } from "app/api/paypal/order/update/address"
 export const updateOrderAddress = async (orderID: string, address: Address, fullName: string)=>{
-	const response = await fetch("/api/paypal/updateorder/address", {
+	const response = await fetch("/api/paypal/order/update/address", {
 		method: "PATCH",
 		headers: { "Content-Type": "application/json" },
 		body: JSON.stringify({ token: orderID, address, fullName } as updateOrderAddressProps)
@@ -70,6 +54,9 @@ export const updateOrderAddress = async (orderID: string, address: Address, full
 // https://youtu.be/fzwkkZp5WcE?t=1m30s
 // https://developer.paypal.com/docs/checkout/integrate/#6-verify-the-transaction
 
+
+import { FormCard, validateCard } from "types/card"
+import { approveCardProps, approveCardRes } from "app/api/paypal/approve/card"
 export const approveCard = async (token: string, cardInfo: Partial<FormCard>) => {
 	validateCard(cardInfo)
 	const response = await fetch("/api/paypal/approve/card", {
@@ -84,6 +71,7 @@ export const approveCard = async (token: string, cardInfo: Partial<FormCard>) =>
 	else throw err
 }
 
+import { approvePayPalRes } from "app/api/paypal/approve/paypal"
 export const approvePayPal = async (token: string) => {
 	const response = await fetch("/api/paypal/approve/paypal", {
 		method: "PATCH",

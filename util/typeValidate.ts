@@ -8,7 +8,6 @@ export function validateSchemaFunctionsGenerator<T>(schema: Joi.Schema): (c: any
 	return (candidate: any): candidate is T => {
 		const {value: _, error, warning} = schema.validate(candidate)
 		if (error) {
-			console.error(`schema validation error`, error.message)
 			throw error
 		}
 		if (warning) console.warn(warning.message)

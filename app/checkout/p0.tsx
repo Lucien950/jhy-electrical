@@ -80,9 +80,7 @@ const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, 
 	const [fullName, setFullName] = useState<string>(checkoutPayPalCustomer.fullName || "")
 	const [address, setAddress] = useState<Partial<Address>>(checkoutPayPalCustomer.address || {})
 
-	useEffect(() => {
-		setP0DataValid(validateP0FormData(fullName, address));
-	}, [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
+	useEffect(() => setP0DataValid(validateP0FormData(fullName, address)), [fullName, address]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	// We do this (instead of inside the country selector) because it is an exceptional case
 	useEffect(() => { setAddress(ad => ({ ...ad, country_code: "CA" })) }, [])
@@ -90,8 +88,9 @@ const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, 
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="shippingForm">
 			<form onSubmit={(e) => {
-				e.preventDefault()
+				e.preventDefault(); e.stopPropagation();
 				if (!p0DataValid) {
+					console.error(validateP0FormError(fullName, address))
 					return toast.error(validateP0FormError(fullName, address)?.message || "Something is wrong with the current form", { theme: "colored" })
 				}
 				formSubmit(fullName, address as Address) // 

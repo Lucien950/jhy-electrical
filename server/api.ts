@@ -31,9 +31,7 @@ export async function apiHandler<T>(req: Request, handler: (req: Request) => T):
   try {
     return new Response(JSON.stringify({res: await handler(req)}));
   } catch (e) {
-    if(e instanceof Error400) {
-      return new Response(JSON.stringify({err: e.message}), { status: e.code, headers: {"Content-Type": "application/json"} })
-    } else if(e instanceof Error500) {
+    if(e instanceof Error400 || e instanceof Error500) {
       return new Response(JSON.stringify({err: e.message}), { status: e.code, headers: {"Content-Type": "application/json"} })
     } else {
       console.error(e)

@@ -25,7 +25,7 @@ export const customerSchema = Joi.object({
 	fullName: nameSchema,
 	paymentMethod: Joi.string().valid("card", "paypal").required(),
 	// don't need to validate payment source because that is auto handled by the paypal api
-	payment_source: Joi.object({
+	paymentSource: Joi.object({
 		card: Joi.object().optional(),
 		paypal: Joi.object().optional(),
 	}).required(),

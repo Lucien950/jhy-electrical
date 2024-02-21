@@ -1,26 +1,14 @@
 // react
 import { permanentRedirect } from 'next/navigation'
-import Link from 'next/link';
 // util
 import { getPayPalOrder } from 'server/paypal';
 import { Stages, validateP0FormData, validateP1FormData } from './stages';
 // components
 import CheckoutRoot from './checkoutRoot';
-// analytics
-// TODO make it admin
-import { logEvent } from 'firebase/analytics';
-import { analytics } from 'util/firebase/analytics';
+//types
 import { FormCustomer } from 'types/customer';
-
-const HandlePayPalError = ({ paypal_error }: { paypal_error: unknown }) => (
-  <div className="w-full h-screen grid place-items-center">
-    <div>
-      <h1>Paypal Error</h1>
-      <p>{JSON.stringify(paypal_error)}</p>
-      <Link href="/cart"> <button className="underline">Go Back</button> </Link>
-    </div>
-  </div>
-)
+import { HandlePayPalError } from './paypalError';
+import { Metadata } from 'next';
 
 const getInitialStage = (CheckoutPayPalCustomer: FormCustomer): Stages => {
   const p0Done = validateP0FormData(CheckoutPayPalCustomer.fullName, CheckoutPayPalCustomer.address)
@@ -28,6 +16,11 @@ const getInitialStage = (CheckoutPayPalCustomer: FormCustomer): Stages => {
   return (p0Done && p1Done) ? Stages.P2 : (p0Done && !p1Done) ? Stages.P1 : Stages.P0
 }
 
+export const metadata: Metadata = {
+	title: "Checkout",
+	description: "Checkout page for JHY Electrical",
+}
+export const dynamic = 'force-dynamic'
 export default async function Checkout({searchParams}: {searchParams: { [key: string]: string | string[] | undefined }}) {
   const CheckoutOrderID = searchParams['token']
   if (!CheckoutOrderID || Array.isArray(CheckoutOrderID)) permanentRedirect("/cart")
@@ -40,7 +33,8 @@ export default async function Checkout({searchParams}: {searchParams: { [key: st
       status: CheckoutStatus
     } = await getPayPalOrder(CheckoutOrderID)
     if (CheckoutStatus == "COMPLETED") return <HandlePayPalError paypal_error={"Order has already been completed"} />
-    // determining initial checkout stage
+    
+    console.log("RERENDER: paypal customer", CheckoutPayPalCustomer)
     return (
       <CheckoutRoot
         CheckoutPayPalCustomer={CheckoutPayPalCustomer}
@@ -52,7 +46,6 @@ export default async function Checkout({searchParams}: {searchParams: { [key: st
     )
   }
   catch (paypal_error) {
-    logEvent(analytics(), "checkout_error_paypal_SSR")
-    return <HandlePayPalError paypal_error={paypal_error} />
+    return <HandlePayPalError paypal_error={(paypal_error as Error).message} />
   }
 }

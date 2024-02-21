@@ -2,26 +2,14 @@
 import { motion } from "framer-motion";
 import { displayVariants } from "./checkoutFormVariants";
 import { PaypalSVG } from "components/paypalSVG";
+import { CardElement } from "components/cardElement";
 import { Oval } from "react-loader-spinner";
 // types
 import { FormCustomer } from "types/customer";
-import { FormPrice, validatePrice } from "types/price";
-// react
-import { MouseEventHandler, useState } from "react";
-import { useRouter } from "next/navigation"
-// state
-import { clearCart } from 'util/redux/cart.slice';
-// firebase to write order
-import { useDispatch } from "react-redux";
-import { submitOrder } from "app/checkout/paypalClient";
-import { CardElement } from "components/cardElement";
-import { toast } from "react-toastify";
-import { logEvent } from "firebase/analytics";
-import { analytics } from "util/firebase/analytics";
-import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
+// utils
+import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { useProduct } from "components/hooks/useProduct";
-
 
 const ProductListing = ({op}: {op: OrderProduct}) => {
 	const {product, productLoading} = useProduct(op)
@@ -42,47 +30,14 @@ const ProductListing = ({op}: {op: OrderProduct}) => {
 	)
 }
 
-const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrderCart, CheckoutOrderID, goToStage }: {
+const ReviewView = ({ checkoutPayPalCustomer, checkoutOrderCart, returnP0, returnP1, formSubmit, submitOrderLoading }: {
 	checkoutPayPalCustomer: FormCustomer,
-	checkoutPayPalPrice: FormPrice,
 	checkoutOrderCart: OrderProduct[] | null,
-	goToStage: (s: number) => void,
-	CheckoutOrderID: string
+	returnP0: () => void,
+	returnP1: () => void,
+	formSubmit: () => void,
+	submitOrderLoading: boolean,
 }) => {
-	const router = useRouter()
-	const dispatch = useDispatch()
-	const [submitOrderLoading, setSubmitOrderLoading] = useState(false)
-
-	const handleOrder: MouseEventHandler<HTMLButtonElement> = async () => {
-		// for extra security
-		try {
-			validatePrice(checkoutPayPalPrice)
-		} catch (e) {
-			if (e instanceof Error) {
-				toast.error(e.message)
-				return
-			}
-			throw e
-		}
-		if (!checkoutPayPalCustomer.paymentSource) return toast.error("Payment Method Paypal does not have paypal information object")
-
-		setSubmitOrderLoading(true)
-		let firebaseOrderID;
-		try {
-			firebaseOrderID = (await submitOrder(CheckoutOrderID)).firebaseOrderID
-		}
-		catch (e) {
-			console.error(e)
-			toast.error("Submit Order Server Side Error: Check Console for more details", { theme: "colored" })
-			setSubmitOrderLoading(false)
-			return
-		}
-
-		logEvent(analytics(), "purchase")
-		dispatch(clearCart())
-		router.push(`/order/${firebaseOrderID}`)
-	}
-
 	return (
 		<motion.div variants={displayVariants} transition={{ duration: 0.08 }} initial="hidden" animate="visible" exit="hidden" key="reviewView">
 			{/* shipping address */}
@@ -99,7 +54,7 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 						</>
 					}
 				</div>
-				<button className="underline" onClick={() => goToStage(0)}>Edit</button>
+				<button className="underline" onClick={returnP0}>Edit</button>
 			</div>
 			{/* payment method */}
 			<div className="bg-gray-200 p-5 flex flex-row mb-2 items-start">
@@ -119,7 +74,7 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 						</div>
 					}
 				</div>
-				<button className="underline" onClick={() => goToStage(1)}>Edit</button>
+				<button className="underline" onClick={returnP1}>Edit</button>
 			</div>
 			{/* items */}
 			<div className="bg-gray-200 p-5 mb-2">
@@ -135,8 +90,8 @@ const ReviewView = ({ checkoutPayPalCustomer, checkoutPayPalPrice, checkoutOrder
 			</div>
 			{/* submit buttons */}
 			<div className="flex flex-row items-center justify-end gap-x-6">
-				<button className="underline" onClick={() => goToStage(1)}>Back to Payment</button>
-				<button className="bg-black p-4 px-24 text-white text-bold relative grid place-items-center" onClick={handleOrder}>
+				<button className="underline" onClick={returnP1}>Back to Payment</button>
+				<button className="bg-black p-4 px-24 text-white text-bold relative grid place-items-center" onClick={formSubmit}>
 					<Oval height={20} width={20} strokeWidth={8} strokeWidthSecondary={8} color="white" secondaryColor="white" wrapperClass={`absolute translate-x-[-60px] transition-[opacity] opacity-0 ${submitOrderLoading && "!opacity-100"}`} />
 					<span className={`absolute transition-transform ${submitOrderLoading && "translate-x-[10px]"}`}>
 						Submit Order

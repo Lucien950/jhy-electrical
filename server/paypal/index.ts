@@ -42,11 +42,11 @@ const makeFormPrice = (orderPurchaseUnit: ArrayElement<NonNullable<OrderResponse
  * @throws Error if the payment method is not supported
  */
 export async function getPayPalOrder (orderID: string) {
-	const accessToken = await generateAccessToken();
+	console.log("getPayPalOrder called")
 	const response = await fetch(`${PAYPALDOMAIN}/v2/checkout/orders/${orderID}`, {
 		method: 'GET',
 		headers: {
-			Authorization: `Bearer ${accessToken}`
+			Authorization: `Bearer ${await generateAccessToken()}`
 		}
 	});
 	if (!response.ok) throw await response.json() as PayPalError;
@@ -56,12 +56,12 @@ export async function getPayPalOrder (orderID: string) {
 	// shipping
 	if(!order_data.purchase_units) throw new Error("No purchase units found in order, thus we have an invalid order");
 	const orderPurchaseUnit = order_data.purchase_units[0];
+	console.log(order_data.purchase_units[0])
 	const shipping = orderPurchaseUnit.shipping;
 	// CUSTOMER INFORMATION
-	const customerInfo = {
-		fullName: shipping?.name?.full_name || null,
-		address: shipping?.address || null,
-	} as FormCustomer;
+	const customerInfo: FormCustomer = {}
+	if(shipping?.name?.full_name) customerInfo.fullName = shipping.name.full_name;
+	if(shipping?.address) customerInfo.address = shipping.address;
 	// little validation
 	if (shipping?.address?.country_code && shipping.address.country_code != "CA") throw new Error("Do not ship outside Canada");
 
@@ -95,8 +95,9 @@ export async function getPayPalOrder (orderID: string) {
 
 
 export const updatePayPalOrderAddress = async (token: string, newAddress: Address, fullName: string) => {
-	const orders = await getPayPalOrder(token);
-	const newPrice = await calculatePrice(await fillOrderProducts(orders.products), newAddress);
+	console.log("update address called")
+	const {products: orderProducts} = await getPayPalOrder(token);
+	const newPrice = await calculatePrice(await fillOrderProducts(orderProducts), newAddress);
 	const patchOrderBody = [
 		{
 			op: "add",
@@ -143,6 +144,7 @@ export const updatePayPalOrderAddress = async (token: string, newAddress: Addres
 		body: JSON.stringify(patchOrderBody)
 	});
 	if (!response.ok) throw await response.json() as PayPalError;
+	console.log("update address response", await response.text())
 	return newPrice;
 };
 
@@ -166,7 +168,11 @@ export const generateAccessToken = async () => {
 	};
 
 	const response = await fetch(`${PAYPALDOMAIN}/v1/oauth2/token`, options);
-	if (response.ok) return (await response.json() as PayPalAuth).access_token;
+	if (response.ok) {
+		const token = (await response.json() as PayPalAuth).access_token
+		console.log(token)
+		return token;
+	}
 	else throw await response.json() as PayPalSimpleError;
 };
 

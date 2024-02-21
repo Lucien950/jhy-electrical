@@ -77,4 +77,5 @@ async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	return { firebaseOrderID }
 }
 
+export const dynamic = 'force-dynamic'
 export const POST = (req: Request) => apiHandler(req, submitOrderHandler)

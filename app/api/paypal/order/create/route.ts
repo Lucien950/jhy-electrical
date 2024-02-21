@@ -1,23 +1,18 @@
 // types
-import { OrderProduct, orderProductSchema } from 'types/order';
+import { orderProductSchema } from 'types/order';
 import { calculatePrice } from 'server/price';
-import { OrderResponseBody } from "@paypal/paypal-js"
 import { fillOrderProducts } from 'util/order';
 import { createOrderAPICall } from 'app/api/paypal/order/createOrderFetch';
 import Joi from 'joi';
 import { validateSchema } from 'util/typeValidate';
 import { apiHandler } from 'server/api';
+import { createOrderProps } from '.';
+import { createOrderRes } from '.';
 
-export type createOrderProps = { products: OrderProduct[], express?: boolean, }
 const createOrderPropsSchema = Joi.object({
 	products: Joi.array().items(orderProductSchema).required().min(1),
 	express: Joi.boolean().optional()
 })
-export type createOrderRes = {
-	orderStatus: OrderResponseBody["status"],
-	orderID: string,
-	redirect_link: string | null,
-}
 /**
  * Create Order API Endpoint
  */
@@ -39,4 +34,5 @@ async function createOrderHandler(req: Request): Promise<createOrderRes> {
 	}
 }
 
+export const dynamic = 'force-dynamic'
 export const POST = (req: Request) => apiHandler(req, createOrderHandler)
