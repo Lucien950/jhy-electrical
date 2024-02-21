@@ -11,4 +11,5 @@ async function approvePayPalHandler(req: Request): Promise<approvePayPalRes> {
 	return { redirect_link: redirectObj.href }
 }
 
+export const dynamic = 'force-dynamic'
 export const PATCH = (req: Request) => apiHandler(req, approvePayPalHandler)

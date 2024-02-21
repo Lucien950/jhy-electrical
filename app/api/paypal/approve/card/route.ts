@@ -13,4 +13,5 @@ async function approveCardHandler(req: Request) {
 	return { newPaymentSource } as approveCardRes
 }
 
+export const dynamic = 'force-dynamic'
 export const PATCH = (req: Request) => apiHandler(req, approveCardHandler)

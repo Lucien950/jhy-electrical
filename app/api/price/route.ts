@@ -17,4 +17,5 @@ async function priceHandler(req: Request): Promise<priceAPIRes> {
 	return { price: await calculatePrice(products, address) }
 }
 
+export const dynamic = 'force-dynamic'
 export const POST = (req: Request) => apiHandler(req, priceHandler)
