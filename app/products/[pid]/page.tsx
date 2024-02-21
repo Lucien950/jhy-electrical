@@ -16,7 +16,6 @@ export async function generateMetadata({params}: {params: {pid?: string}}): Prom
 
 export default async function ProductID({params}: {params: {pid?: string}}) {
   try {
-    console.log(params.pid)
 		if (!params.pid) throw new Error("No PID provided")
 		const product = await getProductByID(params.pid)
     return <ProductListing product={product} />;

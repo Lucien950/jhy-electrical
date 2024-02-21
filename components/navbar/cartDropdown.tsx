@@ -86,7 +86,7 @@ export const CartDropdown = ({ cart, closeCart, isCartOpen }: {
 	const router = useRouter()
 	useEffect(() => { logEvent(analytics(), "view_item_list") }, [])
 
-	const [checkoutLoading, setCheckoutLoading] = useState(true)
+	const [checkoutLoading, setCheckoutLoading] = useState(false)
 	const goToCheckout = async () => {
 		setCheckoutLoading(true)
 		try {
