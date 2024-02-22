@@ -65,7 +65,7 @@ export default function ProductListing({ product }: { product: Product }) {
 	useEffect(() => {
 		setSelectedImageIndex(0)
 		setCurrentVariantAllImageURLs(null)
-		Promise.all(selectedProductVariant.images.map(url => getDownloadURL(ref(storage, `products/${url}`))))
+		Promise.all(selectedProductVariant.images.map(url => getDownloadURL(ref(storage, `products/${product.firestoreID}/${url}`))))
 			.then(v => {
 				setCurrentVariantAllImageURLs(v)
 			})

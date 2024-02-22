@@ -7,12 +7,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { useProductImageURL } from "components/hooks/useProduct";
 
-export const ProductElement = ({ product, deleteProduct, openEditModal, itemVariants }: {
+export default function ProductElement({ product, deleteProduct, openEditModal, itemVariants }: {
 	product: Product;
 	deleteProduct: (id: string) => Promise<void>;
 	openEditModal: (p: Product) => void;
 	itemVariants: Variants;
-}) => {
+}) {
 	const [deleteActive, setDeleteActive] = useState(false);
 	const [confirmDelete, setConfirmDelete] = useState(false);
 	const setConfirmOn = () => {
@@ -35,7 +35,7 @@ export const ProductElement = ({ product, deleteProduct, openEditModal, itemVari
 		setDeleteActive(false);
 	};
 
-	const productImageURL = useProductImageURL(product.variants[0].images[0]);
+	const productImageURL = useProductImageURL(`${product.firestoreID}/${product.variants[0].images[0]}`);
 	return (
 		<motion.div
 			className="flex flex-row flex-wrap lg:flex-nowrap py-4 px-3 items-center gap-x-2 rounded bg-slate-200 shadow-sm"
@@ -67,4 +67,4 @@ export const ProductElement = ({ product, deleteProduct, openEditModal, itemVari
 			</div>
 		</motion.div>
 	);
-};
+}

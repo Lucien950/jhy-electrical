@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion"
 // components
 import LinkBoxes from "components/linkBoxes"
-import { CartIcon } from "./cartIcon"
+import { CartIcon } from "components/icons";
 import { CartDropdown } from "./cartDropdown";
 import { HamButton } from "./hamButton";
 // hooks

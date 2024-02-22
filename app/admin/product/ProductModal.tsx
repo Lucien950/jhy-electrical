@@ -2,31 +2,31 @@
 import { useState } from "react";
 // ui
 import { Dialog, Transition } from "@headlessui/react";
+import ProductModalForm from "./ProductModalForm";
+import { toast } from "react-toastify";
 // types
 import { FirebaseProduct, Product, ProductVariantListing, validateFirebaseProduct, validateProduct } from "types/product";
-import { ModalModes } from "./ProductsComponent";
-import ProductModalForm from "./ProductModalForm";
-import { generateNewSKU } from "util/product";
 import { DeepPartial } from "types/util";
-import { toast } from "react-toastify";
+// util
+import { ModalModes } from "./ProductsComponent";
+import { getDownloadURL, ref } from "firebase/storage";
+import { generateNewSKU } from "util/product";
+import { storage } from "util/firebase/storage";
 
-// THIS COMPONENT MANAGES THE STATE
-export default function ProductModal({ closeModal, defaultModalProduct, defaultMode, createProduct, updateProduct }: {
-	closeModal: () => void,
-	defaultModalProduct: Product,
-	defaultMode: ModalModes,
-
-	createProduct: (mp: FirebaseProduct, photos: Map<string, File>) => Promise<void>,
-	updateProduct: (mp: Product, photos: Map<string, File>) => Promise<void>
+// THIS COMPONENT HOLDS THE STATE
+export default function ProductModal({ closeModal, defaultModalProduct, defaultMode, createProductFirebase, updateProductFirebase }: {
+	// modal controls
+	closeModal: () => void, defaultModalProduct: Product, defaultMode: ModalModes,
+	// product mutations
+	createProductFirebase: (mp: FirebaseProduct, photos: Map<string, File>) => Promise<void>,
+	updateProductFirebase: (mp: Product, photos: Map<string, File>) => Promise<void>
 }) {
+	// state
 	const [modalProduct, setModalProduct] = useState<DeepPartial<FirebaseProduct>>(defaultModalProduct)
-	const [imageMap, ] = useState<Map<string, File>>(new Map())
-
-	function handleProductEdit<K extends keyof Product, V extends Product[K]>(id: K, val: V) {
-		setModalProduct(mp => ({ ...mp, [id]: val }))
-	}
+	function handleProductEdit<K extends keyof Product, V extends Product[K]>(id: K, val: V) { setModalProduct((mp: DeepPartial<FirebaseProduct>) => ({ ...mp, [id]: val })) }
+	const [imageMap,] = useState<Map<string, File>>(new Map())
 	// upload state
-	const [submitting, setSubmitting] = useState(false)
+	const [modalSubmitting, setModalSubmitting] = useState(false)
 	return (
 		<Dialog onClose={closeModal} className="relative z-50" >
 			{/* backdrop */}
@@ -43,7 +43,7 @@ export default function ProductModal({ closeModal, defaultModalProduct, defaultM
 					leave="ease-in duration-200" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-6"
 				>
 					<ProductModalForm defaultMode={defaultMode} closeModal={closeModal} // modal operation 
-						modalProduct={modalProduct} handleProductEdit={handleProductEdit}
+						defaultModalProduct={modalProduct} handleProductEdit={handleProductEdit}
 						createVariant={() => setModalProduct(mp => ({
 							...mp,
 							variants: [
@@ -51,56 +51,58 @@ export default function ProductModal({ closeModal, defaultModalProduct, defaultM
 								{ sku: generateNewSKU() } // this is the new created object
 							]
 						}))}
-						updateVariantGen={(sku: string) => function <K extends keyof ProductVariantListing, V extends ProductVariantListing[K]>(id: K, val: V) {
-							setModalProduct(mp => {
-								const variant = mp.variants?.find(vv => vv.sku == sku);
-								if (!variant) return mp;
-								variant[id] = val;
-								return mp;
-							});
+						updateVariant={function <K extends keyof ProductVariantListing, V extends ProductVariantListing[K]>(sku: string, id: K, val: V) {
+							setModalProduct(mp => ({
+								...mp,
+								variants: (mp.variants || []).map(variant => variant.sku == sku ? { ...variant, [id]: val } : variant)
+							}));
 						}}
-						deleteVariant={(sku: string) => setModalProduct(mp => ({
-							...mp,
-							variants: mp.variants?.filter(vv => vv.sku != sku) || []
-						}))}
+						deleteVariant={(sku: string) => setModalProduct(mp => ({ ...mp, variants: mp.variants?.filter(variant => variant.sku != sku) || [] }))}
 						addVariantImageFile={(sku, s, f) => {
-							setModalProduct(mp => {
-								const variant = mp.variants?.find(vv => vv.sku == sku);
-								if (!variant) return mp;
-								variant.images = [...(variant.images || []), s];
-								return mp;
-							})
+							setModalProduct(mp => ({
+								...mp,
+								variants: (mp.variants || []).map(variant => variant.sku == sku ? ({ ...variant, images: [...(variant.images || []), s] }) : variant)
+							}))
 							imageMap.set(s, f)
 						}}
 						removeVariantImageFile={(sku, s) => {
-							setModalProduct(mp => {
-								const variant = mp.variants?.find(vv => vv.sku == sku);
-								if (!variant) return mp;
-								variant.images = variant.images?.filter(i => i != s);
-								return mp;
-							})
+							setModalProduct(mp => ({
+								...mp,
+								variants: (mp.variants || []).map(variant => variant.sku == sku ? ({ ...variant, images: variant.images?.filter(i => i != s) || [] }) : variant)
+							}))
 							imageMap.delete(s)
 						}}
-						onFormSubmit={async () => {
-							setSubmitting(true)
-							if (defaultMode === ModalModes.Edit) {
-								if(!validateProduct(modalProduct)) {
-									toast.error("Product Validation Error", { theme: "colored" })
-									setSubmitting(false)
-									return
-								}
-								await updateProduct(modalProduct, imageMap)
-							} else if (defaultMode === ModalModes.New) {
-								if(!validateFirebaseProduct(modalProduct)) {
-									toast.error("Product Validation Error", { theme: "colored" })
-									setSubmitting(false)
-									return
-								}
-								await createProduct(modalProduct, imageMap)
+						getVariantImageURL={async (sku, s) => {
+							const variant = modalProduct.variants?.find(variant => variant.sku == sku);
+							if (!variant) return null;
+							if (imageMap.has(s)) return URL.createObjectURL(imageMap.get(s)!);
+							if (!validateProduct(modalProduct)) return null;
+							try {
+								return await getDownloadURL(ref(storage, `products/${modalProduct.firestoreID}/${s}`))
+							} catch (e) {
+								return null;
 							}
-							setSubmitting(false)
+						}}
+						formSubmitAction={async () => {
+							setModalSubmitting(true)
+							if (defaultMode === ModalModes.Edit) {
+								if (!validateProduct(modalProduct)) {
+									toast.error("Product Validation Error", { theme: "colored" })
+									setModalSubmitting(false)
+									return
+								}
+								await updateProductFirebase(modalProduct, imageMap)
+							} else if (defaultMode === ModalModes.New) {
+								if (!validateFirebaseProduct(modalProduct)) {
+									toast.error("Product Validation Error", { theme: "colored" })
+									setModalSubmitting(false)
+									return
+								}
+								await createProductFirebase(modalProduct, imageMap)
+							}
+							setModalSubmitting(false)
 							closeModal()
-						}} uploading={submitting}
+						}} modalSubmitting={modalSubmitting}
 					/>
 				</Transition.Child>
 			</div>

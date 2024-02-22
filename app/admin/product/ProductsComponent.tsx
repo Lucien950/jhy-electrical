@@ -1,21 +1,22 @@
 "use client"
+import { useEffect, useState } from "react"
 // ui
 import { AnimatePresence, motion } from "framer-motion"
 import { Oval } from "react-loader-spinner"
-// firebase
-import { FirebaseProduct, Product } from "types/product"
+import { toast } from "react-toastify"
 import { Transition } from "@headlessui/react"
 import ProductModal from "./ProductModal"
-import { useEffect, useState } from "react"
-import { fillProductDoc, sortProductsByName } from "util/product"
-import { ProductElement } from "./ProductElement"
-import { toast } from "react-toastify"
+import ProductElement from "./ProductElement"
+// types
+import { FirebaseProduct, Product } from "types/product"
 // firebase
-import { collection, onSnapshot, addDoc, doc, setDoc, getDoc, deleteDoc  } from "firebase/firestore"
+import { collection, onSnapshot, addDoc, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "util/firebase/storage";
-import {MD5} from "object-hash"
+// util
+import { MD5 } from "object-hash"
+import { fillProductDoc, sortProductsByName } from "util/product"
 
 export enum ModalModes { Edit = "edit", New = "new" }
 function useModal() {
@@ -23,16 +24,18 @@ function useModal() {
 	const [defaultModalProduct, setDefaultModalProduct] = useState<Product | null>(null)
 	const [modalMode, setModalMode] = useState<ModalModes | null>(null)
 	const openEditModal = (defaultProduct: Product) => { setModalMode(ModalModes.Edit); setDefaultModalProduct(defaultProduct) }
-	const openNewModal = () => { setModalMode(ModalModes.New); setDefaultModalProduct({
-		residential: false,
-		commercial: false,
-		industrial: false,
-	} as Product) } // empty product!!! (this is because I do not want to manage two modal's worth of state even though they need to be different, lazy moment)
+	const openNewModal = () => {
+		setModalMode(ModalModes.New); setDefaultModalProduct({
+			residential: false,
+			commercial: false,
+			industrial: false,
+		} as Product)
+	} // empty product!!! (this is because I do not want to manage two modal's worth of state even though they need to be different, lazy moment)
 	const closeModal = () => { setModalMode(null); setDefaultModalProduct(null) }
 	return { defaultModalProduct, modalMode, openEditModal, openNewModal, closeModal }
 }
 
-export default function ProductsComponent() {
+function useLiveProduct() {
 	const [products, setProducts] = useState<Product[] | null>(null)
 	useEffect(() => {
 		const unsub = onSnapshot(collection(db, "products"), (snapshot) => {
@@ -42,7 +45,7 @@ export default function ProductsComponent() {
 						setProducts(p => sortProductsByName([...(p || []), fillProductDoc(change.doc)]))
 						break
 					case "modified":
-						setProducts(p => sortProductsByName([...(p|| [])].map(product => product.firestoreID === change.doc.id ? fillProductDoc(change.doc) : product)))
+						setProducts(p => sortProductsByName([...(p || [])].map(product => product.firestoreID === change.doc.id ? fillProductDoc(change.doc) : product)))
 						break
 					case "removed":
 						setProducts(p => (p || []).filter(product => product.firestoreID !== change.doc.id))
@@ -53,70 +56,58 @@ export default function ProductsComponent() {
 		return () => { setProducts(null); unsub() }
 	}, [])
 
-	// CRUD single product
-	async function createProduct(createProduct: FirebaseProduct, newPhotos: Map<string, File>) {
-		if(!createProduct.variants.every(v=>v.images.every(i=>newPhotos.has(i)))) {	// check if all images are uploaded
-			toast.error("Please discard all changes and reload the page (something went wrong internally, no data was lost)", { theme: "colored" })
-			return
-		}
-		const addDocPromise = await addDoc(collection(db, "products"), createProduct)
-		await Promise.all(createProduct.variants.map(async v => {
-			await Promise.all(v.images.map(async i => {
-				await uploadBytes(ref(storage, `products/${addDocPromise.id}/${v.sku}/${i}`), newPhotos.get(i)!)
-			}))
-		}))
-		toast.success("Product added")
-	}
-	async function updateProduct(updateProduct: Product, newPhotos: Map<string, File>) {
-		// FIRESTORE Update
-		//eslint-disable-next-line @typescript-eslint/no-unused-vars, prefer-const
-		const { firestoreID, ...firebaseProduct } = updateProduct
-		const p1 = setDoc(doc(db, "products", firestoreID), firebaseProduct) //updateDoc?
+	return products
+}
 
-		const imagesInOldProduct = new Set(defaultModalProduct!.variants.flatMap(v => v.images)) // TODO get the product pre edits
-		const imagesToUpload = updateProduct.variants.flatMap(v => v.images.filter(i => !imagesInOldProduct.has(i)))
-		const p2 = Promise.all(imagesToUpload.map(i => uploadBytes(ref(storage, `products/${firestoreID}/${i}`), newPhotos.get(i)!)))
-
-		const imagesInNewProduct = new Set(updateProduct.variants.flatMap(v => v.images))
-		const imagesToDelete = Array.from(imagesInOldProduct).filter(i => !imagesInNewProduct.has(i))
-		const p3 = Promise.all(imagesToDelete.map(i => deleteObject(ref(storage, `products/${firestoreID}/${i}`))))
-
-		await Promise.all([p1, p2, p3])
-	}
-	async function deleteProduct(id: string) {
-			try {
-				// upload to deleted collection
-				const sourceDoc = doc(db, "proudcts", id)
-				const oldProduct = (await getDoc(sourceDoc)).data()
-				const p1 = setDoc(doc(db, "products_deleted", id), oldProduct)
-				const sourceFile = ref(storage, `products/${id}`)
-				const p2 = getDownloadURL(sourceFile)
-					.then(url => fetch(url))
-					.then(res => res.blob())
-					.then(blob => uploadBytes(ref(storage, `products_deleted/${id}`), blob))
-				await Promise.all([p1, p2])
-				// delete old objects
-				const p3 = deleteDoc(sourceDoc), p4 = deleteObject(sourceFile)
-				await Promise.all([p3, p4])
-				toast.success("Product deleted")
-			}
-			catch (err) {
-				toast.error("Error deleting product, check console for error")
-				console.error(err)
-			}
-	}
-
-	// modal
-	const { defaultModalProduct, modalMode, openEditModal, openNewModal, closeModal } = useModal()
-	// product list
+export default function ProductsComponent() {
+	const products = useLiveProduct();
+	const {
+		defaultModalProduct,
+		modalMode,
+		openEditModal, openNewModal, closeModal
+	} = useModal()
 	const floatUpAnimation = { hide: { opacity: 0, y: "20%" }, show: { opacity: 1, y: 0 }, leave: { opacity: 0 } }
 	return (
 		<>
 			{/* Modal */}
 			<Transition show={defaultModalProduct !== null}>
 				<ProductModal
-					closeModal={closeModal} createProduct={createProduct} updateProduct={updateProduct}
-					defaultModalProduct={defaultModalProduct!} defaultMode={modalMode!} //eslint-disable-line @typescript-eslint/no-non-null-assertion
+					closeModal={closeModal} defaultModalProduct={defaultModalProduct!} defaultMode={modalMode!} //eslint-disable-line @typescript-eslint/no-non-null-assertion
+					createProductFirebase={async (createProduct: FirebaseProduct, newPhotos: Map<string, File>) => {
+						// this function takes a product and uploads it to firebase
+						// images are based on name, and all images listed are uploaded.
+						// THE MAP ONLY serves as a file container
+
+						if (!createProduct.variants.every(v => v.images.every(i => newPhotos.has(i)))) { // check if all images are uploaded
+							toast.error("Please discard all changes and reload the page (something went wrong internally, no data was lost)", { theme: "colored" })
+							return
+						}
+						const addDocPromise = await addDoc(collection(db, "products"), createProduct)
+						await Promise.all(createProduct.variants.map(async (v) => {
+							await Promise.all(v.images.map(async (i) => {
+								await uploadBytes(ref(storage, `products/${addDocPromise.id}/${v.sku}/${i}`), newPhotos.get(i)!)
+							}))
+						}))
+						toast.success("Product added")
+					}}
+					updateProductFirebase={async (updateProduct: Product, newPhotos: Map<string, File>) => {
+						// this function takes a product and a map of images
+						// it will remove images that are in the original list but not in the new list
+						// it will add images that are in the new list but not in the original list
+						// THE MAP ONLY serves as a file container
+
+						const { firestoreID, ...firebaseProduct } = updateProduct
+						const p1 = setDoc(doc(db, "products", firestoreID), firebaseProduct) //updateDoc?
+
+						const imagesInOldProduct = new Set(defaultModalProduct!.variants.flatMap(v => v.images)) // TODO get the product pre edits
+						const imagesToUpload = updateProduct.variants.flatMap(v => v.images.filter(i => !imagesInOldProduct.has(i)))
+						const p2 = Promise.all(imagesToUpload.map(i => uploadBytes(ref(storage, `products/${firestoreID}/${i}`), newPhotos.get(i)!)))
+						const imagesInNewProduct = new Set(updateProduct.variants.flatMap(v => v.images))
+						const imagesToDelete = Array.from(imagesInOldProduct).filter(i => !imagesInNewProduct.has(i))
+						const p3 = Promise.all(imagesToDelete.map(i => deleteObject(ref(storage, `products/${firestoreID}/${i}`))))
+
+						await Promise.all([p1, p2, p3])
+					}}
 				/>
 			</Transition>
 			<div className="relative">
@@ -131,9 +122,30 @@ export default function ProductsComponent() {
 							}}
 						>
 							{products.map(product =>
-								<ProductElement
-									key={MD5(product)} itemVariants={floatUpAnimation}
-									product={product} deleteProduct={deleteProduct} openEditModal={openEditModal}
+								<ProductElement key={MD5(product)} itemVariants={floatUpAnimation} product={product} openEditModal={openEditModal}
+									deleteProduct={async (id: string) => {
+										// TODO migrate delete function to properly delete old images
+										try {
+											// upload to deleted collection
+											const sourceDoc = doc(db, "proudcts", id)
+											const oldProduct = (await getDoc(sourceDoc)).data()
+											const p1 = setDoc(doc(db, "products_deleted", id), oldProduct)
+											const sourceFile = ref(storage, `products/${id}`)
+											const p2 = getDownloadURL(sourceFile)
+												.then(url => fetch(url))
+												.then(res => res.blob())
+												.then(blob => uploadBytes(ref(storage, `products_deleted/${id}`), blob))
+											await Promise.all([p1, p2])
+											// delete old objects
+											const p3 = deleteDoc(sourceDoc), p4 = deleteObject(sourceFile)
+											await Promise.all([p3, p4])
+											toast.success("Product deleted")
+										}
+										catch (err) {
+											toast.error("Error deleting product, check console for error")
+											console.error(err)
+										}
+									}}
 								/>
 							)}
 							{/* ADD PRODUCT BUTTON */}

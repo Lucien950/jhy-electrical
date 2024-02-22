@@ -41,7 +41,7 @@ const productVariantListingSchema = Joi.object({
 	quantity: Joi.number().required().min(0),
 	price: Joi.number().required().greater(0),
 	color: Joi.string().required(),
-	images: Joi.array().items(Joi.string()).required().min(1),
+	images: Joi.array().items(Joi.string()).required(), // TODO make this min(1) once each variant has at least one image
 })
 const firebaseProductSchema = Joi.object({
 	productName: Joi.string().required(),
