@@ -66,7 +66,7 @@ const VariantImagePreview = ({img, getVariantImageURL, removeVariantImageFile}: 
 	} else {
 		return (
 			<div className="h-16 hover:cursor-pointer group relative">
-				<img src={url} key={`img-preview-${img}`} className="h-full group-hover:opacity-50" onClick={() => removeVariantImageFile(img)}/>
+				<img src={url} key={`img-preview-${img}`} alt={`Image Preview for ${img}`} className="h-full group-hover:opacity-50" onClick={() => removeVariantImageFile(img)}/>
 				<p className="opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none absolute text-sm top-[50%] left-[50%] translate-y-[-50%] translate-x-[-50%] whitespace-nowrap">Remove Image</p>
 			</div>
 		)

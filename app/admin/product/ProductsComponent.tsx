@@ -99,12 +99,12 @@ export default function ProductsComponent() {
 						const { firestoreID, ...firebaseProduct } = updateProduct
 						const p1 = setDoc(doc(db, "products", firestoreID), firebaseProduct) //updateDoc?
 
-						const imagesInOldProduct = new Set(defaultModalProduct!.variants.flatMap(v => v.images)) // TODO get the product pre edits
+						const imagesInOldProduct = new Set(defaultModalProduct!.variants.flatMap(v => v.images))
 						const imagesToUpload = updateProduct.variants.flatMap(v => v.images.filter(i => !imagesInOldProduct.has(i)))
 						const p2 = Promise.all(imagesToUpload.map(i => uploadBytes(ref(storage, `products/${firestoreID}/${i}`), newPhotos.get(i)!)))
 						const imagesInNewProduct = new Set(updateProduct.variants.flatMap(v => v.images))
 						const imagesToDelete = Array.from(imagesInOldProduct).filter(i => !imagesInNewProduct.has(i))
-						const p3 = Promise.all(imagesToDelete.map(i => deleteObject(ref(storage, `products/${firestoreID}/${i}`))))
+						const p3 = Promise.all(imagesToDelete.map(i => { deleteObject(ref(storage, `products/${firestoreID}/${i}`)) })) // TODO make this archive
 
 						await Promise.all([p1, p2, p3])
 					}}
@@ -127,7 +127,7 @@ export default function ProductsComponent() {
 										// TODO migrate delete function to properly delete old images
 										try {
 											// upload to deleted collection
-											const sourceDoc = doc(db, "proudcts", id)
+											const sourceDoc = doc(db, "products", id)
 											const oldProduct = (await getDoc(sourceDoc)).data()
 											const p1 = setDoc(doc(db, "products_deleted", id), oldProduct)
 											const sourceFile = ref(storage, `products/${id}`)
