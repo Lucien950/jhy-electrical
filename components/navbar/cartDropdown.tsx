@@ -19,7 +19,7 @@ import Price from "components/price"
 import { logEvent } from "firebase/analytics"
 import { analytics } from "util/firebase/analytics"
 import { encodeProductVariantPayPalSku } from "server/paypal/sku"
-import { useProduct } from "components/hooks/useProduct"
+import { useProduct, useProductImageURL } from "components/hooks/useProduct"
 
 const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 	const dispatch = useDispatch()
@@ -29,6 +29,7 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 		dispatch(removeFromCart(p.PID))
 	}
 	const { product, productLoading, productNotFound } = useProduct(p)
+	const productImageURL = useProductImageURL(product?.images[0] || null)
 
 	if (productNotFound) {
 		return (
@@ -46,7 +47,7 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 					{
 						productLoading || !product
 							? <div className="h-full w-full bg-gray-200 animate-pulse" />
-							: <img src={product.productImageURL} className="w-full h-full object-cover select-none" alt="Product Image" />
+							: <img src={productImageURL || ""} className="w-full h-full object-cover select-none" alt="Product Image" />
 					}
 				</div>
 				{

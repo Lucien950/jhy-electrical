@@ -79,4 +79,4 @@ export function ImageDragArea({ defaultImageURL, addVariantImageFile, removeVari
 			/>
 		</label>
 	);
-};
+}

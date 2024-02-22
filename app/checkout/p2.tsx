@@ -9,10 +9,12 @@ import { FormCustomer } from "types/customer";
 import { OrderProduct } from "types/order";
 // utils
 import { encodeProductVariantPayPalSku } from "server/paypal/sku";
-import { useProduct } from "components/hooks/useProduct";
+import { useProduct, useProductImageURL } from "components/hooks/useProduct";
 
 const ProductListing = ({op}: {op: OrderProduct}) => {
 	const {product, productLoading} = useProduct(op)
+	const productImageURL = useProductImageURL(product?.images[0] || null)
+
 	if(productLoading || !product) {
 		return (
 			<div>Loading</div> // todo
@@ -20,7 +22,7 @@ const ProductListing = ({op}: {op: OrderProduct}) => {
 	}
 	return (
 		<div className="flex flex-row gap-x-2 items-center" key={encodeProductVariantPayPalSku(op.PID, op.variantSKU)}>
-			<img src={product.productImageURL} alt="Product Image" className="h-16" />
+			<img src={productImageURL || ""} alt="Product Image" className="h-16" />
 			<div className="flex-1 text-sm">
 				<h1 className="font-bold text-base">{product.productName}</h1>
 				<p>${product.price.toFixed(2)} x {op.quantity}</p>

@@ -15,7 +15,6 @@ import { collection, onSnapshot, addDoc, doc, setDoc, getDoc, deleteDoc  } from 
 import { db } from "util/firebase/firestore"
 import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "util/firebase/storage";
-import { DeepPartial } from "types/util"
 import {MD5} from "object-hash"
 
 export enum ModalModes { Edit = "edit", New = "new" }

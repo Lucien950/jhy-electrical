@@ -142,8 +142,8 @@ export default async function Order({ params }: { params: { oid?: string } }) {
 					<hr />
 					<div className="flex flex-col gap-y-6 p-6">
 						{
-							order.products.map(productInfo => {
-								return <OrderProductListing productInfo={productInfo} />
+							order.products.map(op => {
+								return <OrderProductListing productInfo={op} key={`${op.PID}-${op.variantSKU}`} />
 							})
 						}
 					</div>

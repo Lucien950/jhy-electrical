@@ -15,7 +15,7 @@ import { InputField } from "components/inputField";
 import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
 import { validateP0FormData, validateP0FormError } from './stages';
-import { useProduct } from "components/hooks/useProduct";
+import { useProduct, useProductImageURL } from "components/hooks/useProduct";
 
 const ProvinceDropdown = ({ province, setProvince }: { province?: string, setProvince: (newProvince: string) => void }) => {
 	const [query, setQuery] = useState('')
@@ -58,10 +58,12 @@ const ProvinceDropdown = ({ province, setProvince }: { province?: string, setPro
 
 const ProductListing = ({orderProduct}: {orderProduct: OrderProduct}) => {
 	const { product, productLoading } = useProduct(orderProduct)
+	const productImageURL = useProductImageURL(product?.images[0] || null)
+
 	if(productLoading || !product) return (<div></div>)
 	return (
 		<div className="flex flex-row items-center gap-x-2 p-2" key={encodeProductVariantPayPalSku(orderProduct.PID, orderProduct.variantSKU)}>
-			<img src={product.productImageURL} alt="" className="h-10" />
+			<img src={productImageURL || ""} alt="" className="h-10" />
 			<p> {product.productName} </p>
 			<p> {product.price} x {product.quantity} </p>
 		</div>

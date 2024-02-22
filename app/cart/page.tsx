@@ -23,11 +23,13 @@ import { estimatePrice } from "app/checkout/estimatePrice";
 import { encodeProductVariantPayPalSku } from "server/paypal/sku";
 import { OrderProduct } from "types/order";
 import { useAppSelector } from "util/redux/hooks";
-import { useProduct } from "components/hooks/useProduct";
+import { useProduct, useProductImageURL } from "components/hooks/useProduct";
 import { useLazyEffect } from "util/useLazyEffect";
 
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 	const { product, productLoading } = useProduct(orderProduct)
+
+	const productImageURL = useProductImageURL(product?.images[0] || null)
 
 	const dispatch = useDispatch()
 	const removeSelf = () => {
@@ -59,7 +61,7 @@ const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 	return (
 		<div className="p-4 flex flex-row gap-x-2">
 			<div className='flex-[1_0_3.5rem] grid place-items-center'>
-				<img src={product.productImageURL} alt="Product Image" className="h-14 w-26 object-cover" />
+				<img src={productImageURL || ""} alt="Product Image" className="h-14 w-26 object-cover" />
 			</div>
 			<div className="flex-[4_4_57%]">
 				<h1 className="font-medium text-lg">

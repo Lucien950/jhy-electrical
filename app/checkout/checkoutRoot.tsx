@@ -9,7 +9,7 @@ import Price from './price'
 // types
 import { OrderProduct } from 'types/order'
 import { FormCustomer, PaymentMethods } from 'types/customer'
-import { FormPrice, attemptPrice, validatePrice } from 'types/price'
+import { FormPrice, attemptPrice } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'

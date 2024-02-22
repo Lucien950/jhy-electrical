@@ -24,6 +24,7 @@ import { addToCart } from 'util/redux/cart.slice';
 import { useAppDispatch, useAppSelector } from 'util/redux/hooks';
 import { getDownloadURL, ref } from 'firebase/storage';
 import { storage } from 'util/firebase/storage';
+import { Oval } from 'react-loader-spinner';
 
 const useProductQuantity = (product: Product, selectedProductVariant: ProductVariantListing) => {
 	const cart = useAppSelector((state: { cart: OrderProduct[] }) => state.cart) as OrderProduct[]
@@ -60,24 +61,31 @@ export default function ProductListing({ product }: { product: Product }) {
 
 	// image selection
 	const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-	const [currentVariantAllImageURLs, setCurrentVariantAllImageURLs] = useState<string[] | null>([])
-	const [loadingImageURLs, setLoadingImageURLs] = useState(false)
+	const [currentVariantAllImageURLs, setCurrentVariantAllImageURLs] = useState<string[] | null>(null)
 	useEffect(() => {
-		setLoadingImageURLs(true)
+		setSelectedImageIndex(0)
+		setCurrentVariantAllImageURLs(null)
 		Promise.all(selectedProductVariant.images.map(url => getDownloadURL(ref(storage, `products/${url}`))))
 			.then(v => {
 				setCurrentVariantAllImageURLs(v)
-				setLoadingImageURLs(false)
 			})
-	}, [selectedVariantSKU])
+	}, [selectedVariantSKU]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<div className="grid grid-cols-1 gap-y-4 lg:grid-cols-2 gap-x-24 mt-36 px-8 container mx-auto">
 			<div>
-				{
-					currentVariantAllImageURLs &&
-					<img src={currentVariantAllImageURLs[selectedImageIndex]} alt={`Product Image for ${product.productName}`} className="w-full h-[37rem] object-contain" />
-				}
+				<div className="h-[calc(100vh-23rem)] w-full">
+					{
+						currentVariantAllImageURLs &&
+						<img src={currentVariantAllImageURLs[selectedImageIndex]} alt={`Product Image for ${product.productName}`} className="w-full h-full object-contain" />
+					}
+					{
+						!currentVariantAllImageURLs &&
+						<div className="w-full h-full grid place-items-center">
+							<Oval height={100} width={100} strokeWidth={8} color="#28a9fa" secondaryColor="#28a9fa" />
+						</div>
+					}
+				</div>
 				<div className="flex flex-row gap-x-2">
 					{
 						currentVariantAllImageURLs &&
