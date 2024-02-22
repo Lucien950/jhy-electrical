@@ -22,7 +22,7 @@ const ProductItem = ({ product }: { product: Product }) => {
   const minPrice = Math.min(...product.variants.map(v => v.price)), maxPrice = Math.max(...product.variants.map(v => v.price))
   const onePrice = product.variants.length === 1 || product.variants.map(v => v.price).every((val, _, arr) => val === arr[0])
   
-  const productImageURL = useProductImageURL(product.variants[0].images[0])
+  const productImageURL = useProductImageURL(`${product.firestoreID}/${product.variants[0].images[0]}`)
   return (
     <motion.div layout>
       <Link href={`products/${product.firestoreID}`} className="block focus:ring-8 focus:outline-none rounded-lg">

@@ -6,12 +6,14 @@ export type NonNullable<T> = Exclude<T, null | undefined>
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] }
 
-export type DeepPartial<T> = T extends string | number | bigint | boolean | null | undefined | symbol | Date
+type Primatives = string | number | bigint | boolean | null | undefined | symbol | Date
+
+export type DeepPartial<T> = T extends Primatives
   ? T | undefined
   // Arrays, Sets and Maps and their readonly counterparts have their items made
   // deeply partial, but their own instances are left untouched
   : T extends Array<infer ArrayType>
-  ? Array<DeepPartial<ArrayType>>
+  ? Array<ArrayType extends Primatives ? ArrayType : DeepPartial<ArrayType>>
   : T extends ReadonlyArray<infer ArrayType>
   ? ReadonlyArray<ArrayType>
   : T extends Set<infer SetType>

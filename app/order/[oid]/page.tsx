@@ -18,7 +18,7 @@ import { ArrayElement } from "types/util";
 
 const OrderProductListing = ({ productInfo }: { productInfo: ArrayElement<CompletedOrder['products']> }) => {
 	const { product } = productInfo;
-	const productImageURL = useProductImageURL(product.images[0])
+	const productImageURL = useProductImageURL(`${product.firestoreID}/${product.images[0]}`)
 	return (
 		<div key={encodeProductVariantPayPalSku(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
 			<div className="relative">

@@ -29,7 +29,7 @@ const CartDropDownProductListing = ({ p }: { p: OrderProduct }) => {
 		dispatch(removeFromCart(p.PID))
 	}
 	const { product, productLoading, productNotFound } = useProduct(p)
-	const productImageURL = useProductImageURL(product?.images[0] || null)
+	const productImageURL = useProductImageURL(`${product?.firestoreID}/${product?.images[0]}` || null)
 
 	if (productNotFound) {
 		return (

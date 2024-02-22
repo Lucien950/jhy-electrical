@@ -29,7 +29,7 @@ import { useLazyEffect } from "util/useLazyEffect";
 const ProductListing = ({ orderProduct }: { orderProduct: OrderProduct }) => {
 	const { product, productLoading } = useProduct(orderProduct)
 
-	const productImageURL = useProductImageURL(product?.images[0] || null)
+	const productImageURL = useProductImageURL(`${product?.firestoreID}/${product?.images[0]}` || null)
 
 	const dispatch = useDispatch()
 	const removeSelf = () => {

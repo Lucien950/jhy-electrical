@@ -13,7 +13,7 @@ import { useProduct, useProductImageURL } from "components/hooks/useProduct";
 
 const ProductListing = ({op}: {op: OrderProduct}) => {
 	const {product, productLoading} = useProduct(op)
-	const productImageURL = useProductImageURL(product?.images[0] || null)
+	const productImageURL = useProductImageURL(`${product?.firestoreID}/${product?.images[0]}` || null)
 
 	if(productLoading || !product) {
 		return (
