@@ -88,7 +88,7 @@ export default function Services() {
 				{/* Sectors */}
 				<h2 className="text-center text-5xl font-bold mb-4">Sectors</h2>
 				<p className="text-center text-lg">JHY Electrical Contracting offers an array of electrical services for residential and commercial projects of any size and scope.</p>
-				<div className="flex flex-col md:flex-row justify-center gap-x-20 gap-y-8 my-10">
+				{/* <div className="flex flex-col md:flex-row justify-center gap-x-20 gap-y-8 my-10">
 					<div className="flex-1">
 						<div className="flex items-center gap-x-4 mb-4">
 							{<ResidentialIcon className="w-12 h-12" />}
@@ -110,7 +110,7 @@ export default function Services() {
 						</div>
 						<p>FILLER COMMERCIAL</p>
 					</div>
-				</div>
+				</div> */}
 
 				<div className="py-28">
 					<div className="text-center max-w-[46rem] mx-auto mb-16">
@@ -167,7 +167,7 @@ export default function Services() {
 							<p className="font-semibold text-center mt-2 text-blue-700">ECRA/ESA #7013745</p>
 						</div>
 					</div>
-					<p className="text-medium text-center">We are proud to be licensed by the ECRA/ESA to offer residential andcommercial services in the Ottawa Area and with a full team of qualified electricians.</p>
+					<p className="text-medium text-center">We are proud to be licensed by the ECRA/ESA to offer residential and commercial services in the Ottawa Area and with a full team of qualified electricians.</p>
 				</div>
 			</div>
 
