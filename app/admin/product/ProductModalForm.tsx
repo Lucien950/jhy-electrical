@@ -60,7 +60,7 @@ const VariantImagePreview = ({img, getVariantImageURL, removeVariantImageFile}: 
 	removeVariantImageFile: (s: string) => void,
 }) => {
 	const [url, setUrl] = useState<string | null>(null)
-	useEffect(() => {getVariantImageURL(img).then(setUrl)}, [img])
+	useEffect(() => {getVariantImageURL(img).then(setUrl)}, [img]) // eslint-disable-line react-hooks/exhaustive-deps
 	if(!url) {
 		return <span key={`img-preview-${img}`}></span>
 	} else {

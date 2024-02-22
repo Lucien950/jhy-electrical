@@ -1,4 +1,4 @@
-import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
+// import { CommercialIcon, IndustrialIcon, ResidentialIcon } from "components/categoryIcons";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
