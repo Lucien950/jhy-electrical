@@ -95,8 +95,6 @@ export default function AdminRoot() {
 						<img className="h-10 w-10 lg:h-16 lg:w-16" src={admin.profileImageURL} alt="" />
 					</div>
 					<h1 className="hidden lg:block text-2xl font-bold mb-4">{admin.name}</h1>
-					{/* TODO Implement this behaviour */}
-					{/* <button className="rounded-full px-5 py-1 border-2 border-slate-800 outline-none focus:ring-2">Edit</button> */}
 				</div>
 				<div className="flex-[4] text-lg h-min flex flex-col gap-y-1 py-2 lg:self-stretch">
 					<SidebarButton name={SidebarButtonType.Analytics} scrollRef={analyticSection} />

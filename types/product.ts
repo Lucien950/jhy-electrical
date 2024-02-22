@@ -46,11 +46,9 @@ const productVariantListingSchema = Joi.object({
 const firebaseProductSchema = Joi.object({
 	productName: Joi.string().required(),
 	description: Joi.string().required(),
-	// TODO check why this is not required
-	commercial: Joi.boolean(), 
-	industrial: Joi.boolean(),
-	residential: Joi.boolean(),
-
+	commercial: Joi.boolean().required(),
+	industrial: Joi.boolean().required(),
+	residential: Joi.boolean().required(),
 	variants: Joi.array().items(productVariantListingSchema).required().min(1),
 })
 const productSchema = firebaseProductSchema.append({
@@ -63,17 +61,3 @@ export const validateFirebaseProduct = validateSchemaFunctionsGenerator<Firebase
 export const attemptFirebaseProduct = attemptSchemaGenerator<FirebaseProduct>(firebaseProductSchema)
 
 export interface ProductWithVariant extends Omit<Product & ProductVariantListing, "variants"> { }
-export const productVariantSchema = productSchema.append({
-	sku: Joi.string().required(),
-	label: Joi.string().required(),
-
-	length: Joi.number().required().greater(0),
-	width: Joi.number().required().greater(0),
-	height: Joi.number().required().greater(0),
-	weight: Joi.number().required().greater(0),
-
-	quantity: Joi.number().required().greater(0),
-	price: Joi.number().required().greater(0),
-	color: Joi.string().required(),
-	images: Joi.array().items(Joi.string()).required(), // TODO make length ge than 1
-})

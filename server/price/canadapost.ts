@@ -29,7 +29,7 @@ export async function canadaPost_getRates(destinationPostalCode: string, {length
 				weight: weight,
 				dimensions: { length, width, height }
 			},
-			"quote-type": "counter", // TODO get customer (and contract) numbers
+			"quote-type": "counter",
 			// "customer-number": "12345",
 			// "contract-id": "67890",
 			"origin-postal-code": ORIGIN_POSTAL_CODE,

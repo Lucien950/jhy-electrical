@@ -82,7 +82,6 @@ const VariantEditor = ({ defaultVariant, handleVariantEdit, deleteVariant, addVa
 	removeVariantImageFile: (s: string) => void,
 	getVariantImageURL: (s: string) => Promise<string | null>,
 }) => {
-	// TODO these two are non-ideal
 	const handleChangeString = (id: keyof ProductVariantListing) => (v: string) => handleVariantEdit(id, v)
 	const handleChangeNumber = (id: keyof ProductVariantListing) => (v: string) => handleVariantEdit(id, parseFloat(v))
 	

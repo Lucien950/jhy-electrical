@@ -1,10 +1,9 @@
 import { addressSchema } from "./address"
-import Joi, { attempt } from "joi"
+import Joi from "joi"
 import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate"
 import { PaymentSource } from "./paypal"
 import {Address} from "./address"
 
-// TODO rethink where to put this?
 export enum PaymentMethods {
 	PayPal="paypal", Card="card"
 }

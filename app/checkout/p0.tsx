@@ -102,7 +102,6 @@ const ShippingForm = ({ checkoutPayPalCustomer, p0DataValid, checkoutOrderCart, 
 					<h1 className="text-xl mb-4 font-bold">Products</h1>
 					{/* product component */}
 					<div className="flex flex-col gap-y-2"> 
-						{/* TODO investigate if maxheight and scroll would do this part good */}
 						{ checkoutOrderCart.map(op => <ProductListing orderProduct={op} key={encodeProductVariantPayPalSku(op.PID, op.variantSKU)}/>) }
 					</div>
 				</div>

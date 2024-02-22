@@ -12,7 +12,7 @@ import { FirebaseProduct, Product } from "types/product"
 // firebase
 import { collection, onSnapshot, addDoc, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore"
 import { db } from "util/firebase/firestore"
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, listAll, ref, uploadBytes } from "firebase/storage";
 import { storage } from "util/firebase/storage";
 // util
 import { MD5 } from "object-hash"
@@ -129,15 +129,21 @@ export default function ProductsComponent() {
 											// upload to deleted collection
 											const sourceDoc = doc(db, "products", id)
 											const oldProduct = (await getDoc(sourceDoc)).data()
+
+
+											const imageFiles = await listAll(ref(storage, `products/${id}`))
 											const p1 = setDoc(doc(db, "products_deleted", id), oldProduct)
-											const sourceFile = ref(storage, `products/${id}`)
-											const p2 = getDownloadURL(sourceFile)
-												.then(url => fetch(url))
-												.then(res => res.blob())
-												.then(blob => uploadBytes(ref(storage, `products_deleted/${id}`), blob))
+
+											const p2 = Promise.all(imageFiles.items.map(async i => {
+												const url = await getDownloadURL(i)
+												const res = await fetch(url)
+												const blob = await res.blob()
+												await uploadBytes(ref(storage, `products_deleted/${id}/${i.name}`), blob)
+											}))
 											await Promise.all([p1, p2])
 											// delete old objects
-											const p3 = deleteDoc(sourceDoc), p4 = deleteObject(sourceFile)
+											const p3 = deleteDoc(sourceDoc)
+											const p4 = Promise.all(imageFiles.items.map(i => deleteObject(i)))
 											await Promise.all([p3, p4])
 											toast.success("Product deleted")
 										}
