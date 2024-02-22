@@ -28,10 +28,11 @@ export function useProduct (op: OrderProduct)  {
 
 
 
-export function useProductImageURL(url: string) {
+export function useProductImageURL(url: string | null) {
 	const [productImageURL, setProductImageURL] = useState<string | null>(null)
   useEffect(() => {
+		if(url === null) return
     getDownloadURL(ref(storage, `products/${url}`)).then(setProductImageURL)
-  }, [])
+  }, [url])
 	return productImageURL
 }

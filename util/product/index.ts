@@ -9,15 +9,15 @@ import { FirebaseProduct, Product, ProductWithVariant } from "types/product";
  * @returns The full product interface
  * @throws Error if the product does not exist
  */
-const _fillProductDoc = async (productDoc: DocumentSnapshot<DocumentData>): Promise<Product> => {
-	const product = productDoc.data() as FirebaseProduct | undefined
-	if(!product) {
-		throw new Error(`Product ${productDoc.id} does not exist`)
+export function fillProductDoc(productDoc: DocumentSnapshot<DocumentData>): Product {
+	const product = productDoc.data() as FirebaseProduct | undefined;
+	if (!product) {
+		throw new Error(`Product ${productDoc.id} does not exist`);
 	}
 	return {
 		...product,
 		firestoreID: productDoc.id
-	}
+	};
 }
 
 /**
@@ -37,7 +37,7 @@ const _getFirebaseProductDocByID = async (productID: string) => {
  * @returns product object
  * @throws Error if the product does not exist
  */
-export const getProductByID = async (pid: string) => _fillProductDoc(await _getFirebaseProductDocByID(pid))
+export const getProductByID = async (pid: string) => fillProductDoc(await _getFirebaseProductDocByID(pid))
 
 /**
  * Given a list of product IDs, returns the product objects
@@ -52,7 +52,7 @@ export const getProductsByIDs = async (pids: string[]) => await Promise.all(pids
  */
 export const getAllProducts = async () => {
 	const productsQS = await getDocs(collection(db, "products"));
-	const products: Product[] = await Promise.all(productsQS.docs.map(doc => _fillProductDoc(doc)))
+	const products: Product[] = await Promise.all(productsQS.docs.map(doc => fillProductDoc(doc)))
 	return products
 }
 

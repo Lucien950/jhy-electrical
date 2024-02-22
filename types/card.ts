@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { validateSchemaFunctionsGenerator } from "util/typeValidate";
+import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate";
 
 export const formCardSchema = Joi.object({
 	cardName: Joi.string().min(1).max(300).required(),
@@ -15,3 +15,4 @@ export type FormCard = {
 }
 
 export const validateCard = validateSchemaFunctionsGenerator<FormCard>(formCardSchema)
+export const attemptCard = attemptSchemaGenerator<FormCard>(formCardSchema)

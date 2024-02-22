@@ -55,10 +55,10 @@ export const updateOrderAddress = async (orderID: string, address: Address, full
 // https://developer.paypal.com/docs/checkout/integrate/#6-verify-the-transaction
 
 
-import { FormCard, validateCard } from "types/card"
+import { FormCard, attemptCard } from "types/card"
 import { approveCardProps, approveCardRes } from "app/api/paypal/approve/card"
 export const approveCard = async (token: string, cardInfo: Partial<FormCard>) => {
-	validateCard(cardInfo)
+	attemptCard(cardInfo)
 	const response = await fetch("/api/paypal/approve/card", {
 		method: "PATCH",
 		headers: { 'Content-Type': 'application/json' },

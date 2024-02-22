@@ -12,6 +12,28 @@ import { CardElement } from "components/cardElement";
 import seedRandom from "seedrandom";
 import { UnserializeOrder } from "util/order";
 import { encodeProductVariantPayPalSku } from "server/paypal/sku";
+import { useProductImageURL } from "components/hooks/useProduct";
+import { ArrayElement } from "types/util";
+
+
+const OrderProductListing = ({ productInfo }: { productInfo: ArrayElement<CompletedOrder['products']> }) => {
+	const { product } = productInfo;
+	const productImageURL = useProductImageURL(product.images[0])
+	return (
+		<div key={encodeProductVariantPayPalSku(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
+			<div className="relative">
+				<div className="h-24 w-24">
+					{ productImageURL && <img src={productImageURL} className="w-full h-full object-cover" alt="" /> }
+				</div>
+				<span className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] w-10 h-10 bg-blue-500 overflow-hidden rounded-full leading-none grid place-items-center text-white text-xl font-bold">{productInfo.quantity}</span>
+			</div>
+			<Link href={`/products/${productInfo.PID}`}>
+				<p className="text-xl">{product.productName}</p>
+			</Link>
+			<p className="ml-auto"><Price price={product.price} />/ea</p>
+		</div>
+	)
+}
 
 const OrderNotFound = () => ( // TODO yassify this
 	<div className="grid place-items-center text-5xl h-screen">
@@ -121,20 +143,7 @@ export default async function Order({ params }: { params: { oid?: string } }) {
 					<div className="flex flex-col gap-y-6 p-6">
 						{
 							order.products.map(productInfo => {
-								const { product } = productInfo
-								if (!product) return (<div></div>)
-								return (
-									<div key={encodeProductVariantPayPalSku(productInfo.PID, productInfo.variantSKU)} className="flex flex-row items-center gap-x-5 justify-start">
-										<div className="relative">
-											<img src={product.productImageURL} className="h-24 w-24 object-cover" alt="" />
-											<span className="absolute top-0 right-0 translate-x-[50%] translate-y-[-50%] w-10 h-10 bg-blue-500 overflow-hidden rounded-full leading-none grid place-items-center text-white text-xl font-bold">{productInfo.quantity}</span>
-										</div>
-										<Link href={`/products/${productInfo.PID}`}>
-											<p className="text-xl">{product.productName}</p>
-										</Link>
-										<p className="ml-auto"><Price price={product.price} />/ea</p>
-									</div>
-								)
+								return <OrderProductListing productInfo={productInfo} />
 							})
 						}
 					</div>

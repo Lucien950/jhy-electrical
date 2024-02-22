@@ -46,7 +46,7 @@ const TableRow = ({ order }: { order: Order }) => {
 	)
 }
 
-export const OrdersComponent = ({ allOrders }: { allOrders: Order[] }) => {
+export default function OrdersComponent({ allOrders }: { allOrders: Order[]} ) {
 	const incompleteOrders = allOrders.filter(o => !o.completed)
 	const completeOrders = allOrders.filter(o => o.completed)
 
@@ -62,17 +62,15 @@ export const OrdersComponent = ({ allOrders }: { allOrders: Order[] }) => {
 			<Tab.List className="p-1 rounded-lg inline-flex flex-row gap-x-1 relative mb-3 focus-within:ring-4">
 				{/* background */}
 				<div className="w-full h-full absolute rounded-lg bg-slate-100 -z-[1] top-0 left-0"></div>
-				{["Incomplete Orders", "Completed Orders", "All Orders"].map((t, i) =>
-					<Tab className="p-2 rounded-md relative outline-none" key={i}>
-						{/* tab content */}
-						<p className="relative"> {t} </p>
-						{/* background little boy */}
-						{selectedIndex == i &&
-							<motion.div
-								className={`w-full h-full absolute top-0 left-0 rounded-md -z-[1] ${i == 0 ? "bg-yellow-300" : ""} ${i == 1 ? "bg-green-500" : ""} ${i == 2 ? "bg-white" : ""}`}
-								layoutId="tabSelect"
-							/>}
-					</Tab>
+				{["Incomplete Orders", "Completed Orders", "All Orders"].map((t, i) => <Tab className="p-2 rounded-md relative outline-none" key={i}>
+					{/* tab content */}
+					<p className="relative"> {t} </p>
+					{/* background little boy */}
+					{selectedIndex == i &&
+						<motion.div
+							className={`w-full h-full absolute top-0 left-0 rounded-md -z-[1] ${i == 0 ? "bg-yellow-300" : ""} ${i == 1 ? "bg-green-500" : ""} ${i == 2 ? "bg-white" : ""}`}
+							layoutId="tabSelect" />}
+				</Tab>
 				)}
 			</Tab.List>
 
@@ -91,10 +89,8 @@ export const OrdersComponent = ({ allOrders }: { allOrders: Order[] }) => {
 						<AnimatePresence mode="wait">
 							<Tab.Panel as={motion.tbody} initial="hide" animate="show" exit="hide"
 								key={`panel${selectedIndex}`} variants={tabVariants} static>
-								{
-									[incompleteOrders, completeOrders, allOrders][selectedIndex]
-										.map(order => <TableRow order={order} key={order.firebaseOrderID} />)
-								}
+								{[incompleteOrders, completeOrders, allOrders][selectedIndex]
+									.map(order => <TableRow order={order} key={order.firebaseOrderID} />)}
 							</Tab.Panel>
 						</AnimatePresence>
 					</Tab.Panels>

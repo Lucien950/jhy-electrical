@@ -1,6 +1,6 @@
 import { addressSchema } from "./address"
-import Joi from "joi"
-import { validateSchemaFunctionsGenerator } from "util/typeValidate"
+import Joi, { attempt } from "joi"
+import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate"
 import { PaymentSource } from "./paypal"
 import {Address} from "./address"
 
@@ -33,4 +33,6 @@ export const customerSchema = Joi.object({
 })
 
 export const validateName = validateSchemaFunctionsGenerator<string>(nameSchema)
+export const attemptName = attemptSchemaGenerator<string>(nameSchema)
 export const validateCustomer = validateSchemaFunctionsGenerator<Customer>(customerSchema)
+export const attemptCustomer = attemptSchemaGenerator<Customer>(customerSchema)

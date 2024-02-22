@@ -1,6 +1,6 @@
 import {components} from "@paypal/paypal-js/types/apis/openapi/checkout_orders_v2"
-import Joi from "joi"
-import { validateSchemaFunctionsGenerator } from "util/typeValidate"
+import Joi, { attempt } from "joi"
+import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate"
 
 export const postalCodePattern = "^(?!.*[DFIOQUdfioqu])[A-VXYa-vxy][0-9][A-Za-z][ -]?[0-9][A-Za-z][0-9]$"
 export const postalCodeSchema = Joi.string().regex(new RegExp(postalCodePattern)).required()
@@ -35,4 +35,5 @@ export const addressSchema = Joi.object({
 	country_code: Joi.string().valid("CA").required(),
 })
 export const validateAddress = validateSchemaFunctionsGenerator<Address>(addressSchema)
+export const attemptAddress = attemptSchemaGenerator<Address>(addressSchema)
 export type subAddr = Pick<Required<Address>, "postal_code" | "admin_area_1">;

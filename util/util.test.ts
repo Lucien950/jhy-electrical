@@ -17,7 +17,7 @@ describe("String Tests", () => {
 
 import Joi from "joi"
 import { OrderProduct } from "types/order"
-import { validateSchema, validateSchemaFunctionsGenerator } from "util/typeValidate"
+import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate"
 describe("Type Validation Tests", () => {
 	const objSchema = Joi.object({
 		a: Joi.string().required(),
@@ -34,17 +34,17 @@ describe("Type Validation Tests", () => {
 	})
 
 	it("Should not throw errors, and return value when valid", async () => {
-		expect(() => validateSchema({ a: "a", b: 1, c: true, d: ["a"] }, objSchema)).not.toThrow()
-		expect(validateSchema({ a: "a", b: 1, c: true, d: ["a"] }, objSchema)).toStrictEqual({ a: "a", b: 1, c: true, d: ["a"] })
-		expect(() => validateSchema({ a: "a", b: 1, c: true, d: ["a", "b"] }, objSchema)).not.toThrow()
-		expect(validateSchema({ a: "a", b: 1, c: true, d: ["a", "b"] }, objSchema)).toStrictEqual({ a: "a", b: 1, c: true, d: ["a", "b"] })
+		expect(() => attemptSchemaGenerator({ a: "a", b: 1, c: true, d: ["a"] }, objSchema)).not.toThrow()
+		expect(attemptSchemaGenerator({ a: "a", b: 1, c: true, d: ["a"] }, objSchema)).toStrictEqual({ a: "a", b: 1, c: true, d: ["a"] })
+		expect(() => attemptSchemaGenerator({ a: "a", b: 1, c: true, d: ["a", "b"] }, objSchema)).not.toThrow()
+		expect(attemptSchemaGenerator({ a: "a", b: 1, c: true, d: ["a", "b"] }, objSchema)).toStrictEqual({ a: "a", b: 1, c: true, d: ["a", "b"] })
 	})
 
 	it("Should throw errors when invalid", () => {
-		expect(() => validateSchema({ a: "a", b: 1, c: true, d: ["a", 1] }, objSchema)).toThrow()
-		expect(() => validateSchema({ a: "a", b: 1, c: "no", d: ["a"] }, objSchema)).toThrow()
-		expect(() => validateSchema({ a: "a", b: null, c: true, d: ["a"] }, objSchema)).toThrow()
-		expect(() => validateSchema({ a: ["a"], b: 1, c: true, d: ["a"] }, objSchema)).toThrow()
+		expect(() => attemptSchemaGenerator({ a: "a", b: 1, c: true, d: ["a", 1] }, objSchema)).toThrow()
+		expect(() => attemptSchemaGenerator({ a: "a", b: 1, c: "no", d: ["a"] }, objSchema)).toThrow()
+		expect(() => attemptSchemaGenerator({ a: "a", b: null, c: true, d: ["a"] }, objSchema)).toThrow()
+		expect(() => attemptSchemaGenerator({ a: ["a"], b: 1, c: true, d: ["a"] }, objSchema)).toThrow()
 	})
 })
 

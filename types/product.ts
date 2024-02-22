@@ -1,5 +1,5 @@
 import Joi from "joi"
-import { validateSchemaFunctionsGenerator } from "util/typeValidate"
+import { attemptSchemaGenerator, validateSchemaFunctionsGenerator } from "util/typeValidate"
 
 export interface FirebaseProduct {
 	productName: string,
@@ -41,20 +41,26 @@ const productVariantListingSchema = Joi.object({
 	quantity: Joi.number().required().min(0),
 	price: Joi.number().required().greater(0),
 	color: Joi.string().required(),
+	images: Joi.array().items(Joi.string()).required().min(1),
 })
-export const productSchema = Joi.object({
+const firebaseProductSchema = Joi.object({
 	productName: Joi.string().required(),
 	description: Joi.string().required(),
-
-	commercial: Joi.boolean(),
+	// TODO check why this is not required
+	commercial: Joi.boolean(), 
 	industrial: Joi.boolean(),
 	residential: Joi.boolean(),
 
 	variants: Joi.array().items(productVariantListingSchema).required().min(1),
-
+})
+const productSchema = firebaseProductSchema.append({
 	firestoreID: Joi.string(),
 })
 export const validateProduct = validateSchemaFunctionsGenerator<Product>(productSchema)
+export const attemptProduct = attemptSchemaGenerator<Product>(productSchema)
+
+export const validateFirebaseProduct = validateSchemaFunctionsGenerator<FirebaseProduct>(firebaseProductSchema)
+export const attemptFirebaseProduct = attemptSchemaGenerator<FirebaseProduct>(firebaseProductSchema)
 
 export interface ProductWithVariant extends Omit<Product & ProductVariantListing, "variants"> { }
 export const productVariantSchema = productSchema.append({

@@ -1,8 +1,8 @@
 import { ValidationError } from "joi"
 // types
-import { PaymentMethods, validateName } from "types/customer"
-import { validateAddress } from "types/address"
-import { validateCard } from "types/card"
+import { PaymentMethods, attemptName } from "types/customer"
+import { attemptAddress } from "types/address"
+import { attemptCard } from "types/card"
 import { PaymentSource } from "types/paypal"
 
 export enum Stages {
@@ -17,8 +17,8 @@ export enum Stages {
 export const validateP0FormData = (name: unknown, address: unknown) => validateP0FormError(name, address) === null
 export const validateP0FormError = (name: unknown, address: unknown) => {
   try {
-    validateName(name)
-    validateAddress(address)
+    attemptName(name)
+    attemptAddress(address)
     return null
   } catch (e) {
     if (e instanceof ValidationError) {
@@ -36,7 +36,7 @@ export const validateP1FormError = (existingPaymentSource: PaymentSource | null,
   if (!paymentMethod) return "Select a Payment Method"
   if (paymentMethod == PaymentMethods.Card) {
     try {
-      validateCard(newPaymentForm)
+      attemptCard(newPaymentForm)
       return null
     } catch (e) {
       if (e instanceof ValidationError) return e.message

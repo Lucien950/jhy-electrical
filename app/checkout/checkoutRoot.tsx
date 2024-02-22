@@ -9,7 +9,7 @@ import Price from './price'
 // types
 import { OrderProduct } from 'types/order'
 import { FormCustomer, PaymentMethods } from 'types/customer'
-import { FormPrice, validatePrice } from 'types/price'
+import { FormPrice, attemptPrice, validatePrice } from 'types/price'
 // analytics
 import { logEvent } from 'firebase/analytics'
 import { analytics } from 'util/firebase/analytics'
@@ -133,7 +133,7 @@ export default function CheckoutRoot({
 									submitOrderLoading={submitOrderLoading}
 									formSubmit={async () => {
 										// for extra security
-										try { validatePrice(checkoutPayPalPrice) }
+										try { attemptPrice(checkoutPayPalPrice) }
 										catch (e) {
 											if (e instanceof Error) return toast.error(e.message)
 											throw e

@@ -1,8 +1,6 @@
 // types
-import Joi from "joi"
-import { validateSchema } from "util/typeValidate"
-import { Customer, validateCustomer } from "types/customer"
-import { Price, validatePrice } from "types/price"
+import { Customer, attemptCustomer } from "types/customer"
+import { Price, attemptPrice } from "types/price"
 // util
 import { fillOrderProducts } from "util/order"
 // paypal
@@ -12,7 +10,7 @@ import { CompletedOrder, OrderProduct } from "types/order"
 // firebase
 import { db } from "server/firebase/firestore"
 import { FirebaseProduct } from "types/product"
-import { submitOrderProps, submitOrderRes } from "."
+import { attemptSubmitOrderProps, submitOrderRes } from "."
 import { apiHandler } from "server/api"
 import { PAYPALDOMAIN } from "../../paypalDomain"
 import { PayPalAuthorizePaymentSuccess } from "types/paypal"
@@ -63,14 +61,14 @@ const submitPayPalOrder = async (token: string): Promise<PayPalAuthorizePaymentS
 
 async function submitOrderHandler(req: Request): Promise<submitOrderRes> {
 	// INPUT VALIDATION
-	const { token } = validateSchema<submitOrderProps>(await req.json(), Joi.object({ token: Joi.string().required() }))
+	const { token } = attemptSubmitOrderProps(await req.json())
 	// make sure order is well formed before authorizing the payment
 	const { products: orderProducts, orderPrice: priceInfo, PayPalCustomer: customerInfo, status } = await getPayPalOrder(token)
 
 	if (!(status === "COMPLETED" || status === "APPROVED")) throw "Order is not Approved"
 
-	validateCustomer(customerInfo) // validates p1 completion
-	validatePrice(priceInfo) // this validates that p0 has been completed
+	attemptCustomer(customerInfo) // validates p1 completion
+	attemptPrice(priceInfo) // this validates that p0 has been completed
 	const finalCustomerInfo = customerInfo as Customer
 	const finalPriceInfo = priceInfo as Price
 
